@@ -1,10 +1,10 @@
-from autoaim_alpha.autoaim_alpha.utils_network.actions import *
-from autoaim_alpha.autoaim_alpha.utils_network.mymodel import *
-from autoaim_alpha.autoaim_alpha.utils_network.data import *
+from autoaim_alpha.utils_network.actions import *
+from autoaim_alpha.utils_network.mymodel import *
+from autoaim_alpha.utils_network.data import *
 
 
-weight_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/weights/11multi.pth'
-output_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/weights/11multi.onnx'
+weight_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/weights/11multi.pth'
+output_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/weights/11multi.onnx'
 dummy_input = torch.randn(1, 1,32,32)
 model = QNet(11)
 

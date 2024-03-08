@@ -1,4 +1,4 @@
-from autoaim_alpha.autoaim_alpha.img.detector import Armor_Detector
+from autoaim_alpha.img.detector import Armor_Detector
 import cv2
 import time
 if __name__ == '__main__':

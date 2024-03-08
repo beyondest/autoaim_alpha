@@ -12,7 +12,7 @@ from autoaim_alpha.autoaim_alpha.utils_network.actions import *
 from torch.utils.data import Subset
 
 
-onnx_filename ='/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/olessons/roi_binary/local_weights/94.4.onnx'
+onnx_filename ='/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/olessons/roi_binary/local_weights/94.4.onnx'
 
 single_file_path = '../../roi_tmp.jpg'
 val_root_path = '/mnt/d/datasets/autoaim/roi_binary/1d'

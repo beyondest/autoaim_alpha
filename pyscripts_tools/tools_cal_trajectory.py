@@ -1,4 +1,4 @@
-from autoaim_alpha.autoaim_alpha.decision_maker.ballistic_predictor import *
+from autoaim_alpha.decision_maker.ballistic_predictor import *
 
 import matplotlib.pyplot as plt
 """

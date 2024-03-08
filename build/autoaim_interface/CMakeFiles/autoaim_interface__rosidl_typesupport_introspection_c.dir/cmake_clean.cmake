@@ -1,0 +1,27 @@
+file(REMOVE_RECURSE
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/each_detect_result__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/detect_result__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/armor_pos__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/car_pos__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/electricsys_state__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/electricsys_com__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/each_detect_result__type_support.c"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/detect_result__type_support.c"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/armor_pos__type_support.c"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/car_pos__type_support.c"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/electricsys_state__type_support.c"
+  "rosidl_typesupport_introspection_c/autoaim_interface/msg/electricsys_com__type_support.c"
+  "CMakeFiles/autoaim_interface__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/autoaim_interface/msg/each_detect_result__type_support.c.o"
+  "CMakeFiles/autoaim_interface__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/autoaim_interface/msg/detect_result__type_support.c.o"
+  "CMakeFiles/autoaim_interface__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/autoaim_interface/msg/armor_pos__type_support.c.o"
+  "CMakeFiles/autoaim_interface__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/autoaim_interface/msg/car_pos__type_support.c.o"
+  "CMakeFiles/autoaim_interface__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/autoaim_interface/msg/electricsys_state__type_support.c.o"
+  "CMakeFiles/autoaim_interface__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/autoaim_interface/msg/electricsys_com__type_support.c.o"
+  "libautoaim_interface__rosidl_typesupport_introspection_c.pdb"
+  "libautoaim_interface__rosidl_typesupport_introspection_c.so"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/autoaim_interface__rosidl_typesupport_introspection_c.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

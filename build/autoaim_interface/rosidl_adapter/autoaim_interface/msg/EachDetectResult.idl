@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from autoaim_interface/msg/EachDetectResult.msg
+// generated code does not contain a copyright notice
+
+#include "geometry_msgs/msg/PoseStamped.idl"
+
+module autoaim_interface {
+  module msg {
+    struct EachDetectResult {
+      string armor_name;
+
+      double confidence;
+
+      geometry_msgs::msg::PoseStamped pose;
+    };
+  };
+};

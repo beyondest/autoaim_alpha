@@ -1,7 +1,7 @@
 
 import cv2
 from torchvision import transforms
-from autoaim_alpha.autoaim_alpha.utils_network.data import *
+from autoaim_alpha.utils_network.data import *
 dataset_root_path ='/mnt/d/datasets/autoaim/roi_binary'
 
 

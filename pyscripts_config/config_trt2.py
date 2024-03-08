@@ -1,8 +1,8 @@
 
 import cv2
 
-from autoaim_alpha.autoaim_alpha.utils_network.data import *
-from autoaim_alpha.autoaim_alpha.utils_network.actions import *    
+from autoaim_alpha.utils_network.data import *
+from autoaim_alpha.utils_network.actions import *    
 
   
 

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-from autoaim_alpha.autoaim_alpha.img.tools import *
+from autoaim_alpha.img.tools import *
 c = canvas((800,1600))
 
 

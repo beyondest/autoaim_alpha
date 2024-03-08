@@ -1,0 +1,24 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from autoaim_interface/msg/ElectricsysCom.msg
+// generated code does not contain a copyright notice
+
+
+module autoaim_interface {
+  module msg {
+    struct ElectricsysCom {
+      string sof;
+
+      double target_abs_pitch;
+
+      double target_abs_yaw;
+
+      double reach_unix_time;
+
+      int64 fire_times;
+
+      @verbatim (language="comment", text=
+        " reserved_slot used for sof = 'A")
+      int64 reserved_slot;
+    };
+  };
+};

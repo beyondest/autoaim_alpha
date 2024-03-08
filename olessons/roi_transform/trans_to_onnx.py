@@ -10,7 +10,7 @@ from autoaim_alpha.autoaim_alpha.utils_network.data import *
 
 model = QNet(num_classes=11)
 dummy = torch.randn((1,1,32,32))
-ori_onnx_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/olessons/roi_binary/local_weights/94.4.onnx'
+ori_onnx_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/olessons/roi_binary/local_weights/94.4.onnx'
 trained_weights_path = './local_weights/weights.0.94.4.pth'
 
 

@@ -16,7 +16,7 @@ weights_savelocal_path = './local_weights'
 
 val_split_rate = 1/10
 
-yaml_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/olessons/roi_transform/classes.yaml'
+yaml_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/olessons/roi_transform/classes.yaml'
 
 
 

@@ -1,18 +1,18 @@
 
-from autoaim_alpha.autoaim_alpha.camera.mv_class import Mindvision_Camera
-from autoaim_alpha.autoaim_alpha.img.detector import Armor_Detector
-from autoaim_alpha.autoaim_alpha.os_op.basic import *
-from autoaim_alpha.autoaim_alpha.img.tools import *
+from autoaim_alpha.camera.mv_class import Mindvision_Camera
+from autoaim_alpha.img.detector import Armor_Detector
+from autoaim_alpha.os_op.basic import *
+from autoaim_alpha.img.tools import *
 
 import time
 
 armor_color = 'blue'
 mode = 'Dbg'
 if_yolvo5 = False
-camera_config_folder = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/autoaim_alpha/config/camera_config' 
-tradition_config_folder = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/autoaim_alpha/config/tradition_config'
-net_config_folder = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/autoaim_alpha/config/net_config'
-depth_estimator_config_yaml_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/mypack36/autoaim_alpha/config/other_config/pnp_params.yaml'
+camera_config_folder = '../config/camera_config' 
+tradition_config_folder = '../config/tradition_config'
+net_config_folder = '../config/net_config'
+depth_estimator_config_yaml_path = '../config/other_config/pnp_params.yaml'
 
 
 fps = 0

@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 import glob
-from autoaim_alpha.autoaim_alpha.utils_network.data import *
-from autoaim_alpha.autoaim_alpha.camera.mv_class import *
+from autoaim_alpha.utils_network.data import *
+from autoaim_alpha.camera.mv_class import *
 
 
 
