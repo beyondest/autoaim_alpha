@@ -1,0 +1,1 @@
+EachDetectResult[] detect_result

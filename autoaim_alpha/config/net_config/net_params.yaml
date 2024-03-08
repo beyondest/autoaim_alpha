@@ -1,0 +1,26 @@
+engine_type: ort
+
+
+# classification model params
+input_name: input
+output_name: output
+input_size:
+- 32
+- 32
+input_dtype: float32
+
+# yolov5 model params
+yolov5_input_name: images
+yolov5_output_name: output0
+yolov5_input_size: 
+- 640
+- 640
+yolov5_input_dtype: 'float32'
+
+
+# for nms params 
+conf_thres: 0.80
+iou_thres: 0.45
+enemy_armor_index_list: None
+agnostic: False
+max_det: 20

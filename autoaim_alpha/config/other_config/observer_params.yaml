@@ -1,0 +1,54 @@
+# Debug modifiable value
+# Q_scale
+# R_scale_dis_diff_denominator: bigger value means more strict continuous detection
+# history_depth: > 3
+# if_force_correct_after_detect
+# min_continous_num_to_apply_predict
+# min_dis_between_continous_detection
+# min_time_between_continous_detection
+
+
+
+
+H:
+- - 1
+  - 0
+  - 0
+- - 0
+  - 1
+  - 0
+- - 0
+  - 0
+  - 1
+Q_scale: 0.1
+R_scale_dis_diff_denominator: 0.1
+
+armor_name_to_car_params: {}
+
+history_depth: 5
+if_force_correct_after_detect: 1
+min_continous_num_to_apply_predict: 3
+min_dis_between_continous_detection: 0.1
+min_time_between_continous_detection: 0.1
+
+
+score_accumulation_method_list_for_automatic_matching:
+- add
+- add
+- add
+
+
+
+score_criterion_for_automatic_matching: 200
+
+# armor_name, tvec, rvec, confidence
+score_weights_list_for_automatic_matching:
+- 100
+- 10
+- 0
+- 0
+
+
+# if > wrongpic_threshold_dis and armor_name == wrongpic, then it's a wrongpic
+wrongpic_threshold_dis: 0.1
+

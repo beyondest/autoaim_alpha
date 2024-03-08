@@ -1,0 +1,7 @@
+1. mindvision fps <=17 when use wsl2, <= 30 when use windows, but it should be 270???
+
+Probobal reasons: mvsdk.cameraGetImageBuffer spend the most time of all, about 0.05s  
+
+2. package basic include utils_network.data, this is not a good practice, it should be in a separate package.
+
+
