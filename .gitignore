@@ -3,6 +3,7 @@
 *.trt
 *.jpg
 *.png
+*.pth
 autoaim_alpha/custom_log/*
 autoaim_alpha/camera/custom_log/*
 autoaim_alpha/Camera/*
