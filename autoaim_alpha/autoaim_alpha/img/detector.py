@@ -784,6 +784,9 @@ class Net_Detector:
                 out, post_pro_t = self.yolov5_post_processor.get_output(model_output[0])
                 
             else:
+                
+                # cause trt output is shape like(x,), need reshape to (batchsize,class_num)
+                model_output0 = model_output[0].reshape(-1,len(self.class_info))
                 out,post_pro_t =  self._classifier_post_process(model_output[0]) 
             
             if self.mode == 'Dbg':

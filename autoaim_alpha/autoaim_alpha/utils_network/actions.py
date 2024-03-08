@@ -273,7 +273,7 @@ def validation(model:torch.nn.Module,
             
     
     
-def trans_logits_in_batch_to_result(logits_in_batch:Union[torch.Tensor,np.ndarray])->tuple:
+def trans_logits_in_batch_to_result(logits_in_batch:Union[torch.Tensor,np.ndarray],classes_nums:Union[int,None] = None)->tuple:
     """Trans logits of model output to [probabilities, indices]
 
     Args:
@@ -286,8 +286,8 @@ def trans_logits_in_batch_to_result(logits_in_batch:Union[torch.Tensor,np.ndarra
         [probability_of_sample_0,probability_of_sample_1,...],[max_index_of_sample_0,max_index_of_sample_1,...]
     """
     if isinstance(logits_in_batch,np.ndarray):
-        if logits_in_batch.ndim == 1:
-            logits_in_batch = logits_in_batch.reshape(1,-1)
+        if logits_in_batch.ndim == 1 and classes_nums is not None:
+            logits_in_batch = logits_in_batch.reshape(classes_nums,-1)
             
         max_prob_index = np.argmax(logits_in_batch, axis=-1)
 
