@@ -154,7 +154,7 @@ class Armor_Detector:
         add_text(img,'FPS',fps,color=(255,255,255),scale_size=0.8)  
             
         if self.final_result_list:
-            lr1.debug(f'Final result nums: {len(self.final_result_list)}')
+            lr1.debug(f'Detector : Final result nums: {len(self.final_result_list)}')
             
             for i in self.final_result_list:
                 draw_big_rec_list([i['big_rec']],img,color=(0,255,0))
@@ -202,18 +202,18 @@ class Armor_Detector:
     def _tradition_part(self,img_bgr:np.ndarray):
         
         if img_bgr is None :
-            lr1.warning("IMG : No img to apply tradition part")
+            lr1.warning("Detector : No img to apply tradition part")
             return None
       
         [self.roi_single_list,self.big_rec_list], tradition_time= self.tradition_detector.get_output(img_bgr)
         
         if self.mode == 'Dbg':
-            lr1.debug(f'Tradition Time : {tradition_time:.6f}')
+            lr1.debug(f'Detector : Tradition Time : {tradition_time:.6f}')
             
             if self.big_rec_list is not None:
-                lr1.debug(f'Tradition Find Target Nums : {len(self.big_rec_list)}')
+                lr1.debug(f'Detector : Tradition Find Target Nums : {len(self.big_rec_list)}')
             else:
-                lr1.debug(f"Tradition Find Nothing")
+                lr1.debug(f"Detector : Tradition Find Nothing")
                 
     def _net_part(self,img_rgb_640:Union[np.ndarray,None]=None):
         if self.if_yolov5: 
@@ -226,7 +226,7 @@ class Armor_Detector:
         else:
             if self.roi_single_list is None:
                 if self.mode == 'Dbg':
-                    lr1.debug("IMG : No img to apply net part")
+                    lr1.debug("Detector : No img to apply net part")
                 return None
             
             else:
@@ -236,11 +236,11 @@ class Armor_Detector:
                     self.probability_list,self.result_list = tmp_list
         
         if self.mode == 'Dbg':
-            lr1.debug(f"Net Time : {net_time:.6f}")
+            lr1.debug(f"Detector : Net Time : {net_time:.6f}")
             if self.probability_list is not None:
-                lr1.debug(f'Net Find Target : {self.result_list}')
+                lr1.debug(f'Detector : Net Find Target : {self.result_list}')
             else:
-                lr1.debug('Net Find Nothing')    
+                lr1.debug('Detecotr : Net Find Nothing')    
         
             
     def _filter_part(self):
@@ -261,7 +261,7 @@ class Armor_Detector:
         self.result_list = result_list
         
         if self.mode == 'Dbg':
-            lr1.debug(f'Confience Filter Target Nums : {len(self.probability_list)}')
+            lr1.debug(f'Detector : Confience Filter Target Nums : {len(self.probability_list)}')
 
             
     def _depth_and_final_part(self):
@@ -271,7 +271,7 @@ class Armor_Detector:
             obj_class = 'small' if name in self.depth_estimator.pnp_params.small_armor_name_list else 'big'
             depth_info = self.depth_estimator.get_result((self.big_rec_list[i],obj_class))
             if depth_info is None:
-                lr1.warning(f"Depth Estimator Fail to get result, skip this target {self.big_rec_list[i]} {name}")
+                lr1.warning(f"Detecotr : Depth Estimator Fail to get result, skip this target {self.big_rec_list[i]} {name}")
                 continue
             
             each_result = {
@@ -356,7 +356,7 @@ class Tradition_Detector:
         #center_list = turn_big_rec_list_to_center_points_list(big_rec_list)
         
         if self.mode == 'Dbg':
-            lr1.debug(f'pre_process1_time : {preprocess_time1:.4f}, find_big_rec_time : {find_big_rec_time:.4f}, pickup_roi_transfomr_time : {pickup_roi_transform_time:.4f}, binary_roi_time : {binary_roi_time:.4f}')
+            lr1.debug(f'Detector : pre_process1_time : {preprocess_time1:.4f}, find_big_rec_time : {find_big_rec_time:.4f}, pickup_roi_transfomr_time : {pickup_roi_transform_time:.4f}, binary_roi_time : {binary_roi_time:.4f}')
             cv2.imshow('single',img_single)
             
             if big_rec_list is not None and len(big_rec_list)>0:
@@ -518,10 +518,7 @@ class Tradition_Detector:
         
         conts,arrs = cv2.findContours(img_single,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         
-        
-        
         small_rec_pairs_list = self.filter1.get_output(conts,img_bgr=img_bgr)
-        
         
         #big_rec_list = [make_big_rec(rec_pair[0],rec_pair[1]) for rec_pair in small_rec_pairs_list] if small_rec_pairs_list is not None else None 
         #big_rec_list = expand_rec_wid(big_rec_list,EXPAND_RATE,img_size_yx=img_single.shape)
@@ -775,7 +772,7 @@ class Net_Detector:
                 out,post_pro_t =  self._classifier_post_process(model_output[0]) 
             
             if self.mode == 'Dbg':
-                lr1.debug(f'Refence Time: {ref_time:.5f}, Post Process Time: {post_pro_t:.5f}')
+                lr1.debug(f'Detector : Refence Time: {ref_time:.5f}, Post Process Time: {post_pro_t:.5f}')
             
             return out
         
@@ -790,7 +787,7 @@ class Net_Detector:
                 out,post_pro_t =  self._classifier_post_process(model_output[0]) 
             
             if self.mode == 'Dbg':
-                lr1.debug(f'Refence Time: {ref_time:.5f}, Post Process Time: {post_pro_t:.5f}')
+                lr1.debug(f'Detector : Refence Time: {ref_time:.5f}, Post Process Time: {post_pro_t:.5f}')
                 
             return out 
      

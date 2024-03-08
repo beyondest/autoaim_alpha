@@ -165,8 +165,8 @@ class Depth_Estimator:
         ry, rz = rz, ry # change the order of ry and rz
         
         if self.mode == 'Dbg':
-            lr1.debug(f"big_rec: {big_rec}, img_points: {img_points}, obj_pts: {obj_pts},")
-            lr1.debug(f'PnP result: x: {x:.4f}, y: {y:.4f}, z: {z:.4f}, rx: {rx:.4f}, ry: {ry:.4f}, rz: {rz:.4f}')
+            lr1.debug(f"Depth_Estimator : PnP input: big_rec: {big_rec}, img_points: {img_points}, obj_pts: {obj_pts},")
+            lr1.debug(f'Depth_Estimator : PnP result: x: {x:.4f}, y: {y:.4f}, z: {z:.4f}, rx: {rx:.4f}, ry: {ry:.4f}, rz: {rz:.4f}')
         
         return [x,y,z],[rx,ry,rz]
         
