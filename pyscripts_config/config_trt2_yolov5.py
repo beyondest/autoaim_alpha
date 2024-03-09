@@ -5,13 +5,14 @@ from autoaim_alpha.utils_network.data import *
 from autoaim_alpha.utils_network.actions import *    
 
 from autoaim_alpha.utils_network.api_for_yolov5 import Yolov5_Post_Processor  
+from autoaim_alpha.img.tools import *
 
 img_path = '../res/armorred.png'
 trt_path = '../autoaim_alpha/config/net_config/yolov5.trt'
 class_yaml = '../autoaim_alpha/config/net_config/yolov5_class.yaml'
 
 
-cur_batch_size = 2
+cur_batch_size = 1
 input_shape = (3,640,640)
 max_batch_size = 1
 
@@ -45,16 +46,25 @@ out,t = engine.run({0:real_time_input})
 result = out[0]
 print(result.shape)
 
+result = result.reshape(cur_batch_size,-1,len(class_info) + 5)
+print(result.shape)
 
 
-# For classifier
+(conts_list,pro_list,cls_list),post_t = yolov5_post_process.get_output(result)
 
-#p_list,index_list =trans_logits_in_batch_to_result(logits)
-#result_list = [class_info[i] for i in index_list]
 
-#print(p_list,result_list)
-#print('spent time:')
-#print(t)
+img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
+draw_big_rec_list(conts_list,img)
+    
+for cont,pro,cls in zip(conts_list,pro_list,cls_list):
+    add_text(img,f'{pro:.2f}',cls,cont[0])
+    
+    
+cvshow(img)
+
+print('reference time:',t)
+print('post process time:',post_t)
+
 
 
 
