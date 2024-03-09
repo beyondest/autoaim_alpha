@@ -529,7 +529,7 @@ class Tradition_Detector:
         t1 = time.perf_counter()
         conts,arrs = cv2.findContours(img_single,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         t2 = time.perf_counter()
-        small_rec_pairs_list = self.filter1.get_output(conts,img_bgr=img_bgr)
+        small_rec_pairs_list = self.filter1.get_output(conts)
         t3 = time.perf_counter()
         #big_rec_list = [make_big_rec(rec_pair[0],rec_pair[1]) for rec_pair in small_rec_pairs_list] if small_rec_pairs_list is not None else None 
         #big_rec_list = expand_rec_wid(big_rec_list,EXPAND_RATE,img_size_yx=img_single.shape)

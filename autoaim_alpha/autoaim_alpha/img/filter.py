@@ -58,6 +58,7 @@ class Filter_of_lightbar(Filter_Base):
         """Get pairs of conts after filter
         Args:
             input_list (list): list of conts
+            img_bgr (Union[np.ndarray,None], optional): image for debug. Defaults to None.
 
         Returns:
             Union[list,None]: 
