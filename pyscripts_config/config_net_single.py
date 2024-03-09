@@ -1,8 +1,8 @@
-from autoaim_alpha.autoaim_alpha.utils_network.actions import *
-from autoaim_alpha.autoaim_alpha.utils_network.mymodel import *
-from autoaim_alpha.autoaim_alpha.utils_network.data import *
-from autoaim_alpha.autoaim_alpha.img.tools import *
-from autoaim_alpha.autoaim_alpha.utils_network.api_for_yolov5 import *
+from autoaim_alpha.utils_network.actions import *
+from autoaim_alpha.utils_network.mymodel import *
+from autoaim_alpha.utils_network.data import *
+from autoaim_alpha.img.tools import *
+from autoaim_alpha.utils_network.api_for_yolov5 import *
 import torch.cuda
 import cv2
 import torch
@@ -32,13 +32,13 @@ real_time_trans = transforms.Compose([
         
 wei = './weights/binary.pth'
 wei2 = './weights/11multi.pth'
-binary_onnx_path = './weights/11multi.onnx'
-yolo_onnx_path = './weights/batchsize1_onnx/ori.onnx'
+binary_onnx_path = '../autoaim_alpha/config/net_config/classifier.onnx'
+yolo_onnx_path = '../autoaim_alpha/config/net_config/yolov5.onnx'
 
-test_path = 'roi_tmp.jpg'
-test_path2 = 'armorred.png'
-class_yaml_path = './tmp_net_config/class.yaml'
-yolo_class_yaml_path = './yolov5_class.yaml'
+test_path = '../res/roi_tmp.jpg'
+test_path2 = '../res/armorred.png'
+class_yaml_path = '../autoaim_alpha/config/net_config/classifier_class.yaml'
+yolo_class_yaml_path = '../autoaim_alpha/config/net_config/yolov5_class.yaml'
 
 
 
@@ -139,12 +139,13 @@ if yolo_onnx_model:
     #p,i = trans_logits_in_batch_to_result(out_list[0])
     
     result = out_list[0]
-    a = Yolov5_Post_Processor(None)
+    a = Yolov5_Post_Processor(class_info)
+    print(result.shape)
     [conts_list,pro_list,cls_list],t2 = a.get_output(result)
     draw_big_rec_list(conts_list,real_time_img)
     
     for cont,pro,cls in zip(conts_list,pro_list,cls_list):
-        add_text(real_time_img,f'{pro:.2f}',class_info[cls],cont[0])
+        add_text(real_time_img,f'{pro:.2f}',cls,cont[0])
         
         
     real_time_img = cv2.cvtColor(real_time_img,cv2.COLOR_RGB2BGR)
