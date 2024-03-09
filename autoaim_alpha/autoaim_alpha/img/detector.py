@@ -525,16 +525,24 @@ class Tradition_Detector:
         if img_single is None:
             return None
         
+        
+        t1 = time.perf_counter()
         conts,arrs = cv2.findContours(img_single,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-        
+        t2 = time.perf_counter()
         small_rec_pairs_list = self.filter1.get_output(conts,img_bgr=img_bgr)
-        
+        t3 = time.perf_counter()
         #big_rec_list = [make_big_rec(rec_pair[0],rec_pair[1]) for rec_pair in small_rec_pairs_list] if small_rec_pairs_list is not None else None 
         #big_rec_list = expand_rec_wid(big_rec_list,EXPAND_RATE,img_size_yx=img_single.shape)
         big_rec_list = [get_trapezoid_corners(rec_pair[0], rec_pair[1]) for rec_pair in small_rec_pairs_list] if small_rec_pairs_list is not None else None 
+        t4 = time.perf_counter()
         big_rec_list = expand_trapezoid_wid(big_rec_list,EXPAND_RATE,img_size_yx=img_single.shape)
-        
+        t5 = time.perf_counter()
         big_rec_list = self.filter2.get_output(big_rec_list)
+        t6 = time.perf_counter()
+        
+        
+        lr1.debug(f"Fuck : findcontours_time : {t2-t1:.4f}, filter1_time : {t3-t2:.4f}, get_big_rec_time : {t4-t3:.4f}, expand_rec_time : {t5-t4:.4f}, filter2_time : {t6-t5:.4f}")
+        
             
         return big_rec_list
     
