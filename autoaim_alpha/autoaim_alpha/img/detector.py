@@ -799,7 +799,7 @@ class Net_Detector:
             
             if self.if_yolov5:
                 model_output0 = model_output[0].reshape(1,-1,len(self.class_info) + 5)
-                out, post_pro_t = self.yolov5_post_processor.get_output(model_output[0])
+                out, post_pro_t = self.yolov5_post_processor.get_output(model_output0)
                 
             else:
                 
