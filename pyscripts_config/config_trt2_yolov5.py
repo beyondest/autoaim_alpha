@@ -53,15 +53,8 @@ print(result.shape)
 (conts_list,pro_list,cls_list),post_t = yolov5_post_process.get_output(result)
 
 
-img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
-draw_big_rec_list(conts_list,img)
-    
-for cont,pro,cls in zip(conts_list,pro_list,cls_list):
-    add_text(img,f'{pro:.2f}',cls,cont[0])
-    
-    
-cvshow(img)
 
+print(pro_list,cls_list)
 print('reference time:',t)
 print('post process time:',post_t)
 
