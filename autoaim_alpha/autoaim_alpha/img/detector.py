@@ -37,6 +37,7 @@ class Net_Params(Params):
         self.output_name = 'output'
         self.input_size =  NET_INPUT_SIZE
         self.input_dtype = NET_INPUT_DTYPE
+        self.max_batchsize = 10
         
         self.yolov5_input_name = 'images'
         self.yolov5_output_name = 'output0'
@@ -206,6 +207,9 @@ class Armor_Detector:
             return None
       
         [self.roi_single_list,self.big_rec_list], tradition_time= self.tradition_detector.get_output(img_bgr)
+        if len(self.roi_single_list) > self.net_detector.params.max_batchsize:
+            lr1.warning(f"Detector : Tradition Find Target Nums : {len(self.roi_single_list)} > {self.net_detector.params.max_batchsize}, will dicard some targets")
+            self.roi_single_list = self.roi_single_list[:self.net_detector.params.max_batchsize]
         
         if self.mode == 'Dbg':
             lr1.debug(f'Detector : Tradition Time : {tradition_time:.6f}')
@@ -695,7 +699,7 @@ class Net_Detector:
                 self.input_dtype = np.float32 if self.params.input_dtype == 'float32' else np.float16
                 
             self.engine = TRT_Engine_2(self.model_path,
-                                       max_batchsize=MAX_INPUT_BATCHSIZE)
+                                       max_batchsize=self.params.max_batchsize)
         
             
 
@@ -787,7 +791,7 @@ class Net_Detector:
                 
                 # cause trt output is shape like(x,), need reshape to (batchsize,class_num)
                 model_output0 = model_output[0].reshape(-1,len(self.class_info))
-                out,post_pro_t =  self._classifier_post_process(model_output[0]) 
+                out,post_pro_t =  self._classifier_post_process(model_output0) 
             
             if self.mode == 'Dbg':
                 lr1.debug(f'Detector : Refence Time: {ref_time:.5f}, Post Process Time: {post_pro_t:.5f}')

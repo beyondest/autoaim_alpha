@@ -8,6 +8,8 @@ input_size:
 - 32
 - 32
 input_dtype: float32
+max_batchsize: 10
+
 
 # yolov5 model params
 yolov5_input_name: images
