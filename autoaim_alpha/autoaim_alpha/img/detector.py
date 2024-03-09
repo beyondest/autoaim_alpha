@@ -205,19 +205,25 @@ class Armor_Detector:
         if img_bgr is None :
             lr1.warning("Detector : No img to apply tradition part")
             return None
+        
       
         [self.roi_single_list,self.big_rec_list], tradition_time= self.tradition_detector.get_output(img_bgr)
-        if len(self.roi_single_list) > self.net_detector.params.max_batchsize:
-            lr1.warning(f"Detector : Tradition Find Target Nums : {len(self.roi_single_list)} > {self.net_detector.params.max_batchsize}, will dicard some targets")
-            self.roi_single_list = self.roi_single_list[:self.net_detector.params.max_batchsize]
         
         if self.mode == 'Dbg':
             lr1.debug(f'Detector : Tradition Time : {tradition_time:.6f}')
             
-            if self.big_rec_list is not None:
-                lr1.debug(f'Detector : Tradition Find Target Nums : {len(self.big_rec_list)}')
+            if self.roi_single_list is not None:
+                lr1.debug(f'Detector : Tradition Find Target Nums : {len(self.roi_single_list)}')
             else:
                 lr1.debug(f"Detector : Tradition Find Nothing")
+                return
+                
+                
+        if len(self.roi_single_list) > self.net_detector.params.max_batchsize:
+            lr1.warning(f"Detector : Tradition Find Target Nums : {len(self.roi_single_list)} > {self.net_detector.params.max_batchsize}, will dicard some targets")
+            self.roi_single_list = self.roi_single_list[:self.net_detector.params.max_batchsize]
+        
+        
                 
     def _net_part(self,img_rgb_640:Union[np.ndarray,None]=None):
         if self.if_yolov5: 
