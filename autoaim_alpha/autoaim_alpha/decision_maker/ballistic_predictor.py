@@ -387,7 +387,7 @@ class Ballistic_Predictor:
         
         RK4_spend_time_all = 0.0
         count = 0
-        
+        count_c = 0
         x = a
         x_new = (a + b) / 2
         dx = self.params.newton_dx
@@ -424,10 +424,11 @@ class Ballistic_Predictor:
                         lr1.warn(f"Ballistic_Predictor : newton failed, solved pitch out of range, {x}")
                     break
                 else:
-                    if 1/c<3:
+                    if count_c < 2:
                         
                         c = c / 2
                         count = 0
+                        count_c += 1
                     else:
                         lr1.warn(f"Ballistic_Predictor : newton failed, iter too many times, final error {fx}")
                         break
