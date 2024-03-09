@@ -6,7 +6,6 @@ mode = 'Dbg'
 port_yaml_path = '../autoaim_alpha/config/other_config/port_params.yaml'
 p = Port(mode,port_yaml_path)
 
-
 p.port_open()
 
 
