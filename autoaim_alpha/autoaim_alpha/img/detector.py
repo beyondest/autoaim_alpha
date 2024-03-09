@@ -208,15 +208,14 @@ class Armor_Detector:
         
       
         [self.roi_single_list,self.big_rec_list], tradition_time= self.tradition_detector.get_output(img_bgr)
-        
-        if self.mode == 'Dbg':
-            lr1.debug(f'Detector : Tradition Time : {tradition_time:.6f}')
-            
-            if self.roi_single_list is not None:
+        if self.roi_single_list is not None:
+            if self.mode == 'Dbg':
+                lr1.debug(f'Detector : Tradition Time : {tradition_time:.6f}')
                 lr1.debug(f'Detector : Tradition Find Target Nums : {len(self.roi_single_list)}')
-            else:
+        else:
+            if self.mode == 'Dbg':
                 lr1.debug(f"Detector : Tradition Find Nothing")
-                return
+            return
                 
                 
         if len(self.roi_single_list) > self.net_detector.params.max_batchsize:
