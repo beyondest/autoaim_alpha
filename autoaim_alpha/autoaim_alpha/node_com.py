@@ -38,7 +38,6 @@ class Node_Com(Node,Custom_Context_Obj):
         
         if msg.sof == 'A' :
             
-            print(f"fuck elesyscom : {msg.reach_unix_time}")
             self.last_sub_topic_time = time.time()
             self.port.action_data.fire_times = msg.fire_times
             self.port.action_data.abs_pitch_10000 = int(msg.target_abs_pitch * 10000)
@@ -93,7 +92,6 @@ class Node_Com(Node,Custom_Context_Obj):
         
     def timer_send_msg_callback(self):
         cur_time = time.time()
-        print(f"fucktimer : {cur_time:.3f}")
         if cur_time - self.last_sub_topic_time > 0.5:
             next_time = cur_time + self.port.params.communication_delay
             self.port.action_data.fire_times = 0

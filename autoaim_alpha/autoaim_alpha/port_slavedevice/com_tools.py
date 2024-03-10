@@ -368,7 +368,6 @@ class action_data(data_list):
         crc_v =b''
         
         for index,each in enumerate(self.list):
-            print(f'Fuck :index{index}, {each}')
             out += convert_to_bytes((each,fmt_list[index]))
         
         if if_crc:

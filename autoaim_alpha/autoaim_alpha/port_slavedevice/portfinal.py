@@ -122,7 +122,6 @@ def convert_xy_to_relative_radians_10000(x,y,shape_of_img:tuple):
 def cv2_click_event_callback(event,x,y,flags,param:Param):
     if event == cv2.EVENT_LBUTTONUP:
         
-        print('fuck')
         param.adata.target_pitch_10000 = round(map_value(y,(0,1024),(-15708,15708)))
         param.adata.target_yaw_10000 = round(map_value(x,(0,1280),(-31416,31416)))
         param.draw_circle_counts = 0
