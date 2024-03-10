@@ -51,7 +51,7 @@ class Node_Webcam_MV(Node,Custom_Context_Obj):
         
         img = self.mv.get_img()
         if if_reverse_img:
-            img = cv2.flip(img,1)
+            img = cv2.rotate(img, cv2.ROTATE_180)
             
         if img is not None:
             
