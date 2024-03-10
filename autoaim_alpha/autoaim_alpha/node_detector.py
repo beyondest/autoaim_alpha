@@ -30,7 +30,7 @@ class Node_Detector(Node,Custom_Context_Obj):
                                             topic_detect_result['qos_profile']
                                             )
         
-        
+
         
         
         if mode == 'Dbg':
@@ -156,6 +156,7 @@ class Node_Detector(Node,Custom_Context_Obj):
         self.cur_pitch = msg.cur_pitch
         self.cur_yaw = msg.cur_yaw
         self.ele_time = msg.unix_time
+        self.get_logger().warn(f"cur_pitch:{self.cur_pitch:.2f},cur_yaw:{self.cur_yaw:.2f},ele_time:{self.ele_time:.2f}")
         
             
     def _start(self):
