@@ -163,12 +163,17 @@ class Node_Marker(Node,Custom_Context_Obj):
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
 
     def armor_pos_corrected_listener(self, msg:ArmorPos):
+        self.get_logger().info(f"Get corrected armor pos {msg.armor_name}:{msg.armor_id}")
         self._update_marker_list(self.corrected_marker_list,msg)
                 
     def armor_pos_without_corrected_listener(self, msg:ArmorPos):
+        self.get_logger().info(f"Get without corrected armor pos {msg.armor_name}:{msg.armor_id}")
+        
         self._update_marker_list(self.without_corrected_marker_list,msg)
                 
     def armor_pos_predicted_listener(self, msg:ArmorPos):
+        self.get_logger().info(f"Get predicted armor pos {msg.armor_name}:{msg.armor_id}")
+        
         self._update_marker_list(self.predicted_marker_list,msg)
     
     def _init_marker_list(self,marker_list:list,color_group:int = 0):    

@@ -30,6 +30,8 @@ class Node_Detector(Node,Custom_Context_Obj):
                                             topic_detect_result['qos_profile']
                                             )
         
+        
+        
         if mode == 'Dbg':
             
             self.sub_ele_sys_com = self.create_subscription(topic_electric_sys_com['type'],
@@ -37,9 +39,16 @@ class Node_Detector(Node,Custom_Context_Obj):
                                             self.sub_ele_sys_com_callback,
                                             topic_electric_sys_com['qos_profile'])
             
-            self.fire_times = 0
-            self.target_abs_pitch = 0.0
-            self.target_abs_yaw = 0.0
+            self.pub_img_for_visualize = self.create_publisher(topic_img_for_visualize['type'],
+                                                topic_img_for_visualize['name'],
+                                                topic_img_for_visualize['qos_profile'])
+                
+        self.fire_times = 0
+        self.target_abs_pitch = 0.0
+        self.target_abs_yaw = 0.0
+            
+            
+            
         
         self.cv_bridge = CvBridge()
         self.armor_detector = Armor_Detector(
@@ -83,14 +92,15 @@ class Node_Detector(Node,Custom_Context_Obj):
         
         
         if mode == 'Dbg':
-            self.armor_detector.visualize(img,
+            img_for_visualize = self.armor_detector.visualize(img,
                                           fps=self.fps,
-                                          windows_name=self.window_name,
+                                          windows_name=None,
                                           fire_times=self.fire_times,
                                           target_abs_pitch=self.target_abs_pitch,
                                           target_abs_yaw=self.target_abs_yaw)
-        
-    
+            
+            self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
+            
             
             
         
