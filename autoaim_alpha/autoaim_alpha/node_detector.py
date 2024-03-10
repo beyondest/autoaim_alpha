@@ -100,8 +100,8 @@ class Node_Detector(Node,Custom_Context_Obj):
                                           target_abs_yaw=self.target_abs_yaw)
             
             #self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
-            #cv2.imshow(self.window_name,img_for_visualize)
-            #cv2.waitKey(1)
+            cv2.imshow(self.window_name,img_for_visualize)
+            cv2.waitKey(1)
             
         
         if result is not None:
