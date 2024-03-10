@@ -32,6 +32,7 @@ class Node_Detector(Node,Custom_Context_Obj):
         
         
         
+        
         if mode == 'Dbg':
             
             self.sub_ele_sys_com = self.create_subscription(topic_electric_sys_com['type'],
@@ -39,6 +40,11 @@ class Node_Detector(Node,Custom_Context_Obj):
                                             self.sub_ele_sys_com_callback,
                                             topic_electric_sys_com['qos_profile'])
             
+            self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
+                                                    topic_electric_sys_state['name'],
+                                                    self.sub_ele_sys_state_callback,
+                                                    topic_electric_sys_state['qos_profile'])
+        
             self.pub_img_for_visualize = self.create_publisher(topic_img_for_visualize['type'],
                                                 topic_img_for_visualize['name'],
                                                 topic_img_for_visualize['qos_profile'])
@@ -46,7 +52,9 @@ class Node_Detector(Node,Custom_Context_Obj):
         self.fire_times = 0
         self.target_abs_pitch = 0.0
         self.target_abs_yaw = 0.0
-            
+        self.cur_yaw = 0.0
+        self.cur_pitch = 0.0
+        self.ele_time = 0.0
             
             
         
@@ -143,6 +151,11 @@ class Node_Detector(Node,Custom_Context_Obj):
         self.target_abs_pitch = msg.target_abs_pitch
         self.fire_times = msg.fire_times
         
+    def sub_ele_sys_state_callback(self,msg:ElectricsysState):
+        
+        self.cur_pitch = msg.cur_pitch
+        self.cur_yaw = msg.cur_yaw
+        self.ele_time = msg.unix_time
         
             
     def _start(self):

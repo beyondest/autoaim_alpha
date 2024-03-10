@@ -154,7 +154,10 @@ class Armor_Detector:
                   windows_name:Union[str,None] = 'detect_result',
                   fire_times:int = 0,
                   target_abs_pitch:float = 0.0,
-                  target_abs_yaw:float = 0.0
+                  target_abs_yaw:float = 0.0,
+                  cur_pitch:float = 0.0,
+                  cur_yaw:float = 0.0,
+                  ele_time:float = 0.0
                  )->None:
         
         """visualize the result of armor detection,
@@ -188,6 +191,12 @@ class Armor_Detector:
                             f'fire:{fire_times}',
                             value=f'tar_pit:{target_abs_pitch:.4f},tar_yaw:{target_abs_yaw:.4f}',
                             pos=(20,150),
+                            color=(0,0,255),
+                            scale_size=0.7)
+                add_text(   img,
+                            f'cur_pit:{cur_pitch:.4f},cur_yaw:{cur_yaw:.4f}',
+                            value=f'ele_time:{ele_time:.4f}',
+                            pos=(20,200),
                             color=(0,0,255),
                             scale_size=0.7)
                 
