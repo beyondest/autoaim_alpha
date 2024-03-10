@@ -12,6 +12,13 @@ from ..utils_network.actions import *
 from .filter import *
 from .depth_estimator import *
 from ..utils_network.api_for_yolov5 import Yolov5_Post_Processor
+
+
+YOLOV5_NAME = 'all_on_yolov5.trt'
+CLASSIFIER_NAME = 'classifier.trt'
+YOLOV5_CLASS_YAML = 'yolov5_class.yaml'
+CLASSIFIER_CLASS_YAML = 'classifier_class.yaml'
+
 ########################################### Params ##############################################################
 
 class Tradition_Params(Params):
@@ -727,9 +734,9 @@ class Net_Detector:
         
         self.params.load_params_from_yaml(net_config_path)
         if self.if_yolov5:
-            class_path = os.path.join(folder_path,'yolov5_class.yaml')
+            class_path = os.path.join(folder_path,YOLOV5_CLASS_YAML)
         else:
-            class_path = os.path.join(folder_path,'classifier_class.yaml')
+            class_path = os.path.join(folder_path,CLASSIFIER_CLASS_YAML)
         
         self.class_info = Data.get_file_info_from_yaml(class_path)
         
@@ -741,9 +748,9 @@ class Net_Detector:
         
         elif self.params.engine_type == 'trt':
             if self.if_yolov5:
-                self.model_path = os.path.join(folder_path,'yolov5.trt')
+                self.model_path = os.path.join(folder_path,YOLOV5_NAME)
             else:
-                self.model_path = os.path.join(folder_path,'classifier.trt')
+                self.model_path = os.path.join(folder_path,CLASSIFIER_NAME)
         
         else: 
             raise ValueError(f'Engine Type Error {self.params.engine_type}, only support ort and trt')

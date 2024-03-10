@@ -17,7 +17,7 @@ yolov5_output_name: output0
 yolov5_input_size: 
 - 640
 - 640
-yolov5_input_dtype: 'float32'
+yolov5_input_dtype: 'float16'
 
 
 # for nms params 

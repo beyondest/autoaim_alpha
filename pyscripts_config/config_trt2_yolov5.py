@@ -8,7 +8,7 @@ from autoaim_alpha.utils_network.api_for_yolov5 import Yolov5_Post_Processor
 from autoaim_alpha.img.tools import *
 
 img_path = '../res/armorred.png'
-trt_path = '../autoaim_alpha/config/net_config/yolov5.trt'
+trt_path = '../autoaim_alpha/config/net_config/all_on_yolov5.trt'
 class_yaml = '../autoaim_alpha/config/net_config/yolov5_class.yaml'
 
 
@@ -25,7 +25,7 @@ cv2.imshow('img',img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-real_time_input = normalize_to_nparray([img],np.float32)
+real_time_input = normalize_to_nparray([img],np.float16)
 class_info = Data.get_file_info_from_yaml(class_yaml)
 
 Data.show_nplike_info([real_time_input])
