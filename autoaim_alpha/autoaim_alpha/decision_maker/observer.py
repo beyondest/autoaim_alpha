@@ -76,7 +76,7 @@ class Armor_Params(Params):
         self.tvec_in_car_frame = np.zeros(3)                # in car frame
         self.rvec_in_car_frame = np.array([0.0,0.0,1.0])    # in car frame
         
-        self.time = 0.0     
+        self.time = time.time()     
         self.confidence = 0.0
         self.id = id 
         self.name = name 
