@@ -85,12 +85,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             com_msg.reach_unix_time = predict_time
             com_msg.target_abs_pitch = abs_pitch
             yaw = rel_yaw + self.cur_yaw
-            print(f"Fuck Yaw {yaw:.3f}")
             if yaw > np.pi:
                 yaw -= np.pi * 2
             elif yaw < -np.pi:
                 yaw += np.pi * 2
-            print(f"Fuck Yaw {yaw:.3f}")
             com_msg.target_abs_yaw = yaw
             com_msg.sof = 'A'
             com_msg.reserved_slot = 0
