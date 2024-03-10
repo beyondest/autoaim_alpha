@@ -1,6 +1,6 @@
 
 # mode: Dbg, Rel 
-mode : Rel
+mode : Dbg
 
 # enemy armor color
 armor_color : blue

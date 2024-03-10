@@ -100,7 +100,7 @@ class Node_Detector(Node,Custom_Context_Obj):
                                           target_abs_yaw=self.target_abs_yaw)
             
             self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
-            
+
             
             
         
@@ -146,14 +146,11 @@ class Node_Detector(Node,Custom_Context_Obj):
         
             
     def _start(self):
-        if mode == 'Dbg':
-            cv2.namedWindow(self.window_name,cv2.WINDOW_AUTOSIZE)
+
         self.get_logger().info(f"Node {self.get_name()} start success")
     
     def _end(self):
-        
-        if mode == 'Dbg':
-            cv2.destroyAllWindows()
+
         self.get_logger().info(f"Node {self.get_name()} end success")
         self.destroy_node()
 

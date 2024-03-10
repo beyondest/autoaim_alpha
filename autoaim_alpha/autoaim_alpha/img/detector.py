@@ -194,8 +194,8 @@ class Armor_Detector:
         if windows_name is None:
             return img   
         
-        cv2.imshow(windows_name,img)
-        cv2.waitKey(1)
+        #cv2.imshow(windows_name,img)
+        #cv2.waitKey(1)
     
             
          
