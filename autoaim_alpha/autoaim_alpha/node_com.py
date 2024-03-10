@@ -37,6 +37,7 @@ class Node_Com(Node,Custom_Context_Obj):
     def listener_callback(self, msg: ElectricsysCom):
         
         if msg.sof == 'A' :
+            print(f"fuck : {msg.reach_unix_time}")
             self.last_sub_topic_time = time.time()
             self.port.action_data.fire_times = msg.fire_times
             self.port.action_data.abs_pitch_10000 = int(msg.target_abs_pitch * 10000)
