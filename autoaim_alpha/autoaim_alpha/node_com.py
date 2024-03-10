@@ -28,7 +28,7 @@ class Node_Com(Node,Custom_Context_Obj):
                          port_config_yaml_path)
         
         if node_com_mode == 'Dbg':
-            self.get_logger().set_level(rclpy.logging.LoggingSeverity.INFO)
+            self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
 
         self.init_synchronization_time()
         self.last_sub_topic_time = 0
@@ -49,6 +49,7 @@ class Node_Com(Node,Custom_Context_Obj):
             self.port.action_data.target_minute = minute
             self.port.action_data.target_second = second
             self.port.action_data.target_second_frac_10000 = int(second_frac * 10000)
+            
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"SOF A from Decision maker : abs_pitch {msg.target_abs_pitch:.3f}, abs_yaw {msg.target_abs_yaw:.3f}, reach at time {msg.reach_unix_time:.3f}")
             
@@ -105,8 +106,12 @@ class Node_Com(Node,Custom_Context_Obj):
             self.port.send_msg('A')
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"Decision too old, last sub time {self.last_sub_topic_time:.3f}, cur_time {cur_time:.3f}, remain cur pos")
+                
         else:
             self.port.send_msg('A')
+            if node_com_mode == 'Dbg':
+                self.get_logger().debug(f"Send A to electric sys, cur pos(p,y) {self.port.pos_data.present_pitch:.3f}, {self.port.pos_data.present_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
+            
 
     def timer_recv_msg_callback(self):
         if_error, current_yaw, current_pitch, cur_time_minute, cur_time_second, cur_time_second_frac = self.port.recv_feedback()

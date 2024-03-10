@@ -94,8 +94,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().info(f"Target {target_armor.confidence} locked {target_armor.name} id {target_armor.id} , FIRE {com_msg.fire_times}")
             
         elif target_armor.confidence == 0.5:
-            self.get_logger().info(f"Target {target_armor.confidence} locked {target_armor.name} id {target_armor.id} , FIRE {com_msg.fire_times}")
             com_msg.fire_times = 1
+            self.get_logger().info(f"Target {target_armor.confidence} locked {target_armor.name} id {target_armor.id} , FIRE {com_msg.fire_times}")
         
         
         elif target_armor.confidence ==0.4:

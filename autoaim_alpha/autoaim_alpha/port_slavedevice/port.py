@@ -67,8 +67,7 @@ class Port:
                 
                 msg = self.syn_data.convert_syn_data_to_bytes(if_part_crc=False)
                 send_data(self.ser,msg)
-            lr1.debug(f"Port_Slavedevice : send msg success")
-
+            lr1.debug(f"Send {sof} {msg} yaw_10000: {self.action_data.abs_yaw_10000}")
             
         
     def recv_feedback(self)->tuple:
@@ -88,12 +87,13 @@ class Port:
                             16)
             if_error = self.pos_data.convert_pos_bytes_to_data(msg,if_part_crc=False)
             
-            cur_yaw = self.pos_data.present_yaw + np.pi
+            cur_yaw = self.pos_data.present_yaw
             cur_pitch = self.pos_data.present_pitch
             cur_time_minute = self.pos_data.stm_minute
             cur_time_second = self.pos_data.stm_second
             cur_time_second_frac = self.pos_data.stm_second_frac 
-            lr1.debug(f"Port_Slavedevice : recv feedback success")
+            lr1.debug(f"Recv {msg} yaw_10000: {cur_yaw}")
+            
             return if_error,cur_yaw,cur_pitch,cur_time_minute,cur_time_second,cur_time_second_frac
         
         else:
