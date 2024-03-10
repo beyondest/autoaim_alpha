@@ -6,6 +6,7 @@ from .decision_maker.ballistic_predictor import *
 from .decision_maker.decision_maker import *
 
 
+
 armor_expiration_time = 1.0 # second
 
 class Node_Decision_Maker(Node,Custom_Context_Obj):
@@ -35,8 +36,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              enemy_car_list)
 
         self.timer = self.create_timer(1/make_decision_freq, self.make_decision_callback)
-        self.cur_yaw = 0
-        self.cur_pitch = 0
         self.declare_parameter("zero_unix_offset",time.time())
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
@@ -54,11 +53,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                   minute,
                                                   second,
                                                   second_frac)
+        
 
     def sub_predict_pos_callback(self, msg:ArmorPos):
         target_pos_in_camera_frame = np.array([msg.pose.pose.position.x,
                                                 msg.pose.pose.position.y,
                                                 msg.pose.pose.position.z])
+        
         q = Quaternion(msg.pose.pose.orientation.w,
                        msg.pose.pose.orientation.x,
                        msg.pose.pose.orientation.y,
@@ -78,8 +79,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         target_armor = self.decision_maker.choose_target()
         
         rel_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
-                                                                                       self.cur_yaw,
-                                                                                       self.cur_pitch)
+                                                                                       self.decision_maker.params.cur_yaw,
+                                                                                       self.decision_maker.params.cur_pitch)
         
         if not if_success:
             self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
@@ -115,7 +116,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         com_msg.reach_unix_time = target_armor.time
         com_msg.target_abs_pitch = abs_pitch
-        yaw = rel_yaw + self.cur_yaw
+    
+        yaw = rel_yaw + self.decision_maker.params.cur_yaw
         if yaw > np.pi:
             yaw -= np.pi * 2
         elif yaw < -np.pi:

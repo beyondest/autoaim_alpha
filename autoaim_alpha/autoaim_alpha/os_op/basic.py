@@ -387,3 +387,13 @@ def TRANS_T_TO_UNIX_TIME(minute:int,
         float: _description_
     """
     return minute*60 + second + second_frac + zero_unix_time
+
+def MAP_VALUE(value, ori_scope:tuple, target_scope:tuple):
+    
+    from_range = ori_scope[1] - ori_scope[0]
+    to_range = target_scope[1] - target_scope[0]
+    
+    scaled_value = (value - ori_scope[0]) / from_range
+    result = target_scope[0] + scaled_value * to_range
+    
+    return result
