@@ -94,14 +94,14 @@ class Node_Detector(Node,Custom_Context_Obj):
         if mode == 'Dbg':
             img_for_visualize = self.armor_detector.visualize(img,
                                           fps=self.fps,
-                                          windows_name=self.window_name,
+                                          windows_name=None,
                                           fire_times=self.fire_times,
                                           target_abs_pitch=self.target_abs_pitch,
                                           target_abs_yaw=self.target_abs_yaw)
             
             #self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
-
-            
+            cv2.imshow(self.window_name,img_for_visualize)
+            cv2.waitKey(1)
             
         
         if result is not None:
