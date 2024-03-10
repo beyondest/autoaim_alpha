@@ -103,7 +103,7 @@ class Node_Com(Node,Custom_Context_Obj):
             next_time = cur_time + self.port.params.communication_delay
             self.port.action_data.fire_times = 0
             self.port.action_data.abs_pitch_10000 = int(self.port.pos_data.present_pitch * 10000)
-            self.port.action_data.abs_yaw_10000 = int((self.port.pos_data.present_yaw - np.pi) * 10000)  # due to int16 is from -32768 to 32767, so we need to convert angle to this range
+            self.port.action_data.abs_yaw_10000 = int((self.port.pos_data.present_yaw ) * 10000)  # due to int16 is from -32768 to 32767, so we need to convert angle to this range
             self.port.action_data.reserved_slot = 0
             minute, second, second_frac = TRANS_UNIX_TIME_TO_T(next_time, self.zero_unix_time)
             self.port.action_data.target_minute = minute
