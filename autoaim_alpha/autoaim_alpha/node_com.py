@@ -91,6 +91,7 @@ class Node_Com(Node,Custom_Context_Obj):
         
     def timer_send_msg_callback(self):
         cur_time = time.time()
+        print(f"fuck : {cur_time:.3f}")
         if cur_time - self.last_sub_topic_time > 0.5:
             next_time = cur_time + self.port.params.communication_delay
             self.port.action_data.fire_times = 0
@@ -129,7 +130,7 @@ class Node_Com(Node,Custom_Context_Obj):
         
     def _start(self):
         
-        self.port.port_open()
+        #self.port.port_open()
         
         self.get_logger().info(f"Node {self.get_name()} start success")
     
