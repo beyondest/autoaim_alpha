@@ -136,13 +136,14 @@ class Node_Detector(Node,Custom_Context_Obj):
         
             
     def _start(self):
-        
-        cv2.namedWindow(self.window_name,cv2.WINDOW_AUTOSIZE)
+        if mode == 'Dbg':
+            cv2.namedWindow(self.window_name,cv2.WINDOW_AUTOSIZE)
         self.get_logger().info(f"Node {self.get_name()} start success")
     
     def _end(self):
         
-        cv2.destroyAllWindows()
+        if mode == 'Dbg':
+            cv2.destroyAllWindows()
         self.get_logger().info(f"Node {self.get_name()} end success")
         self.destroy_node()
 
