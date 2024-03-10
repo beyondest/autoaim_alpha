@@ -91,8 +91,8 @@ class Custome_Context:
         try:
             self.obj_with_start_end_errorhandler._start()
             lr1.info(f"OS_OP : Enter context {self.context_name} Success")
-        except:
-            lr1.error(f"OS_OP : Enter Context {self.context_name} failed")
+        except Exception as e:
+            lr1.error(f"OS_OP : Enter Context {self.context_name} get error {e}")
         
         
         
