@@ -105,7 +105,10 @@ class Node_Detector(Node,Custom_Context_Obj):
                                           windows_name=None,
                                           fire_times=self.fire_times,
                                           target_abs_pitch=self.target_abs_pitch,
-                                          target_abs_yaw=self.target_abs_yaw)
+                                          target_abs_yaw=self.target_abs_yaw,
+                                          cur_pitch=self.cur_pitch,
+                                          cur_yaw=self.cur_yaw,
+                                          ele_time=self.ele_time)
             
             #self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
             cv2.imshow(self.window_name,img_for_visualize)
@@ -156,7 +159,6 @@ class Node_Detector(Node,Custom_Context_Obj):
         self.cur_pitch = msg.cur_pitch
         self.cur_yaw = msg.cur_yaw
         self.ele_time = msg.unix_time
-        self.get_logger().warn(f"cur_pitch:{self.cur_pitch:.2f},cur_yaw:{self.cur_yaw:.2f},ele_time:{self.ele_time:.2f}")
         
             
     def _start(self):
