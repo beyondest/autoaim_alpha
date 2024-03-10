@@ -151,19 +151,21 @@ class Node_Detector(Node,Custom_Context_Obj):
     def sub_ele_sys_com_callback(self,msg:ElectricsysCom):
         
         self.target_abs_yaw = msg.target_abs_yaw
+        
         self.target_abs_pitch = msg.target_abs_pitch
         self.fire_times = msg.fire_times
+        self.get_logger().warn(f"tar-yaw:{self.target_abs_yaw:.2f},tar-pitch:{self.target_abs_pitch:.2f},fire_times:{self.fire_times}")
         
     def sub_ele_sys_state_callback(self,msg:ElectricsysState):
         
         self.cur_pitch = msg.cur_pitch
         self.cur_yaw = msg.cur_yaw
         self.ele_time = msg.unix_time
-        
+        self.get_logger().warn(f"cur-yaw:{self.cur_yaw:.2f},cur-pitch:{self.cur_pitch:.2f},ele_time:{self.ele_time:.2f}")
             
     def _start(self):
         try:
-            cv2.namedWindow(self.window_name,cv2.WINDOW_NORMAL)
+            cv2.namedWindow(self.window_name,cv2.WINDOW_AUTOSIZE)
         except Exception as e:
             self.get_logger().error(f"cv2.namedWindow error {e}")
         
