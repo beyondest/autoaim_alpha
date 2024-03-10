@@ -364,6 +364,7 @@ def TRANS_UNIX_TIME_TO_T(unix_time:float,
         second (int): _description_
         second_frac (float): _description_
     """
+    print(f"fuck: {unix_time}, {zero_unix_time}")
     dt = unix_time - zero_unix_time
     
     minute = int(dt//60)

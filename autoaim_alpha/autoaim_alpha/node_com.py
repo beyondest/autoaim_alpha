@@ -41,15 +41,7 @@ class Node_Com(Node,Custom_Context_Obj):
             self.port.action_data.fire_times = msg.fire_times
             self.port.action_data.abs_pitch_10000 = int(msg.target_abs_pitch * 10000)
             
-            if self.port.action_data.abs_pitch_10000 > 32767:
-                print(f'Fuck : out of range abs_pitch {msg.target_abs_pitch:.3f}')
-                
-                self.port.action_data.abs_pitch_10000 = 32767
-            elif self.port.action_data.abs_pitch_10000 < -32768:
-                print(f'Fuck : out of range abs_pitch {msg.target_abs_pitch:.3f}')
-                
-                self.port.action_data.abs_pitch_10000 = -32768
-                
+
             self.port.action_data.abs_yaw_10000 = int((msg.target_abs_yaw) * 10000)  # due to int16 is from -32768 to 32767, so we need to convert angle to this range
             self.port.action_data.reserved_slot = msg.reserved_slot
             minute, second, second_frac = TRANS_UNIX_TIME_TO_T(msg.reach_unix_time, self.zero_unix_time)

@@ -354,14 +354,14 @@ class action_data(data_list):
         PART_CRC: byte2-5
         ALL: 10 elements ,list has 7 elements
         """
-        self.list = [self.SOF,
-                     self.fire_times,
-                     self.abs_pitch_10000,
-                     self.abs_yaw_10000,
-                     self.target_minute,
-                     self.target_second,
-                     self.target_second_frac_10000,
-                     self.reserved_slot]
+        self.list = [self.SOF,                       #0
+                     self.fire_times,                #1
+                     self.abs_pitch_10000,           #2
+                     self.abs_yaw_10000,             #3
+                     self.target_minute,             #4
+                     self.target_second,             #5
+                     self.target_second_frac_10000,  #6
+                     self.reserved_slot]             #7
         
         fmt_list = ['<c','<b','<h','<h','<B','<B','<H','<h']
         out = b''
