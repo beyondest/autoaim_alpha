@@ -70,7 +70,7 @@ class Node_Detector(Node,Custom_Context_Obj):
 
         self.pre_time = time.perf_counter()
         self.fps = 0
-        self.window_name = 'result'
+        self.window_name = 'show_local'
         
         if node_detector_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
@@ -94,12 +94,12 @@ class Node_Detector(Node,Custom_Context_Obj):
         if mode == 'Dbg':
             img_for_visualize = self.armor_detector.visualize(img,
                                           fps=self.fps,
-                                          windows_name=None,
+                                          windows_name=self.window_name,
                                           fire_times=self.fire_times,
                                           target_abs_pitch=self.target_abs_pitch,
                                           target_abs_yaw=self.target_abs_yaw)
             
-            self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
+            #self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
 
             
             
@@ -146,11 +146,15 @@ class Node_Detector(Node,Custom_Context_Obj):
         
             
     def _start(self):
-
+        try:
+            cv2.namedWindow(self.window_name,cv2.WINDOW_NORMAL)
+        except Exception as e:
+            self.get_logger().error(f"cv2.namedWindow error {e}")
+        
         self.get_logger().info(f"Node {self.get_name()} start success")
     
     def _end(self):
-
+        cv2.destroyAllWindows()
         self.get_logger().info(f"Node {self.get_name()} end success")
         self.destroy_node()
 
