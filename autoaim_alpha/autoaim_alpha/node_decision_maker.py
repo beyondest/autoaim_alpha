@@ -34,6 +34,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.timer = self.create_timer(1/make_decision_freq, self.make_decision_callback)
         self.cur_yaw = 0
         self.cur_pitch = 0
+        self.declare_parameter("zero_unix_offset",time.time())
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
 
