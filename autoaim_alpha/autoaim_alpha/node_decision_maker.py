@@ -5,6 +5,9 @@ from rclpy.node import Node
 from .decision_maker.ballistic_predictor import *
 from .decision_maker.decision_maker import *
 
+
+armor_expiration_time = 1.0 # second
+
 class Node_Decision_Maker(Node,Custom_Context_Obj):
 
     def __init__(self,
@@ -78,30 +81,56 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                                                        self.cur_yaw,
                                                                                        self.cur_pitch)
         
-        if if_success:
-            predict_time = target_armor.time
+        if not if_success:
+            self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
+            return
+        
+
             
-            com_msg = ElectricsysCom()
+        com_msg = ElectricsysCom()
+        if target_armor.confidence == 0.75:
+            com_msg.fire_times = 2
+            
+            self.get_logger().info(f"Target {target_armor.confidence} locked {target_armor.name} id {target_armor.id} , FIRE {com_msg.fire_times}")
+            
+        elif target_armor.confidence == 0.5:
+            self.get_logger().info(f"Target {target_armor.confidence} locked {target_armor.name} id {target_armor.id} , FIRE {com_msg.fire_times}")
+            com_msg.fire_times = 1
+        
+        
+        elif target_armor.confidence ==0.4:
             com_msg.fire_times = 0
-            com_msg.reach_unix_time = predict_time
-            com_msg.target_abs_pitch = abs_pitch
-            yaw = rel_yaw + self.cur_yaw
-            if yaw > np.pi:
-                yaw -= np.pi * 2
-            elif yaw < -np.pi:
-                yaw += np.pi * 2
-            com_msg.target_abs_yaw = yaw
-            com_msg.sof = 'A'
-            com_msg.reserved_slot = 0
-            self.pub_ele_sys_com.publish(com_msg)
-            
-            
-            if node_decision_maker_mode == 'Dbg':
-                self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
-                self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
-                    
+            self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
+        
+        elif target_armor.confidence == 0.3:
+            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
+            return
+        
+        elif target_armor.confidence == 0.2:
+            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} over 0.1s, not follow ")
+            return
         else:
-            self.get_logger().warn(f"Get fire yaw pitch fail,not publish com msg, target pos: {target_armor.tvec}")
+            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
+            return
+            
+        com_msg.reach_unix_time = target_armor.time
+        com_msg.target_abs_pitch = abs_pitch
+        yaw = rel_yaw + self.cur_yaw
+        if yaw > np.pi:
+            yaw -= np.pi * 2
+        elif yaw < -np.pi:
+            yaw += np.pi * 2
+        com_msg.target_abs_yaw = yaw
+        com_msg.sof = 'A'
+        com_msg.reserved_slot = 0
+        self.pub_ele_sys_com.publish(com_msg)
+        
+        
+        if node_decision_maker_mode == 'Dbg':
+            self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
+            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+                
+       
 
     
     def _start(self):

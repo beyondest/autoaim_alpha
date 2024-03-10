@@ -249,6 +249,8 @@ class Observer:
         Args:
             all_targets_list (list): list of all targets, each target is a dict, including:
                 'armor_name':str
+        Returns:
+            dict: armor_name_to_idx, this is the most latest armor id for each armor name
         """
         armor_name_to_idx = {}
         for target in self.enemy_car_list:
@@ -269,6 +271,7 @@ class Observer:
                                                         t, 
                                                         confidence, 
                                                         self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history)
+            
             armor_name_to_idx.update({armor_name:latest_focus_armor_id})
         
         return armor_name_to_idx   
@@ -665,7 +668,7 @@ class Observer:
         # target blink but not lost
         elif focus_period > 0.1 and focus_period < 1:
             tvec_correct,rvec_correct = self.predict_armor_state_by_itself(armor_name,armor_idx,cur_time)
-            confidence = 0
+            confidence = 0.25
             if self.mode == 'Dbg':
                 lr1.debug(f"Observer: Blink Armor {armor_name} id {armor_idx}")
         
@@ -689,7 +692,7 @@ class Observer:
                 P_init = np.eye(3)
                 rvec_kf.set_initial_state(rvec_init,P_init)
                 
-                confidence = 0
+                confidence = 0.3
                
             
             else:
@@ -719,7 +722,7 @@ class Observer:
                     
                     rvec_kf.predict(A,Z,X_bias,None,R)
                     
-                    confidence = 0.25
+                    confidence = 0.4
                     
                 elif continous_num == 3:
                     

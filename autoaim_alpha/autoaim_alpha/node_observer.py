@@ -112,14 +112,17 @@ class Node_Observer(Node,Custom_Context_Obj):
             self.get_logger().debug(f"Observer update predition all, spend time {t2-t1:.4f}s")
         
         if if_pub_armor_state_corrected:
-            armor_state_list = self.observer.get_armor_latest_state()
+            armor_state_list = self.observer.get_armor_latest_state(if_correct_state=True)
             self.publish_armor_state(self.pub_armor_pos_corrected,armor_state_list)
-            if node_observer_mode == 'Dbg':
+            
+            
+        ''' if node_observer_mode == 'Dbg':
                 for armor_state in armor_state_list:
                     if armor_state['armor_name'] in armor_name_to_idx:
                         if armor_state['armor_id'] == armor_name_to_idx[armor_state['armor_name']]:
                             self.get_logger().debug(f"Corrected Armor State:\n{armor_state}\n")
         
+        '''
         if if_pub_car_state:
             
             car_state_list = self.observer.get_car_latest_state()
@@ -135,6 +138,7 @@ class Node_Observer(Node,Custom_Context_Obj):
         
         if if_pub_armor_state_predicted:
             armor_state_list = self.observer.get_armor_latest_state(if_correct_state=True)
+            
             for armor_state in armor_state_list:
                 predict_time = armor_state['armor_time'] + predict_time_offset 
                 

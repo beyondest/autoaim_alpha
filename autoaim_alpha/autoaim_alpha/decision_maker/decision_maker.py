@@ -92,14 +92,22 @@ class Decision_Maker:
             self.params.fire_mode = fire_mode    
 
     def choose_target(self)->Armor_Params:
+        """Choose the nearest enemy car to shoot.
+
+        Returns:
+            Armor_Params: _description_
+        """
         
         nearest_armor_params = min(self.armor_state_predict_list, key=lambda x: x.tvec[2])
+        #latest is meaningless cause we update correct params together
+        
+        
         if self.mode == 'Dbg':
             pass
             #for armor_params in self.armor_state_predict_list:
                 #lr1.debug(f"Decision_Maker : For chosen : armor {armor_params.name} id {armor_params.id} : tvec {armor_params.tvec}, t : {armor_params.time}")
                 
-        lr1.debug(f"Decision_Maker : Choosed nearest_armor_state: {nearest_armor_params.name} id {nearest_armor_params.id} : tvec {nearest_armor_params.tvec}, t : {nearest_armor_params.time}")
+        #lr1.debug(f"Decision_Maker : Choosed latest_armor_state: {latest_armor_params.name} id {latest_armor_params.id} : tvec {latest_armor_params.tvec}, t : {latest_armor_params.time}")
         
         return nearest_armor_params
     

@@ -15,7 +15,7 @@ enemy_car_list :
   - 0.5
   - 0.5
   armor_name: 3x
-  armor_nums: 4  
+  armor_nums: 1  
 #- armor_distance:
 #  - 0.5
 #  - 0.5

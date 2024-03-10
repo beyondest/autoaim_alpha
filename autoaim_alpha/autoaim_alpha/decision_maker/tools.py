@@ -48,7 +48,7 @@ def get_other_face_center_pos(tvec_0:np.ndarray,
         
         return [tvec_0,tvec_1, tvec_2, tvec_3], [rvec_0, rvec_1, rvec_2, rvec_3]
     
-    else:
+    elif armor_nums == 2:
         tvec_1 = tvec_0 + side_1_length * y_unit
         
         rvec_1 = rvec_0 - y_unit * np.pi + side_1_length * y_unit
@@ -57,6 +57,10 @@ def get_other_face_center_pos(tvec_0:np.ndarray,
         
         
         return [tvec_0, tvec_1], [rvec_0, rvec_1]
+    
+    elif armor_nums == 1:
+        return [tvec_0], [rvec_0]
+        
     
 
 def get_rotation_speed_in_xoy_plane(tvec_latest:np.ndarray,tvec_old:np.ndarray,dt:float)->float:
