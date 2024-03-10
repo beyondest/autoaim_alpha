@@ -49,9 +49,11 @@ class Port:
                                     timeout=1
                                     ) 
         
-        except:
+        except Exception as e:
             self.ser = None
+            
             lr1.critical(f"Failed to open serial port {self.params.port_abs_path}")
+            lr1.critical(f"Error message: {e}")
         
         
     def send_msg(self,sof:str = 'A'):
@@ -70,7 +72,7 @@ class Port:
             
         
     def recv_feedback(self)->tuple:
-        """_summary_
+        """Only return True,0,0,0,0,0.0 if ser is None
 
         Returns:
             if_error:bool
