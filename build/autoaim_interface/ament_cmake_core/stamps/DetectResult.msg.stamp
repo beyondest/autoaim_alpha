@@ -1,1 +1,0 @@
-EachDetectResult[] detect_result
