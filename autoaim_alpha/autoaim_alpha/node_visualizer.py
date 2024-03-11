@@ -118,25 +118,25 @@ class Node_Visualizer(Node,Custom_Context_Obj):
     
     
     def refresh_armor_state_without_correct(self):
-        img = canvas(canvas_shape,'white')
+        c = canvas(canvas_shape,'white')
         for armor_state in self.armor_state_without_correct_list:
-            self.draw_armor_state_to_img(img,armor_state)
-        cv2.imshow(self.window_armor_state_without_correct,img)
+            self.draw_armor_state_to_img(c.img,armor_state)
+        cv2.imshow(self.window_armor_state_without_correct,c.img)
         cv2.waitKey(1)
         
     def refresh_armor_state_corrected(self):
-        img = canvas(canvas_shape,'white')
+        c = canvas(canvas_shape,'white')
         for armor_state in self.armor_state_corrected_list:
-            self.draw_armor_state_to_img(img,armor_state)
-        cv2.imshow(self.window_armor_state_without_correct,img)
+            self.draw_armor_state_to_img(c,armor_state)
+        cv2.imshow(self.window_armor_state_without_correct,c.img)
         cv2.waitKey(1)
         
           
     def refresh_armor_state_predicted(self):
-        img = canvas(canvas_shape,'white')
+        c = canvas(canvas_shape,'white')
         for armor_state in self.armor_state_predicted:
-            self.draw_armor_state_to_img(img,armor_state)
-        cv2.imshow(self.window_armor_state_predicted,img)
+            self.draw_armor_state_to_img(c.img,armor_state)
+        cv2.imshow(self.window_armor_state_predicted,c.img)
         cv2.waitKey(1)
         
         
