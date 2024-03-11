@@ -4,7 +4,7 @@ from launch.actions import ExecuteProcess
 
 
 
-package_name = 'autoaim_alpha'
+package_name = 'rqt_plot'
 
 def generate_launch_description():
     return LaunchDescription(

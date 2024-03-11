@@ -13,7 +13,7 @@ from launch.actions import ExecuteProcess
 # (my)pose [ [pose[position[x,y,z],orientation[x,y,z,w]]], [header]]
 
 
-package_name = 'autoaim_alpha'
+package_name = 'rqt_plot'
 
 def generate_launch_description():
     return LaunchDescription(
