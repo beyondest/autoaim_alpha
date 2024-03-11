@@ -175,30 +175,7 @@ class Armor_Detector:
                             pos=i['big_rec'][0],
                             color=(0,0,255),
                             scale_size=0.7)
-                add_text(   img,
-                            f'tx:{i["pos"][0]:.4f}',
-                            value=f'y:{i["pos"][1]:.4f} z:{i["pos"][2]:.4f}',
-                            pos=(20,20),
-                            color=(0,0,255),
-                            scale_size=0.7)
-                add_text(   img,
-                            f'rx:{i["rvec"][0]:.4f}',
-                            value=f'y:{i["rvec"][1]:.4f} z:{i["rvec"][2]:.4f}',
-                            pos=(20,100),
-                            color=(0,0,255),
-                            scale_size=0.7)
-                add_text(   img,
-                            f'fire:{fire_times}',
-                            value=f'tar_pit:{target_abs_pitch:.4f},tar_yaw:{target_abs_yaw:.4f}',
-                            pos=(20,150),
-                            color=(0,0,255),
-                            scale_size=0.7)
-                add_text(   img,
-                            f'cur_pit:{cur_pitch:.4f},cur_yaw:{cur_yaw:.4f}',
-                            value=f'ele_time:{ele_time:.4f}',
-                            pos=(20,200),
-                            color=(0,0,255),
-                            scale_size=0.7)
+                
                 
         if windows_name is None:
             return img   

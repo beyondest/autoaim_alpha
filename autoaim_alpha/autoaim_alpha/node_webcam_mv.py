@@ -50,10 +50,11 @@ class Node_Webcam_MV(Node,Custom_Context_Obj):
     def timer_pub_img_callback(self):
         
         img = self.mv.get_img()
-        if if_reverse_img:
-            img = cv2.rotate(img, cv2.ROTATE_180)
-            
+        
         if img is not None:
+            if if_reverse_img:
+                img = cv2.rotate(img, cv2.ROTATE_180)
+            
             
             self.publisher.publish(self.cv_bridge.cv2_to_imgmsg(img,camera_output_format))
             

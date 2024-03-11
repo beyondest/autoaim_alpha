@@ -99,7 +99,7 @@ class Node_Detector(Node,Custom_Context_Obj):
         
         
         
-        if mode == 'Dbg':
+        if if_show_img_remote or if_show_img_local:
             img_for_visualize = self.armor_detector.visualize(img,
                                           fps=self.fps,
                                           windows_name=None,
@@ -121,6 +121,7 @@ class Node_Detector(Node,Custom_Context_Obj):
             msg = DetectResult()
             
             t = self.get_clock().now().to_msg()
+            log_info = ''
             for each_result in result:
                 ed = EachDetectResult()
                 
@@ -140,9 +141,9 @@ class Node_Detector(Node,Custom_Context_Obj):
                 
                 msg.detect_result.append(ed)
                 
-                log_info = f"armor_name:{ed.armor_name},confidence:{ed.confidence:.2f},pos:{ed.pose.pose.position},orientation:{ed.pose.pose.orientation} time:{t.sec}s{t.nanosec/1000000}ns"
+                log_info += f"\narmor_name:{ed.armor_name},confidence:{ed.confidence:.2f},pos:{ed.pose.pose.position},orientation:{ed.pose.pose.orientation} time:{t.sec}s{t.nanosec/1000000}ns"
                 
-                self.get_logger().warn(f"Find target : {log_info} spend time:{find_time}s")
+            self.get_logger().warn(f"Find target : {log_info} spend time:{find_time}s")
             
             self.pub_detect_result.publish(msg)
             self.get_logger().debug(f"publish detect result success")

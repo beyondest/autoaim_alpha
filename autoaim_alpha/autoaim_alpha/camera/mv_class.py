@@ -185,7 +185,7 @@ class Mindvision_Camera(Custom_Context_Obj):
         Pingpong exposure: odd for exposure[0] , even for exposure[1]
 
         Returns:
-            dst or [dst , pingpong count]
+            dst or [dst , pingpong count] or None if error
         """
         
         
@@ -193,25 +193,32 @@ class Mindvision_Camera(Custom_Context_Obj):
         if self.if_enable_trackbar_config:
             self._detect_trackbar_config()
             
+        try:
+            prawdata,pframehead=mvsdk.CameraGetImageBuffer(self.hcamera,CAMERA_GRAB_IMG_WATI_TIME_MS)
+            t2 = time.perf_counter()
+            if self.pingpong_exposure is not None:
+                self.pingpong_count +=1
+                if self.pingpong_count == 10:
+                    self.pingpong_count = 0
+                if (self.pingpong_count+1 )% 2:
+                    mvsdk.CameraSetExposureTime(self.hcamera,self.pingpong_exposure[0])
+                else:
+                    mvsdk.CameraSetExposureTime(self.hcamera,self.pingpong_exposure[1])
+            if self.if_trigger_by_software:
+                print('trigger')
+                mvsdk.CameraSoftTrigger(self.hcamera)
+                
+            mvsdk.CameraImageProcess(self.hcamera,prawdata,self.pframebuffer_address,pframehead)
+            t3 = time.perf_counter()
             
-        prawdata,pframehead=mvsdk.CameraGetImageBuffer(self.hcamera,CAMERA_GRAB_IMG_WATI_TIME_MS)
-        t2 = time.perf_counter()
-        if self.pingpong_exposure is not None:
-            self.pingpong_count +=1
-            if self.pingpong_count == 10:
-                self.pingpong_count = 0
-            if (self.pingpong_count+1 )% 2:
-                mvsdk.CameraSetExposureTime(self.hcamera,self.pingpong_exposure[0])
-            else:
-                mvsdk.CameraSetExposureTime(self.hcamera,self.pingpong_exposure[1])
-        if self.if_trigger_by_software:
-            print('trigger')
-            mvsdk.CameraSoftTrigger(self.hcamera)
+            mvsdk.CameraReleaseImageBuffer(self.hcamera,prawdata)
             
-        mvsdk.CameraImageProcess(self.hcamera,prawdata,self.pframebuffer_address,pframehead)
-        t3 = time.perf_counter()
+        except Exception as e:
+            lr1.critical(f"Camera : CameraGetImageBuffer get error {e}, release buffer by hand")
+            mvsdk.CameraReleaseImageBuffer(self.hcamera,prawdata)
+            return None
+            
         
-        mvsdk.CameraReleaseImageBuffer(self.hcamera,prawdata)
         mvsdk.CameraFlipFrameBuffer(self.pframebuffer_address,pframehead,self.camera_run_platform=='windows')
         frame_data = (mvsdk.c_ubyte * pframehead.uBytes).from_address(self.pframebuffer_address)        # make an array with size ubyte (8) and length uBytes
         frame = np.frombuffer(frame_data, dtype=np.uint8)
@@ -481,6 +488,7 @@ class Mindvision_Camera(Custom_Context_Obj):
     def _start(self):
         self.pframebuffer_address = mvsdk.CameraAlignMalloc(self.roi_resolution_xy[0] * self.roi_resolution_xy[1] * CAMERA_CHANNEL_NUMS,
                                                             CAMERA_ALIGN_BYTES_NUMS)
+        
         mvsdk.CameraClearBuffer(self.hcamera)
         mvsdk.CameraPlay(self.hcamera)
         if self.if_trigger_by_software:

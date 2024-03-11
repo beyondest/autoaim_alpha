@@ -101,19 +101,20 @@ class Kalman_Filter:
                  Q:np.ndarray,
                  R:np.ndarray, 
                  H:np.ndarray,
-                 X_0:Union[np.ndarray,None]=None, 
-                 P_0:Union[np.ndarray,None]=None
+                 X_0:Union[np.ndarray,None]=np.zeros(3), 
+                 P_0:Union[np.ndarray,None]=np.zeros((3,3))
                  ):
         
         self.Q = Q      # process noise covariance matrix
         self.R = R      # measurement noise covariance matrix
         self.H = H      # measurement matrix
-        self.K = None   # Kalman gain matrix
+        self.K = np.eye(3)   # Kalman gain matrix, -->1 then trust measurement, or trust predict
         
         self.X_posterior_predict = X_0    # initial state     
         self.P_posterior_predict = P_0    # initial state covariance matrix
-        self.X_prior_predict = None
-        self.P_prior_predict = None
+        self.X_prior_predict = np.zeros(3)
+        self.P_prior_predict = np.zeros((3,3))
+        self.set_initial_state(np.zeros(3),np.zeros((3,3)))
         
     def set_initial_state(self, 
                           X_0:np.ndarray, 
