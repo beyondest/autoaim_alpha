@@ -12,9 +12,9 @@ def generate_launch_description():
             package=package_name,
             node_executable='rqt_plot',
             node_name='plot_cur_tar_yaw',
-            arguments=['--topics','/armor_pos_without_correct/pose/pose/position/y',
-                       '--topics','/armor_pos_corrected/pose/pose/position/y',
-                       '--topics','/armor_pos_predicted/pose/pose/position/y'],
+            arguments=['--topics','/armor_pos_without_correct/pose/pose/position/z',
+                       '--topics','/armor_pos_corrected/pose/pose/position/z',
+                       '--topics','/armor_pos_predicted/pose/pose/position/z'],
             output='log'
         )]
     )
