@@ -10,12 +10,12 @@ from .decision_maker.observer import Armor_Params
 # if armor.t - cur_t > expired_time, then this is an expired info; 
 # WARNING : YOU MUST CONSIDER LATENCE OF RECEIVING REMOTE INFO
 expired_time = 1.0
-wid_step_add_by_attr = 25
+wid_step_add_by_attr = 150
 wid_step_cal_by_id = 100
 
 refresh_freq = 30
-# w,h,c
-canvas_shape = (800,600,3)
+# h,w,c
+canvas_shape = (600,800,3)
 armor_name_to_pos_y_start = {'1d': 100, '2x': 0, '3d': 0, '3x': 20, '4d': 0, '4x': 40, '5x': 0, 'based': 0, 'outpost': 0, 'sentry': 60, 'wrongpic': 80}\
     if not if_yolov5 else \
         {'B1': 100, 'B2': 0, 'B3': 20, 'B4': 40, 'B5': 0, 'BBb': 0, 'BG': 0, 'BO': 0,\
@@ -128,7 +128,7 @@ class Node_Visualizer(Node,Custom_Context_Obj):
     def refresh_armor_state_corrected(self):
         c = canvas(canvas_shape,'white')
         for armor_state in self.armor_state_corrected_list:
-            self.draw_armor_state_to_img(c,armor_state)
+            self.draw_armor_state_to_img(c.img,armor_state)
         cv2.imshow(self.window_armor_state_corrected,c.img)
         cv2.waitKey(1)
         
@@ -154,7 +154,7 @@ class Node_Visualizer(Node,Custom_Context_Obj):
         rvec = q.get_axis() * q.angle
         
         for armor_params in armor_state_list:
-            if armor_params.name == msg.name and armor_params.id == msg.id:
+            if armor_params.name == msg.armor_name and armor_params.id == msg.armor_id:
                 armor_params.tvec = target_pos_in_camera_frame
                 armor_params.rvec = rvec
                 armor_params.confidence = msg.confidence
@@ -199,14 +199,14 @@ class Node_Visualizer(Node,Custom_Context_Obj):
                     f'name',
                     value=f'{armor_state.name}:{armor_state.id}',
                     pos=pos,
-                    color=(0,0,255),
+                    color=(0,0,0),
                     scale_size=0.7)
         
         add_text(   img,
                     f'if_latest',
                     value=f'{if_latest}',
                     pos=(int(pos[0] + wid_step_add_by_attr * 1), pos[1]),
-                    color=(0,0,255),
+                    color=(0,0,0),
                     scale_size=0.7)
         
         
@@ -215,25 +215,25 @@ class Node_Visualizer(Node,Custom_Context_Obj):
                         f'pos',
                         value=f'x:{armor_state.tvec[0]:.3f}y:{armor_state.tvec[1]:.3f} z:{armor_state.tvec[2]:.3f}',
                         pos=(int(pos[0] + wid_step_add_by_attr * 2),pos[1]),
-                        color=(0,0,255),
+                        color=(0,0,0),
                         scale_size=0.7)
             add_text(   img,
                         f'rot',
                         value=f'x:{armor_state.rvec[0]:.3f} y:{armor_state.rvec[1]:.3f} z:{armor_state.rvec[2]:.3f}',
                         pos=(int(pos[0] + wid_step_add_by_attr * 3),pos[1]),
-                        color=(0,0,255),
+                        color=(0,0,0),
                         scale_size=0.7)
             add_text(   img,
                         f'latest_time:',
                         value=f'{armor_state.time}:.3f',
                         pos=(int(pos[0] + wid_step_add_by_attr * 4),pos[1]),
-                        color=(0,0,255),
+                        color=(0,0,0),
                         scale_size=0.7)
             add_text(   img,
                         f'confidence',
                         value=f'{armor_state.confidence:.2f}',
                         pos=(int(pos[0] + wid_step_add_by_attr * 5),pos[1]),
-                        color=(0,0,255),
+                        color=(0,0,0),
                         scale_size=0.7)
             
 

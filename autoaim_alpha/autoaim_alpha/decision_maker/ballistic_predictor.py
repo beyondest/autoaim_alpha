@@ -425,8 +425,8 @@ class Ballistic_Predictor:
                         lr1.warn(f"Ballistic_Predictor : newton failed, solved pitch out of range, {x}")
                     break
                 else:
-                    # only allow divide c 2 times
-                    if count_c < 2:
+                    # only allow divide c 4 times
+                    if count_c < 4:
                         
                         c = c / 2
                         count = 0
