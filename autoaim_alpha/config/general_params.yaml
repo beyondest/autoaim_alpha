@@ -11,11 +11,14 @@ if_yolov5: True
 # armor_distance : the distance between 2 opposite armors, unit: m
 # if armor_nums == 4: [x_distance, y_distance], x distance means maximum efficency direction of robot chassis 
 # if armor_nums == 2: [no_meaning, distance] 
+
+
+# WARNING : armor_name depends on if_yolov5 !!!
 enemy_car_list : 
 - armor_distance:
   - 0.5
   - 0.5
-  armor_name: 3x
+  armor_name: B3
   armor_nums: 1  
 #- armor_distance:
 #  - 0.5
@@ -25,7 +28,7 @@ enemy_car_list :
 
 # in camera frame
 armor_name_to_init_state:
-  3x:
+  B3:
     rvec:
     - 0.0
     - 0.0

@@ -41,7 +41,7 @@ class Node_Visualizer(Node,Custom_Context_Obj):
         if if_pub_armor_state_without_correct:
         
             self.sub_armor_state_without_corrected = self.create_subscription(  topic_armor_pos_without_correct['type'],
-                                                                                topic_armor_pos_without_correct['type'],
+                                                                                topic_armor_pos_without_correct['name'],
                                                                                 self.sub_armor_pos_without_correct_callback,
                                                                                 topic_armor_pos_without_correct['qos_profile'])
             
@@ -50,17 +50,18 @@ class Node_Visualizer(Node,Custom_Context_Obj):
             
             
             
-        if if_pub_armor_state_predicted:
+        if if_pub_armor_state_corrected:
             self.sub_armor_state_corrected = self.create_subscription(topic_armor_pos_corrected['type'],
-                                                            topic_armor_pos_corrected['type'],
+                                                            topic_armor_pos_corrected['name'],
                                                             self.sub_armor_pos_corrected_callback,
                                                             topic_armor_pos_corrected['qos_profile'])
+            
             self.timer_refresh_armor_state_corrected = self.create_timer(1/refresh_freq,
                                                                     self.refresh_armor_state_corrected)
         
         if if_pub_armor_state_predicted:
             self.sub_armor_state_predicted = self.create_subscription(topic_armor_pos_predicted['type'],
-                                                            topic_armor_pos_predicted['type'],
+                                                            topic_armor_pos_predicted['name'],
                                                             self.sub_armor_pos_predicted_callback,
                                                             topic_armor_pos_predicted['qos_profile'])
             
@@ -128,7 +129,7 @@ class Node_Visualizer(Node,Custom_Context_Obj):
         c = canvas(canvas_shape,'white')
         for armor_state in self.armor_state_corrected_list:
             self.draw_armor_state_to_img(c,armor_state)
-        cv2.imshow(self.window_armor_state_without_correct,c.img)
+        cv2.imshow(self.window_armor_state_corrected,c.img)
         cv2.waitKey(1)
         
           
