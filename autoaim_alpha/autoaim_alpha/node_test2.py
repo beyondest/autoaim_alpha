@@ -31,7 +31,7 @@ class PosePublisher(Node):
         
         
         self.publisher_.publish(msg)
-        self.time += 0.0
+        self.time += 0.01
         
         msg2 = ElectricsysState()
         msg2.cur_pitch = 0.1

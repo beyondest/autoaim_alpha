@@ -78,7 +78,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
     def make_decision_callback(self):
         target_armor = self.decision_maker.choose_target()
         
-        rel_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
+        abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
                                                                                        self.decision_maker.params.cur_yaw,
                                                                                        self.decision_maker.params.cur_pitch)
         
@@ -110,19 +110,15 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         elif target_armor.confidence == 0.2:
             self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} over 0.1s, not follow ")
             return
+        
         else:
             self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
             return
             
+            
         com_msg.reach_unix_time = target_armor.time
         com_msg.target_abs_pitch = abs_pitch
-    
-        yaw = rel_yaw + self.decision_maker.params.cur_yaw
-        if yaw > np.pi:
-            yaw -= np.pi * 2
-        elif yaw < -np.pi:
-            yaw += np.pi * 2
-        com_msg.target_abs_yaw = yaw
+        com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         self.pub_ele_sys_com.publish(com_msg)

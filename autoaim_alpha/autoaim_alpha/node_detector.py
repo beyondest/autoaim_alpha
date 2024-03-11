@@ -111,8 +111,9 @@ class Node_Detector(Node,Custom_Context_Obj):
                                           ele_time=self.ele_time)
             
             #self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
-            cv2.imshow(self.window_name,img_for_visualize)
-            cv2.waitKey(1)
+            if if_show_img_local:
+                cv2.imshow(self.window_name,img_for_visualize)
+                cv2.waitKey(1)
             
         
         if result is not None:
@@ -140,13 +141,13 @@ class Node_Detector(Node,Custom_Context_Obj):
                 
                 log_info = f"armor_name:{ed.armor_name},confidence:{ed.confidence:.2f},pos:{ed.pose.pose.position},orientation:{ed.pose.pose.orientation} time:{t.sec}s{t.nanosec/1000000}ns"
                 
-                self.get_logger().debug(f"Find target : {log_info} spend time:{find_time}s")
+                self.get_logger().info(f"Find target : {log_info} spend time:{find_time}s")
             
             self.pub_detect_result.publish(msg)
             self.get_logger().debug(f"publish detect result success")
             
         else:
-            self.get_logger().debug(f"no target found")
+            self.get_logger().info(f"No target found")
     
     def sub_ele_sys_com_callback(self,msg:ElectricsysCom):
         
@@ -164,10 +165,11 @@ class Node_Detector(Node,Custom_Context_Obj):
         self.get_logger().warn(f"cur-yaw:{self.cur_yaw:.2f},cur-pitch:{self.cur_pitch:.2f},ele_time:{self.ele_time:.2f}")
             
     def _start(self):
-        try:
-            cv2.namedWindow(self.window_name,cv2.WINDOW_AUTOSIZE)
-        except Exception as e:
-            self.get_logger().error(f"cv2.namedWindow error {e}")
+        if if_show_img_local:
+            try:
+                cv2.namedWindow(self.window_name,cv2.WINDOW_AUTOSIZE)
+            except Exception as e:
+                self.get_logger().error(f"cv2.namedWindow error {e}")
         
         self.get_logger().info(f"Node {self.get_name()} start success")
     

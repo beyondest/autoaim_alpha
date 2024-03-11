@@ -118,7 +118,7 @@ class Ballistic_Predictor:
             
         Returns:
             list of dicts:
-                yaw: absolute yaw angle from electrical system (radian angle) (0-2pi)
+                yaw: absolute yaw angle from electrical system (radian angle) (-pi-pi)
                 pitch: absolute pitch angle from electrical system (radian angle) (-pi/3 to pi/3)
                 bullet flight time: _description_
                 if_success: If the bullet can reach the target return True, otherwise return False.
@@ -143,18 +143,20 @@ class Ballistic_Predictor:
         
         cos_theta_with_z_axis = CAL_COS_THETA(tvec_xoy, np.array([0,1]))
         if tvec_xoy[0] > 0:
-            required_yaw = -np.arccos(cos_theta_with_z_axis) 
+            relative_yaw = -np.arccos(cos_theta_with_z_axis) 
         else:
-            required_yaw = np.arccos(cos_theta_with_z_axis)
+            relative_yaw = np.arccos(cos_theta_with_z_axis)
             
         [required_pitch , flight_time, if_success] , solve_time = self._cal_pitch_by_newton(tvec_yoz)
         
         required_pitch = required_pitch
-        required_yaw = required_yaw + cur_yaw
-        if required_yaw < 0:
+        required_yaw = relative_yaw + cur_yaw
+        
+        if required_yaw < -np.pi:
             required_yaw = required_yaw + 2*np.pi
-        if required_yaw > 2*np.pi:
+        if required_yaw > np.pi:
             required_yaw = required_yaw - 2*np.pi
+        
         
         if not if_success:
             required_pitch = cur_pitch

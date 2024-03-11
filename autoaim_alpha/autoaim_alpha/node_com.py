@@ -12,7 +12,7 @@ class Node_Com(Node,Custom_Context_Obj):
         
         super().__init__(name)
         
-        self.publisher_ = self.create_publisher(topic_electric_sys_state['type'],
+        self.ele_sys_state_pub = self.create_publisher(topic_electric_sys_state['type'],
                                                 topic_electric_sys_state['name'],
                                                 topic_electric_sys_state['qos_profile'])
         
@@ -127,7 +127,7 @@ class Node_Com(Node,Custom_Context_Obj):
             msg.cur_yaw = current_yaw
             unix_time = TRANS_T_TO_UNIX_TIME(cur_time_minute, cur_time_second, cur_time_second_frac, self.zero_unix_time)
             msg.unix_time = unix_time
-            self.publisher_.publish(msg)
+            self.ele_sys_state_pub.publish(msg)
             
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"Recv from electric sys state p: {msg.cur_pitch:.3f}, y: {msg.cur_yaw:.3f}, t:{msg.unix_time:.3f}")

@@ -1,7 +1,7 @@
 
 # mode: Dbg, Rel 
 mode : Dbg
-
+if_show_img_local: True
 # enemy armor color
 armor_color : blue
 
