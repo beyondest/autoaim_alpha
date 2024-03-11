@@ -149,7 +149,6 @@ class Ballistic_Predictor:
             
         [required_pitch , flight_time, if_success] , solve_time = self._cal_pitch_by_newton(tvec_yoz)
         
-        required_pitch = required_pitch
         required_yaw = relative_yaw + cur_yaw
         
         if required_yaw < -np.pi:

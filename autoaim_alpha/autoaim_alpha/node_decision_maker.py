@@ -92,7 +92,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if target_armor.confidence == 0.75:
             com_msg.fire_times = 2
             
-            self.get_logger().info(f"Target {target_armor.confidence} locked {target_armor.name} id {target_armor.id} , FIRE {com_msg.fire_times}")
+            self.get_logger().warn(f"Target {target_armor.confidence} locked {target_armor.name} id {target_armor.id} , FIRE {com_msg.fire_times}")
             
         elif target_armor.confidence == 0.5:
             com_msg.fire_times = 1
