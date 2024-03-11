@@ -76,6 +76,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
 
         
     def make_decision_callback(self):
+        com_msg = ElectricsysCom()
         
         com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
         com_msg.target_abs_pitch = self.decision_maker.params.cur_pitch
@@ -98,7 +99,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
 
             
-        com_msg = ElectricsysCom()
         if target_armor.confidence == 0.75:
             com_msg.fire_times = 2
             
