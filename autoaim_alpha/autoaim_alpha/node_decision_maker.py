@@ -50,7 +50,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         if self.if_connetect_to_ele_sys == False:
             self.if_connetect_to_ele_sys = True
-            self.decision_maker.params.electric_system_zero_unix_time = self.get_parameter('zero_unix_time').value
+            self.decision_maker.params.electric_system_zero_unix_time = msg.unix_time
+            self.get_logger().info(f"Connect to electric system, zero_unix_time {msg.unix_time}, cur_time {time.time()}")
             
         self.ballestic._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
 

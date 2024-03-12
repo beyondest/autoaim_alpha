@@ -134,15 +134,17 @@ class Node_Com(Node,Custom_Context_Obj):
                 pass 
                 #self.get_logger().error(f"Com port {self.port.params.port_abs_path} cannot open")
         else:
+            msg = ElectricsysState()
+            
             if self.if_first_recv_from_ele_sys:
                 self.if_first_recv_from_ele_sys = False
                 self.init_synchronization_time(cur_time_minute, cur_time_second, cur_time_second_frac)
+                msg.unix_time = self.zero_unix_time
+            else:
+                msg.unix_time = TRANS_T_TO_UNIX_TIME(cur_time_minute, cur_time_second, cur_time_second_frac, self.zero_unix_time)
                 
-            msg = ElectricsysState()
             msg.cur_pitch = current_pitch
             msg.cur_yaw = current_yaw
-            unix_time = TRANS_T_TO_UNIX_TIME(cur_time_minute, cur_time_second, cur_time_second_frac, self.zero_unix_time)
-            msg.unix_time = unix_time
             self.ele_sys_state_pub.publish(msg)
             
             if node_com_mode == 'Dbg':
