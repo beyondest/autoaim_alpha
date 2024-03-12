@@ -8,10 +8,10 @@ from .decision_maker.decision_maker import *
 
 yaw_left = -np.pi
 yaw_right = np.pi
-yaw_step = 0.1
+yaw_step = 0.01
 pitch_down = -0.3491    # -20
 pitch_up = 1.2227       # +70
-pitch_step = 0.1
+pitch_step = 0.01
 
 yaw_test_data = np.round(np.arange(yaw_left,yaw_right,yaw_step),3)
 
@@ -202,7 +202,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg = ElectricsysCom()
         
         com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
-        com_msg.target_abs_pitch = 0
+        com_msg.target_abs_pitch = 0.0
         com_msg.target_abs_yaw = yaw_test_data[self.yaw_test_idx]
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
@@ -224,7 +224,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
         com_msg.target_abs_pitch = pitch_test_data[self.pitch_test_idx]
-        com_msg.target_abs_yaw = 0
+        com_msg.target_abs_yaw = 0.0
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
