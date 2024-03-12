@@ -437,7 +437,12 @@ def get_threshold(img_for_show_in_hist:np.ndarray,
         if hist.size == 0:
             lr1.error(f'hist size is 0 ,hist {hist}')
             return thresh
-        non_zero_max_index = np.argwhere(hist > 0).max()
+        non_zero_max_indices = np.argwhere(hist > 0)
+        if non_zero_max_indices.size >0:
+            non_zero_max_index = non_zero_max_indices.max()
+        else:
+            non_zero_max_index = 0
+            
         if non_zero_max_index == 0:
             non_zero_max_index = 1
         step = canvas_wid // non_zero_max_index

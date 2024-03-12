@@ -6,8 +6,17 @@ from .decision_maker.ballistic_predictor import *
 from .decision_maker.decision_maker import *
 
 
+yaw_left = -np.pi
+yaw_right = np.pi
+yaw_step = 0.1
+pitch_down = -0.3491    # -20
+pitch_up = 1.2227       # +70
+pitch_step = 0.1
 
-armor_expiration_time = 1.0 # second
+yaw_test_data = np.round(np.arange(yaw_left,yaw_right,yaw_step),3)
+
+
+pitch_test_data = np.r_[(np.round(np.arange(pitch_down,pitch_up,pitch_step),3)),np.round(np.arange(pitch_up,pitch_down,-pitch_step)),np.round(np.arange(pitch_down,0,pitch_step),3)]
 
 class Node_Decision_Maker(Node,Custom_Context_Obj):
 
@@ -35,12 +44,34 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              None,
                                              enemy_car_list)
 
-        self.timer = self.create_timer(1/make_decision_freq, self.test_gimbal_action_callback)
+        action_mode_to_callback = {0:self.make_decision_callback,
+                                1:self.repeat_recv_from_ele_callback,
+                                2:self.test_yaw_callback,
+                                3:self.test_pitch_callback}
         
-        self.if_connetect_to_ele_sys = False
-
+        action_mode_to_note = {0:"Make decision",
+                                1:"Repeat recv from ele",
+                                2:"Test yaw",
+                                3:"Test pitch"}
+        
+        
+        
+        self.timer = self.create_timer(1/make_decision_freq, action_mode_to_callback[gimbal_action_mode])
+        self.get_logger().warn(f"Use gimbal_action_mode {action_mode_to_note[gimbal_action_mode]}")
+        
+        if if_ignore_elesys:
+            self.decision_maker.params.electric_system_zero_unix_time = time.time()
+            self.get_logger().warn(f"Ignore electric system, init zero_unix_time {self.decision_maker.params.electric_system_zero_unix_time}")
+            self.if_connetect_to_ele_sys = True
+            
+        else:
+            self.if_connetect_to_ele_sys = False
+        
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
+            
+        self.yaw_test_idx = 0
+        self.pitch_test_idx = 0
             
         
         
@@ -139,16 +170,18 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
                 
        
-    def test_gimbal_action_callback(self):
+    def repeat_recv_from_ele_callback(self):
+        
+        
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
         
         com_msg = ElectricsysCom()
         
-        self.get_logger().debug(f"Fuck : {self.decision_maker.params.electric_system_unix_time}, {type(self.decision_maker.params.electric_system_unix_time)}")
-        self.get_logger().debug(f"Fuck : {self.decision_maker.params.cur_pitch}, {type(self.decision_maker.params.cur_pitch)}")
-        self.get_logger().debug(f"Fuck : {self.decision_maker.params.cur_yaw}, {type(self.decision_maker.params.cur_yaw)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.params.electric_system_unix_time}, {type(self.decision_maker.params.electric_system_unix_time)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_pitch}, {type(self.decision_maker.params.cur_pitch)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_yaw}, {type(self.decision_maker.params.cur_yaw)}")
 
         com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
         com_msg.target_abs_pitch = self.decision_maker.params.cur_pitch
@@ -160,6 +193,48 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.pub_ele_sys_com.publish(com_msg)
         
+    def test_yaw_callback(self):
+        
+        if self.if_connetect_to_ele_sys == False:
+            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            return
+        
+        com_msg = ElectricsysCom()
+        
+        com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
+        com_msg.target_abs_pitch = 0
+        com_msg.target_abs_yaw = yaw_test_data[self.yaw_test_idx]
+        com_msg.sof = 'A'
+        com_msg.reserved_slot = 0
+        com_msg.fire_times = 0
+        self.yaw_test_idx += 1
+        if self.yaw_test_idx >= len(yaw_test_data):
+            self.yaw_test_idx = 0
+        
+        self.pub_ele_sys_com.publish(com_msg)
+        
+        
+        
+    def test_pitch_callback(self):
+        if self.if_connetect_to_ele_sys == False:
+            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            return
+        
+        com_msg = ElectricsysCom()
+        
+        com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
+        com_msg.target_abs_pitch = pitch_test_data[self.pitch_test_idx]
+        com_msg.target_abs_yaw = 0
+        com_msg.sof = 'A'
+        com_msg.reserved_slot = 0
+        com_msg.fire_times = 0
+        self.pitch_test_idx += 1
+        if self.pitch_test_idx >= len(pitch_test_data):
+            self.pitch_test_idx = 0
+        
+        self.pub_ele_sys_com.publish(com_msg)
+    
+    
     def _start(self):
         
         self.get_logger().info(f"Node {self.get_name()} start success")

@@ -157,7 +157,8 @@ class Kalman_Filter:
             self.X_prior_predict = A @ self.X_posterior_predict
             
         self.P_prior_predict = A @ self.P_posterior_predict @ A.T + self.Q
-        lr1.debug(f"KALMAN prior pridict : X_prior_predict:{self.X_prior_predict}, P_prior_predict:{self.P_prior_predict}")
+        
+        #lr1.debug(f"KALMAN prior pridict : X_prior_predict:{self.X_prior_predict}, P_prior_predict:{self.P_prior_predict}")
         
     def _correct(self,
                  Z:np.ndarray):
@@ -169,7 +170,7 @@ class Kalman_Filter:
         self.X_posterior_predict = self.X_prior_predict + self.K @ (Z - self.H @ self.X_prior_predict)
         self.P_posterior_predict = self.X_posterior_predict - self.K @ self.H@ self.P_prior_predict
         
-        lr1.debug(f"KALMAN : K:{self.K}, X_posterior_predict:{self.X_posterior_predict}, P_posterior_predict:{self.P_posterior_predict}")
+        #lr1.debug(f"KALMAN : K:{self.K}, X_posterior_predict:{self.X_posterior_predict}, P_posterior_predict:{self.P_posterior_predict}")
 
         
 

@@ -1,6 +1,6 @@
 # Debug modifiable value
-# Q_scale
-# R_scale_dis_diff_denominator: bigger value means more strict continuous detection
+# Q_scale : process noise parameter for Kalman filter
+# R_scale_dis_diff_denominator: bigger value means R is smaller, which means trust more the measurement
 # history_depth: > 3
 # if_force_correct_after_detect
 # min_continous_num_to_apply_predict
@@ -22,14 +22,14 @@ H:
   - 1
 Q_scale: 0.1
 R_scale_dis_diff_denominator: 0.1
-
+predict_offset_time: 1.0
 armor_name_to_car_params: {}
 
 history_depth: 5
 if_force_correct_after_detect: 1
-min_continous_num_to_apply_predict: 3
+min_continous_num_to_apply_predict: 2
 min_dis_between_continous_detection: 0.1
-min_time_between_continous_detection: 0.1
+min_time_between_continous_detection: 0.3
 
 
 score_accumulation_method_list_for_automatic_matching:

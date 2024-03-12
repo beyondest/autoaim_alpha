@@ -1,19 +1,28 @@
 
 # mode: Dbg, Rel 
 mode : Dbg
-if_show_img_local: False
+
+# gimbal_action_mode:
+# 0: not test gimbal, make decision only
+# 1: test gimbal, repeat what recv from electric system
+# 2: test gimbal, turn around yaw
+# 3: test gimbal, turn down, then turn up, then turn down, then turn horizontal
+gimbal_action_mode: 1
+
+
+if_ignore_elesys: True
+if_show_img_local: True
 if_show_img_remote: False
 # enemy armor color
 armor_color : blue
 
 if_reverse_img: True
+
+
+
 if_yolov5: True
-# armor_distance : the distance between 2 opposite armors, unit: m
-# if armor_nums == 4: [x_distance, y_distance], x distance means maximum efficency direction of robot chassis 
-# if armor_nums == 2: [no_meaning, distance] 
-
-
 # WARNING : armor_name depends on if_yolov5 !!!
+
 enemy_car_list : 
 - armor_distance:
   - 0.5
@@ -25,6 +34,10 @@ enemy_car_list :
 #  - 0.5
 #  armor_name: 4x
 #  armor_nums: 2
+
+# armor_distance : the distance between 2 opposite armors, unit: m
+# if armor_nums == 4: [x_distance, y_distance], x distance means maximum efficency direction of robot chassis 
+# if armor_nums == 2: [no_meaning, distance] 
 
 # in camera frame
 armor_name_to_init_state:
@@ -46,7 +59,6 @@ armor_name_to_init_state:
 #    - 1
 #    - 1
 #    - 1
-
 
 # Warning :
 # global logger level need to be set in os_op/global_logger.py

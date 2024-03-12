@@ -87,7 +87,7 @@ class Filter_of_lightbar(Filter_Base):
             aspect = wid/hei
             if self.mode == 'Dbg':
                 
-                lr1.debug(f'Light Bar Aspect : {aspect}, Light Bar Area : {rec_area}')
+                lr1.debug(f'Light Bar Aspect : {aspect}')
                 if img_bgr is not None:
                     draw_single_cont(img_bgr,each_cont)
                     #add_text(img_bgr,'as',round(aspect,2),(round(x),round(y)),color=(255,255,255),scale_size=0.6)
@@ -95,20 +95,16 @@ class Filter_of_lightbar(Filter_Base):
                     #add_text(img_bgr,'wi',round(wid,2),(round(x),round(y+60)),color=(255,255,255),scale_size=0.6)
                 
             
-            if  INRANGE(aspect,self.filter_params.accept_aspect_ratio_range) \
-            and INRANGE(rec_area,self.filter_params.accept_area_range):
+            if  INRANGE(aspect,self.filter_params.accept_aspect_ratio_range):
                 
                 each_dict = {'cont':each_cont,'center':[x,y],'aspect_ratio':aspect,'rec_area':rec_area}
                 tmp_list.append(each_dict)
-        
-        
         
         if self.mode == 'Dbg':
             lr1.debug(f'Filter Light Bar after one order : {len(tmp_list)}')      
         
         if len(tmp_list)  == 0:
             return None
-        
         #tmp_list = sorted(tmp_list,key=lambda x:x['center'][0],reverse=True)
 
         # Two order filter
@@ -125,7 +121,6 @@ class Filter_of_lightbar(Filter_Base):
                     lr1.debug(f"Light Bar Two Aspect Ratio : {two_aspect_ratio}")
                     lr1.debug(f"Light Bar Two Area Ratio : {two_area_ratio}")
                     #lr1.debug(f"Light Bar Center Dis : {center_dis}")
-                    
                         
                 if  INRANGE(two_area_ratio,self.filter_params.accept_two_area_ratio_range) \
                 and INRANGE(two_aspect_ratio,self.filter_params.accept_two_aspect_ratio_range):
@@ -234,17 +229,13 @@ class Filter_of_big_rec(Filter_Base):
         for each_cont in input_list:
             x,y,wid,hei,rec_points_list,rec_area = getrec_info(each_cont)
             
-            
             if wid == 0 or hei == 0:
                 continue
-            
             aspect = wid/hei
             if self.mode == 'Dbg':
                 
-                lr1.debug(f"Big Rec Aspect : {aspect}, Big Rec Area : {rec_area}")
-            
-            if  INRANGE(aspect,self.filter_params.accept_aspect_ratio_range) \
-            and INRANGE(rec_area,self.filter_params.accept_area_range):
+                lr1.debug(f"Big Rec Aspect : {aspect}")
+            if  INRANGE(aspect,self.filter_params.accept_aspect_ratio_range):
                 tmp_list.append(each_cont)
               
             

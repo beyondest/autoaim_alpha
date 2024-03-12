@@ -21,7 +21,7 @@ yolov5_input_dtype: 'float16'
 
 
 # for nms params 
-conf_thres: 0.80
+conf_thres: 0.20
 iou_thres: 0.45
 enemy_armor_index_list: None
 agnostic: False

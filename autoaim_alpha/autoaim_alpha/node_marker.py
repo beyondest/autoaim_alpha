@@ -23,7 +23,7 @@ group_3_id_to_color_dict = {0 : (0.0 ,0.0 ,1.0),
                             2 : (0.8 ,0.0 ,1.0),
                             3 : (1.0 ,0.0 ,1.0)}
 
-
+# red for correct, green for without correct, blue for predicted
 
 
 id_to_color_dict = {0 : (1,0,0),1 : (0,1,0),2 : (0,0,1),3 : (1,1,0)}
@@ -164,17 +164,17 @@ class Node_Marker(Node,Custom_Context_Obj):
 
     def armor_pos_corrected_listener(self, msg:ArmorPos):
         self.get_logger().info(f"Get corrected armor pos {msg.armor_name}:{msg.armor_id}")
-        self._update_marker_list(self.corrected_marker_list,msg)
+        self._update_marker_list(self.corrected_marker_list,msg,'c')
                 
     def armor_pos_without_corrected_listener(self, msg:ArmorPos):
         self.get_logger().info(f"Get without corrected armor pos {msg.armor_name}:{msg.armor_id}")
         
-        self._update_marker_list(self.without_corrected_marker_list,msg)
+        self._update_marker_list(self.without_corrected_marker_list,msg,'w')
                 
     def armor_pos_predicted_listener(self, msg:ArmorPos):
         self.get_logger().info(f"Get predicted armor pos {msg.armor_name}:{msg.armor_id}")
         
-        self._update_marker_list(self.predicted_marker_list,msg)
+        self._update_marker_list(self.predicted_marker_list,msg,'p')
     
     def _init_marker_list(self,marker_list:list,color_group:int = 0):    
         for enemy_car in self.enemy_car_list:
@@ -183,7 +183,7 @@ class Node_Marker(Node,Custom_Context_Obj):
                 armor_marker.marker.header.stamp = self.get_clock().now().to_msg()
                 marker_list.append(armor_marker) 
                 
-    def _update_marker_list(self,marker_list:list,msg:ArmorPos):
+    def _update_marker_list(self,marker_list:list,msg:ArmorPos,which_type:str):
         
         for armor_marker in marker_list:
             
@@ -193,7 +193,7 @@ class Node_Marker(Node,Custom_Context_Obj):
                 self.pub_armor_marker.publish(armor_marker.marker)
                 self._add_text_to_marker(armor_marker.marker,f"{armor_marker.armor_name}:{armor_marker.armor_id}")
                 self._add_text_to_marker(armor_marker.marker,
-                                         f"y:{msg.pose.pose.position.y:.2f}",
+                                         f"{which_type}:{msg.pose.pose.position.y:.2f}",
                                            id_offset=200,
                                            pos_offset=np.array([0,0,0.1]))
                 

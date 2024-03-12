@@ -44,10 +44,11 @@ class Node_Detector(Node,Custom_Context_Obj):
                                                     topic_electric_sys_state['name'],
                                                     self.sub_ele_sys_state_callback,
                                                     topic_electric_sys_state['qos_profile'])
-        
-            self.pub_img_for_visualize = self.create_publisher(topic_img_for_visualize['type'],
-                                                topic_img_for_visualize['name'],
-                                                topic_img_for_visualize['qos_profile'])
+            
+            if if_show_img_remote:
+                self.pub_img_for_visualize = self.create_publisher(topic_img_for_visualize['type'],
+                                                    topic_img_for_visualize['name'],
+                                                    topic_img_for_visualize['qos_profile'])
                 
         self.fire_times = 0
         self.target_abs_pitch = 0.0
@@ -65,7 +66,9 @@ class Node_Detector(Node,Custom_Context_Obj):
                                             tradition_config_folder=tradition_config_folder,
                                             net_config_folder=net_config_folder,
                                             depth_estimator_config_yaml=depth_estimator_config_yaml_path,
-                                            if_yolov5=if_yolov5
+                                            if_yolov5=if_yolov5,
+                                            if_show_img_local = if_show_img_local,
+                                            enemy_car_list = enemy_car_list
                                              )
         
         #self.armor_detector.tradition_detector.enable_preprocess_config()
@@ -74,6 +77,7 @@ class Node_Detector(Node,Custom_Context_Obj):
         
         
         if node_detector_mode == 'Dbg':
+
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
 
         self.pre_time = time.perf_counter()
@@ -102,13 +106,7 @@ class Node_Detector(Node,Custom_Context_Obj):
         if if_show_img_remote or if_show_img_local:
             img_for_visualize = self.armor_detector.visualize(img,
                                           fps=self.fps,
-                                          windows_name=None,
-                                          fire_times=self.fire_times,
-                                          target_abs_pitch=self.target_abs_pitch,
-                                          target_abs_yaw=self.target_abs_yaw,
-                                          cur_pitch=self.cur_pitch,
-                                          cur_yaw=self.cur_yaw,
-                                          ele_time=self.ele_time)
+                                          windows_name=None)
             
             if if_show_img_remote:
                 self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
@@ -141,7 +139,7 @@ class Node_Detector(Node,Custom_Context_Obj):
                 
                 msg.detect_result.append(ed)
                 
-                log_info += f"\narmor_name:{ed.armor_name},confidence:{ed.confidence:.2f},pos:{ed.pose.pose.position},orientation:{ed.pose.pose.orientation} time:{t.sec}s{t.nanosec/1000000}ns"
+                log_info += f"\narmor_name:{ed.armor_name},conf:{ed.confidence:.2f}, x:{each_result['pos'][0]:.2f},y:{each_result['pos'][1]:.2f},z:{each_result['pos'][2]:.2f}"
                 
             self.get_logger().warn(f"Find target : {log_info} spend time:{find_time}s")
             

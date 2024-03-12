@@ -1,6 +1,10 @@
+
+# Deprecated
 accept_area_range:
 - 10
 - 350000
+
+# 0.4 to 3.13
 accept_aspect_ratio_range:
-- 0.4
-- 3.13
+- 0.01
+- 10.00

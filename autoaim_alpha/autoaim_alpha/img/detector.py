@@ -71,13 +71,21 @@ class Armor_Detector:
                  net_config_folder :Union[str,None] = None,
                  save_roi_key:str = 'c',
                  depth_estimator_config_yaml:Union[str,None] = None,
-                 if_yolov5:bool = True
+                 if_yolov5:bool = True,
+                 if_show_img_local:bool = False,
+                 enemy_car_list = None
                  ) -> None:
         
         CHECK_INPUT_VALID(armor_color,'red','blue')
         CHECK_INPUT_VALID(mode,'Dbg','Rel')
         self.mode = mode
         self.if_yolov5 = if_yolov5
+        self.if_show_img_local = if_show_img_local
+        if enemy_car_list is None:
+            self.enemy_car_list = []
+            lr1.warn('No enemy car list, will not filter enemy armor')
+        self.enemy_car_list = [car['armor_name'] for car in enemy_car_list]
+        
         self.reset_result()
             
         self.net_detector = Net_Detector(
@@ -99,7 +107,8 @@ class Armor_Detector:
                                                         mode,
                                                         tradition_config_folder_path=tradition_config_folder,
                                                         roi_single_shape=self.net_detector.params.input_size,
-                                                        save_roi_key=save_roi_key
+                                                        save_roi_key=save_roi_key,
+                                                        if_show_img_local=if_show_img_local
                                                         )  
         
 
@@ -151,13 +160,7 @@ class Armor_Detector:
     def visualize(self,
                   img,
                   fps,
-                  windows_name:Union[str,None] = 'detect_result',
-                  fire_times:int = 0,
-                  target_abs_pitch:float = 0.0,
-                  target_abs_yaw:float = 0.0,
-                  cur_pitch:float = 0.0,
-                  cur_yaw:float = 0.0,
-                  ele_time:float = 0.0
+                  windows_name:Union[str,None] = 'detect_result'
                  )->None:
         
         """visualize the result of armor detection,
@@ -180,9 +183,7 @@ class Armor_Detector:
         if windows_name is None:
             return img   
         
-        #cv2.imshow(windows_name,img)
-        #cv2.waitKey(1)
-    
+
             
          
     def reset_result(self):
@@ -253,7 +254,7 @@ class Armor_Detector:
         result_list = []
         if self.probability_list is not None:
             for i in range(len(self.probability_list)):
-                if self.probability_list[i] > self.net_detector.params.conf_thres:
+                if self.probability_list[i] > self.net_detector.params.conf_thres and self.result_list[i] in self.enemy_car_list:
                     pro_list.append(self.probability_list[i])
                     big_rec_list.append(self.big_rec_list[i])
                     result_list.append(self.result_list[i])
@@ -298,7 +299,8 @@ class Tradition_Detector:
                  mode:str,
                  roi_single_shape:list,
                  tradition_config_folder_path:Union[str,None] = None,
-                 save_roi_key:str = 'c'
+                 save_roi_key:str = 'c',
+                 if_show_img_local:bool = False
                  ) -> None:
         
         CHECK_INPUT_VALID(mode,'Dbg','Rel')
@@ -306,6 +308,7 @@ class Tradition_Detector:
         
         
         self.mode = mode
+        self.if_show_img_local = if_show_img_local
         self.filter1 = Filter_of_lightbar(mode)
         self.filter2 = Filter_of_big_rec(mode)
         self.Tradition_Params = Tradition_Params()
@@ -359,18 +362,19 @@ class Tradition_Detector:
         
         if self.mode == 'Dbg':
             lr1.debug(f'Detector : pre_process1_time : {preprocess_time1:.4f}, find_big_rec_time : {find_big_rec_time:.4f}, pickup_roi_transfomr_time : {pickup_roi_transform_time:.4f}, binary_roi_time : {binary_roi_time:.4f}')
-            cv2.imshow('single',img_single)
+            if self.if_show_img_local:
+                cv2.imshow('single',img_single)
             
-            if big_rec_list is not None and len(big_rec_list)>0:
-                combined_roi_transform = roi_transform_list[0]
-                combined_roi_binary = roi_binary_list[0]
-                for i in range(1,len(roi_transform_list)):
-                    combined_roi_transform = np.r_[combined_roi_transform,roi_transform_list[i]]
-                    combined_roi_binary = np.r_[combined_roi_binary,roi_binary_list[i]]
-                    
-                cv2.imshow(f'roi_transform',combined_roi_transform)
-                cv2.imshow(f'roi_binary',combined_roi_binary) 
-                self.roi_single = roi_binary_list[0]
+                if big_rec_list is not None and len(big_rec_list)>0:
+                    combined_roi_transform = roi_transform_list[0]
+                    combined_roi_binary = roi_binary_list[0]
+                    for i in range(1,len(roi_transform_list)):
+                        combined_roi_transform = np.r_[combined_roi_transform,roi_transform_list[i]]
+                        combined_roi_binary = np.r_[combined_roi_binary,roi_binary_list[i]]
+                        
+                    cv2.imshow(f'roi_transform',combined_roi_transform)
+                    cv2.imshow(f'roi_binary',combined_roi_binary) 
+                    self.roi_single = roi_binary_list[0]
         
         if self.if_enable_save_roi:
             

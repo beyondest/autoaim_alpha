@@ -159,7 +159,7 @@ class Observer_Params(Params):
                   
                   [0.0,0.0,1.0]]
         
-        
+        self.predict_offset_time = 1.0
         self.history_depth = 5
         self.if_force_correct_after_detect = 1
         self.min_continous_num_to_apply_predict = 3
@@ -467,15 +467,15 @@ class Observer:
             
             tv_vec = (correct_history_list[0].tvec - correct_history_list[1].tvec) / predict_period if predict_period > 0 else np.zeros(3)
             tv_vec_old = (correct_history_list[1].tvec - correct_history_list[2].tvec) / predict_period if predict_period > 0 else np.zeros(3)
-            ta_vec = (tv_vec - tv_vec_old) / predict_period if predict_period > 0 else np.zeros(3)
+            #ta_vec = (tv_vec - tv_vec_old) / predict_period if predict_period > 0 else np.zeros(3)
             
-            tvec = correct_history_list[0].tvec + tv_vec * predict_period + 0.5 * ta_vec * predict_period**2
+            tvec = correct_history_list[0].tvec + tv_vec * predict_period 
             
             rv_vec = (correct_history_list[0].rvec - correct_history_list[1].rvec) / predict_period if predict_period > 0 else np.zeros(3)
             rv_vec_old = (correct_history_list[1].rvec - correct_history_list[2].rvec) / predict_period if predict_period > 0 else np.zeros(3)
-            ra_vec = (rv_vec - rv_vec_old) / predict_period if predict_period > 0 else np.zeros(3)
+            #ra_vec = (rv_vec - rv_vec_old) / predict_period if predict_period > 0 else np.zeros(3)
             
-            rvec = correct_history_list[0].rvec + rv_vec * predict_period + 0.5 * ra_vec * predict_period**2
+            rvec = correct_history_list[0].rvec + rv_vec * predict_period  
             
             if self.mode == 'Dbg':
                 lr1.debug(f"Observer: Continuous num : {continuous_num}")
@@ -654,8 +654,8 @@ class Observer:
         
         focus_period = self.__get_armor_last_focus_period(detect_history_list[0].name,detect_history_list[0].id)
         
-        # actually , this is correct time
-        cur_time = time.time()
+        # actually , this is predict time
+        cur_time = time.time() + self.observer_params.predict_offset_time
         
         # target lost
         if focus_period > 1:
