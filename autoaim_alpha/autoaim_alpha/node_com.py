@@ -36,8 +36,13 @@ class Node_Com(Node,Custom_Context_Obj):
         #self.init_synchronization_time()
         self.last_sub_topic_time = 0
         self.if_first_recv_from_ele_sys = True
+        self.zero_unix_time = None
         
     def listener_callback(self, msg: ElectricsysCom):
+        if self.zero_unix_time is None:
+            self.get_logger().debug(f"No zero_unix_time, waiting for connection")
+            return
+        
         
         if msg.sof == 'A' :
             
@@ -91,7 +96,11 @@ class Node_Com(Node,Custom_Context_Obj):
 
         
     def timer_send_msg_callback(self):
+        if self.zero_unix_time is None:
+            self.get_logger().debug(f"No zero_unix_time, waiting for connection")
+            return
         cur_time = time.time()
+        
         if cur_time - self.last_sub_topic_time > 0.5:
             
             # gimbal just has to stay location, so next_time = cur_time + communication_delay
