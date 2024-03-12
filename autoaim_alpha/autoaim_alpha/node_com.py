@@ -4,6 +4,9 @@ import rclpy
 from rclpy.node import Node
 from .port_slavedevice.port import *
 import time
+
+# when first recv from ele_sys, set zero_unix_time = current time - ele_sys_time_already_run
+
 class Node_Com(Node,Custom_Context_Obj):
 
     def __init__(self,
@@ -30,9 +33,9 @@ class Node_Com(Node,Custom_Context_Obj):
         if node_com_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
 
-        self.init_synchronization_time()
+        #self.init_synchronization_time()
         self.last_sub_topic_time = 0
-        
+        self.if_first_recv_from_ele_sys = True
         
     def listener_callback(self, msg: ElectricsysCom):
         
@@ -77,23 +80,21 @@ class Node_Com(Node,Custom_Context_Obj):
         else:
             self.get_logger().error(f"Unknown sof {msg.sof}")
         
-    def init_synchronization_time(self):
-        self.port.syn_data.present_minute = 0
-        self.port.syn_data.present_second = 0
-        self.port.syn_data.present_second_frac_10000  = 0
+    def init_synchronization_time(self,ele_time_minute:int, ele_time_second:int, ele_time_second_frac:float):
         self.zero_unix_time = time.time()
+        self.zero_unix_time -= ele_time_minute * 60 + ele_time_second + ele_time_second_frac 
         
         self.declare_parameter('zero_unix_time',self.zero_unix_time)
-        self.port.send_msg('S')
-        
         if node_com_mode == 'Dbg':
-            self.get_logger().debug(f"Init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
+            self.get_logger().debug(f"First Recv from electric sys, init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
         
 
         
     def timer_send_msg_callback(self):
         cur_time = time.time()
         if cur_time - self.last_sub_topic_time > 0.5:
+            
+            # gimbal just has to stay location, so next_time = cur_time + communication_delay
             next_time = cur_time + self.port.params.communication_delay
             self.port.action_data.fire_times = 0
             self.port.action_data.abs_pitch_10000 = int(self.port.pos_data.present_pitch * 10000)
@@ -110,10 +111,11 @@ class Node_Com(Node,Custom_Context_Obj):
         else:
             self.port.send_msg('A')
             if node_com_mode == 'Dbg':
-                self.get_logger().debug(f"Send A to electric sys, cur pos(p,y) {self.port.pos_data.present_pitch:.3f}, {self.port.pos_data.present_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
+                self.get_logger().debug(f"Follow , cur pos(p,y) {self.port.pos_data.present_pitch:.3f}, {self.port.pos_data.present_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
             
 
     def timer_recv_msg_callback(self):
+        
         if_error, current_yaw, current_pitch, cur_time_minute, cur_time_second, cur_time_second_frac = self.port.recv_feedback()
         if if_error:
             if self.port.ser is not None:
@@ -122,6 +124,10 @@ class Node_Com(Node,Custom_Context_Obj):
                 pass 
                 #self.get_logger().error(f"Com port {self.port.params.port_abs_path} cannot open")
         else:
+            if self.if_first_recv_from_ele_sys:
+                self.if_first_recv_from_ele_sys = False
+                self.init_synchronization_time(cur_time_minute, cur_time_second, cur_time_second_frac)
+                
             msg = ElectricsysState()
             msg.cur_pitch = current_pitch
             msg.cur_yaw = current_yaw

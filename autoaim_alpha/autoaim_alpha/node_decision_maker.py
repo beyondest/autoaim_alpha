@@ -38,26 +38,31 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.timer = self.create_timer(1/make_decision_freq, self.test_gimbal_action_callback)
         
         
-        
-        self.declare_parameter("zero_unix_offset",time.time())
+
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
-
+        while 1:
+            try:
+                self.decision_maker.params.electric_system_zero_unix_time = self.get_parameter("zero_unix_offset").get_parameter_value().double_value
+                break
+            except Exception as e:
+                self.get_logger().warn(f"Get zero_unix_offset parameter fail, {e}, wait to connect electric system")
+        self.get_logger().warn(f"Get zero_unix_offset parameter success, connect to electric system, zero_unix_time: {self.decision_maker.params.electric_system_zero_unix_time}")
+        self.get_logger().warn(f"Start make decision")
+        
+        
 
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
         self.ballestic._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
-        zero_unix_offset = self.get_parameter("zero_unix_offset").get_parameter_value().double_value
 
-        
-        minute,second,second_frac = TRANS_UNIX_TIME_TO_T(msg.unix_time,zero_unix_offset)
+        minute,second,second_frac = TRANS_UNIX_TIME_TO_T(msg.unix_time,self.decision_maker.params.electric_system_zero_unix_time)
         self.decision_maker.update_our_side_info(msg.cur_yaw,
                                                   msg.cur_pitch,
                                                   minute,
                                                   second,
                                                   second_frac)
         
-
     def sub_predict_pos_callback(self, msg:ArmorPos):
         target_pos_in_camera_frame = np.array([msg.pose.pose.position.x,
                                                 msg.pose.pose.position.y,
@@ -76,7 +81,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                    msg.pose.header.stamp.sec + msg.pose.header.stamp.nanosec/1e9
                                                    )
         
-
         
     def make_decision_callback(self):
         com_msg = ElectricsysCom()
@@ -90,8 +94,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if not if_success:
             self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
             return
-        
-
             
         if target_armor.confidence == 0.75:
             com_msg.fire_times = 2
@@ -126,10 +128,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         
-        
-        
         self.pub_ele_sys_com.publish(com_msg)
-        
         
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
@@ -155,8 +154,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.pub_ele_sys_com.publish(com_msg)
         
-        
-    
     def _start(self):
         
         self.get_logger().info(f"Node {self.get_name()} start success")
@@ -170,8 +167,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
 
         self.get_logger().error(f"Node {self.get_name()} get error {exc_value}")
         
-        
-
 def main(args=None):
     rclpy.init(args=args)
     
@@ -180,8 +175,8 @@ def main(args=None):
     with Custome_Context(node_decision_maker_name,node,[KeyboardInterrupt]):
         rclpy.spin(node)
         
-    
     rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
+
