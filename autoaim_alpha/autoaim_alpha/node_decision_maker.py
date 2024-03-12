@@ -37,23 +37,21 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
 
         self.timer = self.create_timer(1/make_decision_freq, self.test_gimbal_action_callback)
         
-        
+        self.if_connetect_to_ele_sys = False
 
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
-        while 1:
-            try:
-                self.decision_maker.params.electric_system_zero_unix_time = self.get_parameter("zero_unix_offset").get_parameter_value().double_value
-                break
-            except Exception as e:
-                self.get_logger().warn(f"Get zero_unix_offset parameter fail, {e}, wait to connect electric system")
-        self.get_logger().warn(f"Get zero_unix_offset parameter success, connect to electric system, zero_unix_time: {self.decision_maker.params.electric_system_zero_unix_time}")
-        self.get_logger().warn(f"Start make decision")
+            
+        
         
         
 
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
+        if self.if_connetect_to_ele_sys == False:
+            self.if_connetect_to_ele_sys = True
+            self.decision_maker.params.electric_system_zero_unix_time = self.get_parameter('zero_unix_time').value
+            
         self.ballestic._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
 
         minute,second,second_frac = TRANS_UNIX_TIME_TO_T(msg.unix_time,self.decision_maker.params.electric_system_zero_unix_time)
@@ -62,6 +60,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                   minute,
                                                   second,
                                                   second_frac)
+        
         
     def sub_predict_pos_callback(self, msg:ArmorPos):
         target_pos_in_camera_frame = np.array([msg.pose.pose.position.x,
@@ -83,6 +82,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         
     def make_decision_callback(self):
+        if self.if_connetect_to_ele_sys == False:
+            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            return
+        
         com_msg = ElectricsysCom()
         
         target_armor = self.decision_maker.choose_target()
@@ -136,7 +139,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                 
        
     def test_gimbal_action_callback(self):
-        
+        if self.if_connetect_to_ele_sys == False:
+            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            return
         
         com_msg = ElectricsysCom()
         

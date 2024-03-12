@@ -86,10 +86,11 @@ class Node_Com(Node,Custom_Context_Obj):
             self.get_logger().error(f"Unknown sof {msg.sof}")
         
     def init_synchronization_time(self,ele_time_minute:int, ele_time_second:int, ele_time_second_frac:float):
-        self.zero_unix_time = time.time()
-        self.zero_unix_time -= ele_time_minute * 60 + ele_time_second + ele_time_second_frac 
+        zero_unix_time = time.time()
+        zero_unix_time -= ele_time_minute * 60 + ele_time_second + ele_time_second_frac 
         
-        self.declare_parameter('zero_unix_time',self.zero_unix_time)
+        self.declare_parameter('zero_unix_time',zero_unix_time)
+        self.zero_unix_time = zero_unix_time
         if node_com_mode == 'Dbg':
             self.get_logger().debug(f"First Recv from electric sys, init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
         

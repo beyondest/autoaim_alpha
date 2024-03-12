@@ -14,7 +14,7 @@ class Decision_Maker_Params(Params):
         self.cur_pitch = 0.0
         self.remaining_health = 0.0
         self.remaining_ammo = 0
-        self.electric_system_zero_unix_time = time.time()
+        self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
         
         
