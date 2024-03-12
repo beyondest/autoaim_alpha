@@ -32,7 +32,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              ballistic_predictor_config_yaml_path)
         
         self.decision_maker = Decision_Maker(node_decision_maker_mode,
-                                             decision_maker_config_yaml_path,
+                                             None,
                                              enemy_car_list)
 
         self.timer = self.create_timer(1/make_decision_freq, self.test_gimbal_action_callback)
