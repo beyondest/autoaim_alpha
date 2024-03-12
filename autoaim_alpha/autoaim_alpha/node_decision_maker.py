@@ -123,9 +123,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         
-        print(f"Fuck : {self.decision_maker.params.electric_system_unix_time}, {type(self.decision_maker.params.electric_system_unix_time)}")
-        print(f"Fuck : {self.decision_maker.params.cur_pitch}, {type(self.decision_maker.params.cur_pitch)}")
-        print(f"Fuck : {self.decision_maker.params.cur_yaw}, {type(self.decision_maker.params.cur_yaw)}")
+        self.get_logger().debug(f"Fuck : {self.decision_maker.params.electric_system_unix_time}, {type(self.decision_maker.params.electric_system_unix_time)}")
+        self.get_logger().debug(f"Fuck : {self.decision_maker.params.cur_pitch}, {type(self.decision_maker.params.cur_pitch)}")
+        self.get_logger().debug(f"Fuck : {self.decision_maker.params.cur_yaw}, {type(self.decision_maker.params.cur_yaw)}")
 
         com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
         com_msg.target_abs_pitch = self.decision_maker.params.cur_pitch
