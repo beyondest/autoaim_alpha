@@ -345,14 +345,18 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.yaw_left = -np.pi/2 *3
         self.yaw_right = np.pi/2 * 3
         self.pitch_down = 10/180 * np.pi
-        self.pitch_up = 10/180 * np.pi
-        self.yaw_search_step = 0.01
+        self.pitch_up = 20/180 * np.pi
+        self.yaw_search_step = 0.03
         self.yaw_search_data = np.round(np.arange(yaw_left,yaw_right,self.yaw_search_step),3)
         
         # 1 wave down, 1 wave up, 1 wave down, 1 wave up, 1 wave down
-        self.pitch_search_step = ((2 * np.pi + 3* np.pi)/len(self.yaw_search_data))
-        self.pitch_search_data = np.sin(np.arange(-3 * np.pi, 2 * np.pi, self.pitch_search_step)) * abs(self.pitch_down)
-        
+        self.pitch_search_step = ((5 * np.pi + 6* np.pi)/len(self.yaw_search_data))
+        self.pitch_search_data = np.sin(np.arange(-3 * np.pi, 2 * np.pi, self.pitch_search_step)) 
+        for i in self.pitch_search_data:
+            if i < 0:
+                self.pitch_search_data[i] = i * self.pitch_down
+            else:
+                self.pitch_search_data[i] = i * self.pitch_up
     
     def _start(self):
         
