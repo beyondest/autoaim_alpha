@@ -8,7 +8,7 @@ mode : Dbg
 # 2: test gimbal, turn around yaw
 # 3: test gimbal, turn down, then turn up, then turn down, then turn horizontal
 # 4: doing nothing, use rqt to control gimbal, use rqt to see target value
-gimbal_action_mode: 1
+gimbal_action_mode: 4
 
 
 if_ignore_elesys: True
