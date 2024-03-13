@@ -47,7 +47,6 @@ class Node_Com(Node,Custom_Context_Obj):
             self.get_logger().debug(f"No zero_unix_time, waiting for connection")
             return
         
-        
         if msg.sof == 'A' :
             self.cur_yaw = msg.target_abs_yaw
             self.cur_pitch = msg.target_abs_pitch
@@ -123,6 +122,7 @@ class Node_Com(Node,Custom_Context_Obj):
             self.port.action_data.target_second = second
             self.port.action_data.target_second_frac_10000 = int(second_frac * 10000)
             self.port.send_msg('A')
+            
             if node_com_mode == 'Dbg':
                 self.get_logger().warn(f"Decision too old, you should control gimbal all time, last sub time {self.last_sub_topic_time:.3f}, cur_time {cur_time:.3f}, remain cur pos")
                 
@@ -130,7 +130,7 @@ class Node_Com(Node,Custom_Context_Obj):
             
             self.port.send_msg('A')
             if node_com_mode == 'Dbg':
-                self.get_logger().debug(f"Follow , cur pos(p,y) {self.port.pos_data.present_pitch:.3f}, {self.port.pos_data.present_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
+                self.get_logger().debug(f"Obey , cur pos(p,y) {self.port.pos_data.present_pitch:.3f}, {self.port.pos_data.present_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
             
     def timer_recv_msg_callback(self):
         
@@ -160,7 +160,6 @@ class Node_Com(Node,Custom_Context_Obj):
                 self.get_logger().debug(f"Recv from electric sys state p: {msg.cur_pitch:.3f}, y: {msg.cur_yaw:.3f}, t:{msg.unix_time:.3f}")
         
     def _start(self):
-        
         #self.port.port_open()
         
         self.get_logger().info(f"Node {self.get_name()} start success")

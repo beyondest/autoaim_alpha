@@ -18,6 +18,7 @@ yolov5_input_size:
 yolov5_input_dtype: 'float16'
 
 # for nms params 
+# yolov5 needs bigger conf_thres 0.8 and classifier needs smaller conf_thres 0.2
 conf_thres: 0.80
 iou_thres: 0.45
 enemy_armor_index_list: None

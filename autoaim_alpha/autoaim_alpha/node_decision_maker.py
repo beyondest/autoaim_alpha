@@ -130,6 +130,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
                                                                                        self.decision_maker.cur_yaw,
                                                                                        self.decision_maker.cur_pitch)
+        abs_pitch = self.decision_maker.cur_pitch
         
         if if_success:
             
