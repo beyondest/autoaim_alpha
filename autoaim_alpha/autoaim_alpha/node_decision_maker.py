@@ -293,7 +293,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
-        self.get_logger().debug(f"Make decision : fire_times {fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+        self.get_logger().debug(f"Make decision : fire_times {fire_times}  target_abs_pitch {com_msg.cur_pitch:.3f} target_abs_yaw {com_msg.cur_yaw:.3f} reach_unix_time {com_msg.unix_time:.3f}")
                 
        
     def repeat_recv_from_ele_callback(self):
