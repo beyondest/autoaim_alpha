@@ -10,7 +10,7 @@ class Decision_Maker_Params(Params):
         
         self.yaw_left_degree = -100
         self.yaw_right_degree = 100
-        self.pitch_down_degree = 10
+        self.pitch_down_degree = -10
         self.pitch_up_degree = 15
         self.yaw_search_step = 0.01
         
