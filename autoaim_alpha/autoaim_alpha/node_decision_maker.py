@@ -26,6 +26,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.pub_ele_sys_com = self.create_publisher(topic_electric_sys_com['type'],
                                                 topic_electric_sys_com['name'],
                                                 topic_electric_sys_com['qos_profile'])
+
+        
+        self.pub_ele_sys_com_show = self.create_publisher(topic_electric_sys_com_show['type'],
+                                                topic_electric_sys_com_show['name'],
+                                                topic_electric_sys_com_show['qos_profile'])
         
         self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
                                                       topic_electric_sys_state['name'],
@@ -49,6 +54,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                 2:self.test_yaw_callback,
                                 3:self.test_pitch_callback,
                                 4:self.doing_nothing_callback}
+        
+        
         
         action_mode_to_note = {0:"Make decision",
                                 1:"Repeat recv from ele",
@@ -237,7 +244,84 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.pub_ele_sys_com.publish(com_msg)
     
     def doing_nothing_callback(self):
-        pass
+        if self.if_connetect_to_ele_sys == False:
+            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            return
+        
+        com_msg = ElectricsysCom()
+        
+        target_armor = self.decision_maker.choose_target()
+        
+        abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
+                                                                                       self.decision_maker.params.cur_yaw,
+                                                                                       self.decision_maker.params.cur_pitch)
+        
+        if not if_success:
+            self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
+            return
+            
+        if target_armor.confidence == 0.75:
+            com_msg.fire_times = 2
+            
+            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {com_msg.fire_times}")
+            
+        elif target_armor.confidence == 0.5:
+            com_msg.fire_times = 1
+            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked , FIRE {com_msg.fire_times}")
+        
+        
+        elif target_armor.confidence ==0.4:
+            com_msg.fire_times = 0
+            self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
+        
+        elif target_armor.confidence == 0.3:
+            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
+            return
+        
+        elif target_armor.confidence == 0.2:
+            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} over 0.1s, not follow ")
+            return
+        
+        else:
+            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
+            return
+            
+            
+        com_msg.reach_unix_time = target_armor.time
+        com_msg.target_abs_pitch = abs_pitch
+        com_msg.target_abs_yaw = abs_yaw
+        com_msg.sof = 'A'
+        com_msg.reserved_slot = 0
+        
+        self.pub_ele_sys_com_show.publish(com_msg)
+        
+        if node_decision_maker_mode == 'Dbg':
+            self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
+            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+                
+       
+    def repeat_recv_from_ele_callback(self):
+        
+        
+        if self.if_connetect_to_ele_sys == False:
+            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            return
+        
+        com_msg = ElectricsysCom()
+        
+        self.get_logger().debug(f"Get : {self.decision_maker.params.electric_system_unix_time}, {type(self.decision_maker.params.electric_system_unix_time)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_pitch}, {type(self.decision_maker.params.cur_pitch)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_yaw}, {type(self.decision_maker.params.cur_yaw)}")
+
+        com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
+        com_msg.target_abs_pitch = self.decision_maker.params.cur_pitch
+        com_msg.target_abs_yaw = self.decision_maker.params.cur_yaw
+        com_msg.sof = 'A'
+        com_msg.reserved_slot = 0
+        com_msg.fire_times = 0
+        
+        
+        self.pub_ele_sys_com.publish(com_msg)
     
     def _start(self):
         
