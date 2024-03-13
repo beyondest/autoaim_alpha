@@ -23,11 +23,7 @@ class Node_Com(Node,Custom_Context_Obj):
                                                       topic_electric_sys_com['name'],
                                                       self.listener_callback,
                                                       topic_electric_sys_com['qos_profile'])
-        self.sub_show = self.create_subscription(topic_electric_sys_com_show['type'],
-                                                  topic_electric_sys_com_show['name'],
-                                                  self.show_callback,
-                                                  topic_electric_sys_com_show['qos_profile']) 
-                             
+
         self.timer_send_msg = self.create_timer(1/send_msg_freq, self.timer_send_msg_callback)
         self.timer_recv_msg = self.create_timer(1/recv_from_ele_sys_freq, self.timer_recv_msg_callback)
         
@@ -98,10 +94,7 @@ class Node_Com(Node,Custom_Context_Obj):
         if node_com_mode == 'Dbg':
             self.get_logger().debug(f"First Recv from electric sys, init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
         
-    def show_callback(self, msg: ElectricsysCom):
-        
-        self.get_logger().warn(f"Show msg: {msg.target_abs_yaw:.3f}")
-        
+
     def timer_send_msg_callback(self):
         if self.zero_unix_time is None:
             self.get_logger().debug(f"No zero_unix_time, waiting for connection")
