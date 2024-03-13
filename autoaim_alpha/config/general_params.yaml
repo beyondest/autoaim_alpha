@@ -7,6 +7,7 @@ mode : Dbg
 # 1: test gimbal, repeat what recv from electric system
 # 2: test gimbal, turn around yaw
 # 3: test gimbal, turn down, then turn up, then turn down, then turn horizontal
+# 4: doing nothing, use rqt to control gimbal
 gimbal_action_mode: 1
 
 

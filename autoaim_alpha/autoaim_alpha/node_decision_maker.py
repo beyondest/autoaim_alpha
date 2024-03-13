@@ -47,12 +47,14 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         action_mode_to_callback = {0:self.make_decision_callback,
                                 1:self.repeat_recv_from_ele_callback,
                                 2:self.test_yaw_callback,
-                                3:self.test_pitch_callback}
+                                3:self.test_pitch_callback,
+                                4:self.doing_nothing_callback}
         
         action_mode_to_note = {0:"Make decision",
                                 1:"Repeat recv from ele",
                                 2:"Test yaw",
-                                3:"Test pitch"}
+                                3:"Test pitch",
+                                4:"Doing nothing"}
         
         
         
@@ -234,6 +236,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.pub_ele_sys_com.publish(com_msg)
     
+    def doing_nothing_callback(self):
+        pass
     
     def _start(self):
         

@@ -1,8 +1,11 @@
 import cv2
 import numpy as np
 import glob
-from autoaim_alpha.utils_network.data import *
-from autoaim_alpha.camera.mv_class import *
+import sys
+sys.path.append('..')
+
+from autoaim_alpha.autoaim_alpha.utils_network.data import *
+from autoaim_alpha.autoaim_alpha.camera.mv_class import *
 
 
 
@@ -57,9 +60,9 @@ if __name__ == '__main__':
     action = 'record'   # record or calibrate
     
     img_path = './tmp_calib_images/*.jpg'
-    calibration_img_save_path = './tmp_calib_images'
+    calibration_img_save_path = '../good_mv2'
     calibration_save_path = 'camera_calibration.yaml'
-    camera_config_folder = './camera_config'
+    camera_config_folder = '../autoaim_alpha/config/camera_config'
     
     if action == 'record':
         ca = Mindvision_Camera(output_format='bgr8',
