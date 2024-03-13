@@ -53,10 +53,15 @@ class Node_Com(Node,Custom_Context_Obj):
 
             self.port.action_data.abs_yaw_10000 = int((msg.target_abs_yaw) * 10000)  # due to int16 is from -32768 to 32767, so we need to convert angle to this range
             self.port.action_data.reserved_slot = msg.reserved_slot
-            minute, second, second_frac = TRANS_UNIX_TIME_TO_T(msg.reach_unix_time, self.zero_unix_time)
-            self.port.action_data.target_minute = minute
-            self.port.action_data.target_second = second
-            self.port.action_data.target_second_frac_10000 = int(second_frac * 10000)
+            if msg.reach_unix_time == 0:
+                self.port.action_data.target_minute = 0
+                self.port.action_data.target_second = 0
+                self.port.action_data.target_second_frac_10000 = 0
+            else:
+                minute, second, second_frac = TRANS_UNIX_TIME_TO_T(msg.reach_unix_time, self.zero_unix_time)
+                self.port.action_data.target_minute = minute
+                self.port.action_data.target_second = second
+                self.port.action_data.target_second_frac_10000 = int(second_frac * 10000)
             
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"SOF A from Decision maker : abs_pitch {msg.target_abs_pitch:.3f}, abs_yaw {msg.target_abs_yaw:.3f}, reach at time {msg.reach_unix_time:.3f}")
