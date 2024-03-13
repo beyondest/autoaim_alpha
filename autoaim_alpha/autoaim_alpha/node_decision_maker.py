@@ -247,7 +247,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
         
-        com_msg = ElectricsysCom()
+        com_msg = ElectricsysState()
         
         target_armor = self.decision_maker.choose_target()
         
@@ -285,14 +285,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
             return
             
-            
-        com_msg.reach_unix_time = target_armor.time
-        com_msg.target_abs_pitch = abs_pitch
-        com_msg.target_abs_yaw = abs_yaw
-        com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
+        com_msg.cur_yaw = abs_yaw
+        com_msg.cur_pitch = abs_pitch
+        com_msg.unix_time = time.time()
         
         self.pub_show.publish(com_msg)
+
         
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
