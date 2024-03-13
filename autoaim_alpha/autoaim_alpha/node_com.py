@@ -151,8 +151,8 @@ class Node_Com(Node,Custom_Context_Obj):
             else:
                 msg.unix_time = TRANS_T_TO_UNIX_TIME(cur_time_minute, cur_time_second, cur_time_second_frac, self.zero_unix_time)
                 
-            msg.cur_pitch = self.cur_yaw
-            msg.cur_yaw = self.cur_pitch
+            msg.cur_pitch = self.cur_pitch
+            msg.cur_yaw = self.cur_yaw
             self.ele_sys_state_pub.publish(msg)
             
             if node_com_mode == 'Dbg':
