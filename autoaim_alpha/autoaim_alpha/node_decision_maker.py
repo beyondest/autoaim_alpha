@@ -18,6 +18,7 @@ yaw_test_data = np.round(np.arange(yaw_left,yaw_right,yaw_step),3)
 
 pitch_test_data = np.r_[(np.round(np.arange(pitch_down,pitch_up,pitch_step),3)),np.round(np.arange(pitch_up,pitch_down,-pitch_step)),np.round(np.arange(pitch_down,0,pitch_step),3)]
 
+
 class Node_Decision_Maker(Node,Custom_Context_Obj):
 
     def __init__(self,
@@ -46,6 +47,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.decision_maker = Decision_Maker(node_decision_maker_mode,
                                              None,
+                                             
                                              enemy_car_list)
 
         action_mode_to_callback = {0:self.make_decision_callback,
@@ -62,6 +64,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                 3:"Test pitch",
                                 4:"Doing nothing"}
         
+        self._init_yaw_pitch_search_data()
         
         
         self.timer = self.create_timer(1/make_decision_freq, action_mode_to_callback[gimbal_action_mode])
@@ -131,35 +134,35 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                                                        self.decision_maker.params.cur_yaw,
                                                                                        self.decision_maker.params.cur_pitch)
         
-        if not if_success:
-            self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
-            return
+        if if_success:
             
-        if target_armor.confidence == 0.75:
-            com_msg.fire_times = 2
-            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {com_msg.fire_times}")
+            if target_armor.confidence == 0.75:
+                com_msg.fire_times = 2
+                self.search_mode = 0
+                self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {com_msg.fire_times}")
+                
+            elif target_armor.confidence ==0.5:
+                com_msg.fire_times = 0
+                self.search_mode = 0
+                self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
             
-        
-        elif target_armor.confidence ==0.5:
-            com_msg.fire_times = 0
-            self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
-        
-        
-        elif target_armor.confidence == 0.25:
-            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
-            return
-        
+            elif target_armor.confidence == 0.25:
+                abs_yaw, abs_pitch = self._get_next_yaw_pitch()
+                self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
+            
+            else:
+                abs_yaw, abs_pitch = self._get_next_yaw_pitch()
+                self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
+            
         else:
-            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
-            return
-            
+            self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
+            abs_yaw,abs_pitch = self._get_next_yaw_pitch()
             
         com_msg.reach_unix_time = target_armor.time
         com_msg.target_abs_pitch = abs_pitch
         com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
-        
         self.pub_ele_sys_com.publish(com_msg)
         
         if node_decision_maker_mode == 'Dbg':
@@ -197,10 +200,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             return
         
         com_msg = ElectricsysCom()
-        
+        y,p = self._get_next_yaw_pitch()
         com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
-        com_msg.target_abs_pitch = 0.0
-        com_msg.target_abs_yaw = yaw_test_data[self.yaw_test_idx]
+        com_msg.target_abs_pitch = p
+        com_msg.target_abs_yaw = y
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
@@ -299,6 +302,57 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         
         self.pub_ele_sys_com.publish(com_msg)
+    
+    
+    def _get_next_yaw_pitch(self):
+        if self.search_mode:
+            next_yaw = self.yaw_search_data[self.search_index]
+            next_pitch = self.pitch_search_data[self.search_index]
+            
+            if self.search_mode == 1:
+                self.search_index += 1
+            else:
+                self.search_index -= 1
+                
+        else:
+            self.search_mode = 1
+            self.search_index = int((self.decision_maker.params.cur_yaw - self.yaw_left)/self.yaw_search_step)
+            if self.search_index >= len(self.yaw_search_data):
+                self.search_index = len(self.yaw_search_data) - 1
+            elif self.search_index < 0:
+                self.search_index = 0
+            next_yaw = self.yaw_search_data[self.search_index]
+            next_pitch = self.pitch_search_data[self.search_index]
+        
+        if self.search_index >= len(self.yaw_search_data):
+                
+            self.search_mode = 2
+            self.search_index = len(self.yaw_search_data) - 1
+            
+        elif self.search_index < 0:
+            self.search_mode = 1 
+            self.search_index = 0
+            
+        return next_yaw,next_pitch
+ 
+        
+    
+    def _init_yaw_pitch_search_data(self):
+        self.search_index = 0
+        # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
+        self.search_mode = 1
+        
+        self.yaw_left = -np.pi
+        self.yaw_right = np.pi
+        self.pitch_down = 10/180 * np.pi
+        self.pitch_up = 10/180 * np.pi
+        self.yaw_search_step = 0.05
+        self.yaw_search_data = np.round(np.arange(yaw_left,yaw_right,self.yaw_search_step),3)
+        
+        # 1 wave down, 1 wave up, 1 wave down, 1 wave up, 1 wave down
+        self.pitch_search_step = ((2 * np.pi + 3* np.pi)/len(self.pitch_search_data))
+        self.pitch_search_data = np.sin(np.arange(-3 * np.pi, 2 * np.pi, self.pitch_search_step)) * abs(self.pitch_down)
+        
     
     def _start(self):
         
