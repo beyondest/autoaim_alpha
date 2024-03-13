@@ -342,11 +342,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
         self.search_mode = 1
         
-        self.yaw_left = -np.pi/3 *2
-        self.yaw_right = np.pi/3 * 2
+        self.yaw_left = -100/180 * np.pi
+        self.yaw_right = 100/180 * np.pi
         self.pitch_down = 10/180 * np.pi
-        self.pitch_up = 20/180 * np.pi
-        self.yaw_search_step = 0.02
+        self.pitch_up = 15/180 * np.pi
+        self.yaw_search_step = 0.015
         self.yaw_search_data = np.round(np.arange(self.yaw_left,self.yaw_right,self.yaw_search_step),3)
         
         self.pitch_search_left = -5 * np.pi
