@@ -27,9 +27,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                 topic_electric_sys_com['name'],
                                                 topic_electric_sys_com['qos_profile'])
 
-        self.pub_ele_sys_com_show = self.create_publisher(topic_electric_sys_com_show['type'],
-                                        topic_electric_sys_com_show['name'],
-                                        topic_electric_sys_com_show['qos_profile'])
+        self.pub_show = self.create_publisher(topic_show['type'],
+                                        topic_show['name'],
+                                        topic_show['qos_profile'])
 
         self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
                                                       topic_electric_sys_state['name'],
@@ -292,7 +292,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         
-        self.pub_ele_sys_com_show.publish(com_msg)
+        self.pub_show.publish(com_msg)
         
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
