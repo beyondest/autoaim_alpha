@@ -80,10 +80,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.yaw_test_idx = 0
         self.pitch_test_idx = 0
-            
-        
-        
-        
 
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
@@ -93,13 +89,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().info(f"Connect to electric system, zero_unix_time {msg.unix_time}, cur_time {time.time()}")
             
         self.ballestic._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
-
-        minute,second,second_frac = TRANS_UNIX_TIME_TO_T(msg.unix_time,self.decision_maker.params.electric_system_zero_unix_time)
-        self.decision_maker.update_our_side_info(msg.cur_yaw,
-                                                  msg.cur_pitch,
-                                                  minute,
-                                                  second,
-                                                  second_frac)
+        self.decision_maker.update_our_side_info(
+                                                 cur_yaw=msg.cur_yaw,
+                                                 cur_pitch=msg.cur_pitch,
+                                                 ele_unix_time=msg.unix_time,
+                                                 remaining_health=None,
+                                                 remaining_ammo=None)
         
         
     def sub_predict_pos_callback(self, msg:ArmorPos):
@@ -111,7 +106,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                        msg.pose.pose.orientation.x,
                        msg.pose.pose.orientation.y,
                        msg.pose.pose.orientation.z)
+        
         rvec = q.get_axis() * q.angle
+        
         self.decision_maker.update_enemy_side_info(msg.armor_name,
                                                    msg.armor_id,
                                                    target_pos_in_camera_frame,
@@ -140,24 +137,16 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         if target_armor.confidence == 0.75:
             com_msg.fire_times = 2
-            
             self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {com_msg.fire_times}")
             
-        elif target_armor.confidence == 0.5:
-            com_msg.fire_times = 1
-            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked , FIRE {com_msg.fire_times}")
         
-        
-        elif target_armor.confidence ==0.4:
+        elif target_armor.confidence ==0.5:
             com_msg.fire_times = 0
             self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
         
-        elif target_armor.confidence == 0.3:
-            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
-            return
         
-        elif target_armor.confidence == 0.2:
-            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} over 0.1s, not follow ")
+        elif target_armor.confidence == 0.25:
+            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
             return
         
         else:
@@ -261,11 +250,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         if target_armor.confidence == 0.75:
             fire_times = 2
-            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {com_msg.fire_times}")
+            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {fire_times}")
             
         elif target_armor.confidence == 0.5:
             fire_times = 1
-            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked , FIRE {com_msg.fire_times}")
+            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked , FIRE {fire_times}")
         
         
         elif target_armor.confidence ==0.4:

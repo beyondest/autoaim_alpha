@@ -451,6 +451,7 @@ class Observer:
             armor_predict_tvec (np.ndarray): _description_
             armor_predict_rvec (np.ndarray): _description_
         """
+        
         correct_history_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_detect_history[armor_index]
         continuous_num = self.__find_continous_num(correct_history_list,if_check_dis_continuous=True)
         if continuous_num < self.observer_params.min_continous_num_to_apply_predict:
@@ -461,7 +462,6 @@ class Observer:
                 lr1.debug(f"Observer: Predict get not enough continuous history : {continuous_num}, use the last correct state")
             return tvec,rvec
         else:
-        
         
             predict_period = specific_time - correct_history_list[0].time
             
@@ -658,135 +658,44 @@ class Observer:
         cur_time = time.time() + self.observer_params.predict_offset_time
         
         # target lost
-        if focus_period > 1:
+        if focus_period > self.observer_params.min_time_between_continous_detection:
             tvec_correct = correct_history_list[0].tvec
             rvec_correct = correct_history_list[0].rvec
             confidence = 0
             if self.mode == 'Dbg':
                 lr1.debug(f"Observer: Lost Armor {armor_name} id {armor_idx}")
                 
-        # target blink but not lost
-        elif focus_period > 0.1 and focus_period < 1:
-            tvec_correct,rvec_correct = self.predict_armor_state_by_itself(armor_name,armor_idx,cur_time)
-            confidence = 0.25
-            if self.mode == 'Dbg':
-                lr1.debug(f"Observer: Blink Armor {armor_name} id {armor_idx}")
-        
         # target focused
         else:
             
-            tvec_kf = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_tvec_kf[armor_idx]
-            rvec_kf = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_rvec_kf[armor_idx]
             continous_num = self.__find_continous_num(detect_history_list,if_check_dis_continuous=False)
-            id = 0
             if self.mode == 'Dbg':
                 lr1.debug(f"Observer: Focus Armor {armor_name} id {armor_idx} continous_num {continous_num}")
                 
             if continous_num == 1:
                 
-                tvec_init = detect_history_list[id].tvec
-                P_init = np.eye(3)
-                tvec_kf.set_initial_state(tvec_init,P_init)
-                
-                rvec_init = detect_history_list[id].rvec
-                P_init = np.eye(3)
-                rvec_kf.set_initial_state(rvec_init,P_init)
-                
-                confidence = 0.3
+                tvec = detect_history_list[0].tvec
+                rvec = detect_history_list[0].rvec
+                confidence = 0.25
                
-            
             else:
-                period_new = cur_time - correct_history_list[0].time  
+                dis_continous_nums = self.__find_continous_num(detect_history_list,if_check_dis_continuous=True)
                 
-                if continous_num == 2:
-                    
-                    # predict tvec
-                    dis = np.linalg.norm(detect_history_list[id].tvec - detect_history_list[id + 1].tvec)
-                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
-                    R = np.eye(3) * R_scale
-                    detect_period = detect_history_list[id].time - detect_history_list[id + 1].time
-                    tv_vec = (detect_history_list[id].tvec - detect_history_list[id + 1].tvec) / detect_period if detect_period > 0 else np.zeros(3)
-                    X_bias = tv_vec * period_new
-                    A = np.eye(3)
-                    Z = detect_history_list[id].tvec
-                    tvec_kf.predict(A,Z,X_bias,None,R)
-
-                    # predict rvec
-                    dis = np.linalg.norm(detect_history_list[id].rvec - detect_history_list[id + 1].rvec)
-                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
-                    R = np.eye(3) * R_scale
-                    rv_vec = (detect_history_list[id].rvec - detect_history_list[id + 1].rvec) / detect_period if detect_period > 0 else np.zeros(3)
-                    X_bias = rv_vec * period_new
-                    A = np.eye(3)
-                    Z = detect_history_list[id].rvec
-                    
-                    rvec_kf.predict(A,Z,X_bias,None,R)
-                    
-                    confidence = 0.4
-                    
-                elif continous_num == 3:
-                    
-                    # predict tvec
-                    correct_period = correct_history_list[id].time - correct_history_list[id + 1].time
-                    dis = np.linalg.norm(detect_history_list[id].tvec - detect_history_list[id + 1].tvec)
-                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
-                    R = np.eye(3) * R_scale
-                    tv_vec = (correct_history_list[id].tvec - correct_history_list[id + 1].tvec) / correct_period if correct_period > 0 else np.zeros(3)
-                    X_bias = tv_vec * period_new
-                    A = np.eye(3)
-                    Z = detect_history_list[id].tvec
-                    tvec_kf.predict(A,Z,X_bias,None,R)
-
-                    # predict rvec
-                    dis = np.linalg.norm(detect_history_list[id].rvec - detect_history_list[id + 1].rvec)
-                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
-                    R = np.eye(3) * R_scale
-                    rv_vec = (correct_history_list[id].rvec - correct_history_list[id + 1].rvec) / correct_period if correct_period > 0 else np.zeros(3)
-                    X_bias = rv_vec * period_new
-                    A = np.eye(3)
-                    Z = detect_history_list[id].rvec
-                    
-                    rvec_kf.predict(A,Z,X_bias,None,R)
-                    
+                if dis_continous_nums == 1:
+                    tvec = (correct_history_list[0].tvec + detect_history_list[0].tvec)/2
+                    rvec = (correct_history_list[0].rvec + detect_history_list[0].rvec)/2
                     confidence = 0.5
-                
+                    
                 else:
-                    # predict tvec
-                    correct_period_1 = correct_history_list[id].time - correct_history_list[id + 1].time
-                    correct_period_2 = correct_history_list[id + 1].time - correct_history_list[id + 2].time
-                    
-                    dis = np.linalg.norm(detect_history_list[id].tvec - detect_history_list[id + 1].tvec)
-                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
-                    R = np.eye(3) * R_scale
-                    tv_vec = (correct_history_list[id].tvec - correct_history_list[id + 1].tvec) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)                
-                    tv_vec_old = (correct_history_list[id + 1].tvec - correct_history_list[id + 2].tvec) / correct_period_2 if correct_period_2 > 0 else np.zeros(3)                    
-                    ta_vec = (tv_vec - tv_vec_old) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)
-                    X_bias = tv_vec * period_new + ta_vec * (period_new ** 2) / 2
-                    A = np.eye(3)
-                    Z = detect_history_list[id].tvec
-                    tvec_kf.predict(A,Z,X_bias,None,R)
-
-                    # predict rvec
-                    dis = np.linalg.norm(detect_history_list[id].rvec - detect_history_list[id + 1].rvec)
-                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
-                    R = np.eye(3) * R_scale
-                    rv_vec = (correct_history_list[id].rvec - correct_history_list[id + 1].rvec) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)
-                    rv_vec_old = (correct_history_list[id + 1].rvec - correct_history_list[id + 2].rvec) / correct_period_2 if correct_period_2 > 0 else np.zeros(3)
-                    ra_vec = (rv_vec - rv_vec_old) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)
-                    X_bias = rv_vec * period_new + ra_vec * (period_new ** 2) / 2
-                    A = np.eye(3)
-                    Z = detect_history_list[id].rvec
-                    
-                    rvec_kf.predict(A,Z,X_bias,None,R)
-                    
+                    tvec = detect_history_list[0].tvec
+                    rvec = detect_history_list[0].rvec
                     confidence = 0.75
-
-            tvec_correct = tvec_kf.get_cur_state()
-            rvec_correct = rvec_kf.get_cur_state()        
-        
+                    
+            tvec_correct = tvec
+            rvec_correct = rvec
+            
         return tvec_correct,rvec_correct,cur_time,confidence
           
-        
     def __cal_car_rotation_speed(self,
                             armor_name:str)->float:
         

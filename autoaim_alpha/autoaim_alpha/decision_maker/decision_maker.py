@@ -69,20 +69,14 @@ class Decision_Maker:
     def update_our_side_info(self,
                              cur_yaw:float,
                              cur_pitch:float,
-                             electric_system_minute:int,
-                             electric_system_second:int,
-                             electric_system_second_frac:float,
+                             ele_unix_time:float,
                              remaining_health:Union[float,None] = None,
                              remaining_ammo:Union[float,None] = None,
                              fire_mode:Union[int,None] = None)->None:
         
         self.params.cur_yaw = cur_yaw
         self.params.cur_pitch = cur_pitch
-        self.params.electric_system_unix_time = trans_t_to_unix_time(electric_system_minute,
-                                                                     electric_system_second,
-                                                                     electric_system_second_frac,
-                                                                     self.params.electric_system_zero_unix_time)      
-        
+        self.params.electric_system_unix_time = ele_unix_time
         
         if remaining_health is not None:
             self.params.remaining_health = remaining_health

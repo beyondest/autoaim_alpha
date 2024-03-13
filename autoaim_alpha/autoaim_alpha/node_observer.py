@@ -11,6 +11,8 @@ from .decision_maker.ballistic_predictor import *
 from .port_slavedevice.port import *
 
 
+
+predict_time_offset = 1.0
 class Node_Observer(Node,Custom_Context_Obj):
 
     def __init__(self,
@@ -127,7 +129,6 @@ class Node_Observer(Node,Custom_Context_Obj):
             
             car_state_list = self.observer.get_car_latest_state()
             self.publish_car_state(self.pub_car_pos,car_state_list)
-            
             if node_observer_mode == 'Dbg':
                 self.get_logger().debug(f"Car State:\n{car_state_list}\n")      
                 
@@ -154,7 +155,6 @@ class Node_Observer(Node,Custom_Context_Obj):
             
             if node_observer_mode == 'Dbg':
                 self.get_logger().debug(f"Predicted Armor State:\n{armor_state_list}\n")
-            
         else:
             pass
             

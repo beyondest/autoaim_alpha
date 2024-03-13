@@ -10,7 +10,7 @@ class PosePublisher(Node):
         super().__init__('pose_publisher')
         self.publisher_ = self.create_publisher(PoseStamped, 'pose', 10)
         self.pub2 = self.create_publisher(ElectricsysState, 'test', 10)
-        timer_period = 0.01  # seconds
+        timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.time = 0.0
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
@@ -34,11 +34,10 @@ class PosePublisher(Node):
         self.time += 0.01
         
         msg2 = ElectricsysState()
-        msg2.cur_pitch = 0.1
+        msg2.cur_pitch = 0.1 * self.time
         
         self.pub2.publish(msg2)
-   
-        
+
 def main(args=None):
     rclpy.init(args=args)
     pose_publisher = PosePublisher()

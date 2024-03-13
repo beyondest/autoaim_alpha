@@ -1,0 +1,96 @@
+                       tvec_kf = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_tvec_kf[armor_idx]
+            rvec_kf = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_rvec_kf[armor_idx]
+                           #P_init = np.eye(3)
+                #tvec_kf.set_initial_state(tvec_init,P_init)
+            # predict tvec
+                    dis = np.linalg.norm(detect_history_list[id].tvec - detect_history_list[id + 1].tvec)
+                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
+                    R = np.eye(3) * R_scale
+                    detect_period = detect_history_list[id].time - detect_history_list[id + 1].time
+                    tv_vec = (detect_history_list[id].tvec - detect_history_list[id + 1].tvec) / detect_period if detect_period > 0 else np.zeros(3)
+                    X_bias = tv_vec * period_new
+                    A = np.eye(3)
+                    Z = detect_history_list[id].tvec
+                    tvec_kf.predict(A,Z,X_bias,None,R)
+
+                    # predict rvec
+                    dis = np.linalg.norm(detect_history_list[id].rvec - detect_history_list[id + 1].rvec)
+                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
+                    R = np.eye(3) * R_scale
+                    rv_vec = (detect_history_list[id].rvec - detect_history_list[id + 1].rvec) / detect_period if detect_period > 0 else np.zeros(3)
+                    X_bias = rv_vec * period_new
+                    A = np.eye(3)
+                    Z = detect_history_list[id].rvec
+                    
+                    rvec_kf.predict(A,Z,X_bias,None,R)
+                    
+                    confidence = 0.4
+
+                            else:
+                period_new = cur_time - correct_history_list[0].time  
+                dis_continous_nums = self.__find_continous_num(detect_history_list,if_check_dis_continuous=True)
+                
+                if dis_continous_nums == 1:
+                    tvec = (correct_history_list[0].tvec + detect_history_list[0].tvec)/2
+                    rvec = (correct_history_list[0].rvec + detect_history_list[0].rvec)/2
+                    confidence = 0.4
+                    
+                elif continous_num == 3:
+                    
+                    # predict tvec
+                    correct_period = correct_history_list[id].time - correct_history_list[id + 1].time
+                    dis = np.linalg.norm(detect_history_list[id].tvec - detect_history_list[id + 1].tvec)
+                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
+                    R = np.eye(3) * R_scale
+                    tv_vec = (correct_history_list[id].tvec - correct_history_list[id + 1].tvec) / correct_period if correct_period > 0 else np.zeros(3)
+                    X_bias = tv_vec * period_new
+                    A = np.eye(3)
+                    Z = detect_history_list[id].tvec
+                    tvec_kf.predict(A,Z,X_bias,None,R)
+
+                    # predict rvec
+                    dis = np.linalg.norm(detect_history_list[id].rvec - detect_history_list[id + 1].rvec)
+                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
+                    R = np.eye(3) * R_scale
+                    rv_vec = (correct_history_list[id].rvec - correct_history_list[id + 1].rvec) / correct_period if correct_period > 0 else np.zeros(3)
+                    X_bias = rv_vec * period_new
+                    A = np.eye(3)
+                    Z = detect_history_list[id].rvec
+                    
+                    rvec_kf.predict(A,Z,X_bias,None,R)
+                    
+                    confidence = 0.5
+                    
+                else:
+                    # predict tvec
+                    correct_period_1 = correct_history_list[id].time - correct_history_list[id + 1].time
+                    correct_period_2 = correct_history_list[id + 1].time - correct_history_list[id + 2].time
+                    
+                    dis = np.linalg.norm(detect_history_list[id].tvec - detect_history_list[id + 1].tvec)
+                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
+                    R = np.eye(3) * R_scale
+                    tv_vec = (correct_history_list[id].tvec - correct_history_list[id + 1].tvec) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)                
+                    tv_vec_old = (correct_history_list[id + 1].tvec - correct_history_list[id + 2].tvec) / correct_period_2 if correct_period_2 > 0 else np.zeros(3)                    
+                    ta_vec = (tv_vec - tv_vec_old) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)
+                    X_bias = tv_vec * period_new + ta_vec * (period_new ** 2) / 2
+                    A = np.eye(3)
+                    Z = detect_history_list[id].tvec
+                    tvec_kf.predict(A,Z,X_bias,None,R)
+
+                    # predict rvec
+                    dis = np.linalg.norm(detect_history_list[id].rvec - detect_history_list[id + 1].rvec)
+                    R_scale = dis / self.observer_params.R_scale_dis_diff_denominator
+                    R = np.eye(3) * R_scale
+                    rv_vec = (correct_history_list[id].rvec - correct_history_list[id + 1].rvec) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)
+                    rv_vec_old = (correct_history_list[id + 1].rvec - correct_history_list[id + 2].rvec) / correct_period_2 if correct_period_2 > 0 else np.zeros(3)
+                    ra_vec = (rv_vec - rv_vec_old) / correct_period_1 if correct_period_1 > 0 else np.zeros(3)
+                    X_bias = rv_vec * period_new + ra_vec * (period_new ** 2) / 2
+                    A = np.eye(3)
+                    Z = detect_history_list[id].rvec
+                    
+                    rvec_kf.predict(A,Z,X_bias,None,R)
+                    
+                    confidence = 0.75
+
+            #tvec_correct = tvec_kf.get_cur_state()
+            #rvec_correct = rvec_kf.get_cur_state() 
