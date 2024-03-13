@@ -1,0 +1,11 @@
+yaw_left_degree: -100
+yaw_right_degree: 100
+pitch_down_degree: 10
+pitch_up_degree: 15
+yaw_search_step: 0.01
+        
+pitch_search_left_waves: 5
+pitch_search_right_waves: 6
+
+        
+fire_mode: 1

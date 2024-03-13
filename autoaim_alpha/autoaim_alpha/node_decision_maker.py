@@ -46,8 +46,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              ballistic_predictor_config_yaml_path)
         
         self.decision_maker = Decision_Maker(node_decision_maker_mode,
-                                             None,
-                                             
+                                             decision_maker_params_yaml_path,
                                              enemy_car_list)
 
         action_mode_to_callback = {0:self.make_decision_callback,
@@ -71,8 +70,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.get_logger().warn(f"Use gimbal_action_mode {action_mode_to_note[gimbal_action_mode]}")
         
         if if_ignore_elesys:
-            self.decision_maker.params.electric_system_zero_unix_time = time.time()
-            self.get_logger().warn(f"Ignore electric system, init zero_unix_time {self.decision_maker.params.electric_system_zero_unix_time}")
+            self.decision_maker.electric_system_zero_unix_time = time.time()
+            self.get_logger().warn(f"Ignore electric system, init zero_unix_time {self.decision_maker.electric_system_zero_unix_time}")
             self.if_connetect_to_ele_sys = True
             
         else:
@@ -88,7 +87,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         if self.if_connetect_to_ele_sys == False:
             self.if_connetect_to_ele_sys = True
-            self.decision_maker.params.electric_system_zero_unix_time = msg.unix_time
+            self.decision_maker.electric_system_zero_unix_time = msg.unix_time
             self.get_logger().info(f"Connect to electric system, zero_unix_time {msg.unix_time}, cur_time {time.time()}")
             
         self.ballestic._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
@@ -131,8 +130,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         target_armor = self.decision_maker.choose_target()
         
         abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
-                                                                                       self.decision_maker.params.cur_yaw,
-                                                                                       self.decision_maker.params.cur_pitch)
+                                                                                       self.decision_maker.cur_yaw,
+                                                                                       self.decision_maker.cur_pitch)
         
         if if_success:
             
@@ -147,16 +146,18 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                 self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
             
             elif target_armor.confidence == 0.25:
-                abs_yaw, abs_pitch = self._get_next_yaw_pitch()
+                abs_yaw, abs_pitch = self.decision_maker.search_target()
                 self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
             
             else:
-                abs_yaw, abs_pitch = self._get_next_yaw_pitch()
+                abs_yaw, abs_pitch = self.decision_maker.search_target()
                 self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
             
         else:
             self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
-            abs_yaw,abs_pitch = self._get_next_yaw_pitch()
+            abs_yaw, abs_pitch = self.decision_maker.search_target()
+                            
+
             
         com_msg.reach_unix_time = target_armor.time
         com_msg.target_abs_pitch = abs_pitch
@@ -179,13 +180,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        self.get_logger().debug(f"Get : {self.decision_maker.params.electric_system_unix_time}, {type(self.decision_maker.params.electric_system_unix_time)}")
-        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_pitch}, {type(self.decision_maker.params.cur_pitch)}")
-        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_yaw}, {type(self.decision_maker.params.cur_yaw)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.electric_system_unix_time}, {type(self.decision_maker.electric_system_unix_time)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.cur_pitch}, {type(self.decision_maker.cur_pitch)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.cur_yaw}, {type(self.decision_maker.cur_yaw)}")
 
-        com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
-        com_msg.target_abs_pitch = self.decision_maker.params.cur_pitch
-        com_msg.target_abs_yaw = self.decision_maker.params.cur_yaw
+        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
+        com_msg.target_abs_pitch = self.decision_maker.cur_pitch
+        com_msg.target_abs_yaw = self.decision_maker.cur_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
@@ -199,11 +200,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
         
+        
         com_msg = ElectricsysCom()
-        y,p = self._get_next_yaw_pitch()
-        com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
-        com_msg.target_abs_pitch = p
-        com_msg.target_abs_yaw = y
+        abs_yaw, abs_pitch = self.decision_maker.search_target()
+        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
+        com_msg.target_abs_pitch = abs_pitch
+        com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
@@ -222,7 +224,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
+        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = pitch_test_data[self.pitch_test_idx]
         com_msg.target_abs_yaw = 0.0
         com_msg.sof = 'A'
@@ -244,8 +246,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         target_armor = self.decision_maker.choose_target()
         
         abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
-                                                                                       self.decision_maker.params.cur_yaw,
-                                                                                       self.decision_maker.params.cur_pitch)
+                                                                                       self.decision_maker.cur_yaw,
+                                                                                       self.decision_maker.cur_pitch)
         if not if_success:
             self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
             return
@@ -289,13 +291,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        self.get_logger().debug(f"Get : {self.decision_maker.params.electric_system_unix_time}, {type(self.decision_maker.params.electric_system_unix_time)}")
-        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_pitch}, {type(self.decision_maker.params.cur_pitch)}")
-        self.get_logger().debug(f"Get : {self.decision_maker.params.cur_yaw}, {type(self.decision_maker.params.cur_yaw)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.electric_system_unix_time}, {type(self.decision_maker.electric_system_unix_time)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.cur_pitch}, {type(self.decision_maker.cur_pitch)}")
+        self.get_logger().debug(f"Get : {self.decision_maker.cur_yaw}, {type(self.decision_maker.cur_yaw)}")
 
-        com_msg.reach_unix_time = self.decision_maker.params.electric_system_unix_time
-        com_msg.target_abs_pitch = self.decision_maker.params.cur_pitch
-        com_msg.target_abs_yaw = self.decision_maker.params.cur_yaw
+        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
+        com_msg.target_abs_pitch = self.decision_maker.cur_pitch
+        com_msg.target_abs_yaw = self.decision_maker.cur_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
@@ -303,62 +305,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.pub_ele_sys_com.publish(com_msg)
     
-    
-    def _get_next_yaw_pitch(self):
-        if self.search_mode:
-            next_yaw = self.yaw_search_data[self.search_index]
-            next_pitch = self.pitch_search_data[self.search_index]
-            
-            if self.search_mode == 1:
-                self.search_index += 1
-            else:
-                self.search_index -= 1
-                
-        else:
-            self.search_mode = 1
-            self.search_index = int((self.decision_maker.params.cur_yaw - self.yaw_left)/self.yaw_search_step)
-            if self.search_index >= len(self.yaw_search_data):
-                self.search_index = len(self.yaw_search_data) - 1
-            elif self.search_index < 0:
-                self.search_index = 0
-            next_yaw = self.yaw_search_data[self.search_index]
-            next_pitch = self.pitch_search_data[self.search_index]
-        
-        if self.search_index >= len(self.yaw_search_data):
-                
-            self.search_mode = 2
-            self.search_index = len(self.yaw_search_data) - 1
-            
-        elif self.search_index < 0:
-            self.search_mode = 1 
-            self.search_index = 0
-            
-        return next_yaw,next_pitch
- 
+   
         
     
-    def _init_yaw_pitch_search_data(self):
-        self.search_index = 0
-        # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
-        self.search_mode = 1
-        
-        self.yaw_left = -100/180 * np.pi
-        self.yaw_right = 100/180 * np.pi
-        self.pitch_down = 10/180 * np.pi
-        self.pitch_up = 15/180 * np.pi
-        self.yaw_search_step = 0.015
-        self.yaw_search_data = np.round(np.arange(self.yaw_left,self.yaw_right,self.yaw_search_step),3)
-        
-        self.pitch_search_left = -5 * np.pi
-        self.pitch_search_right = 6* np.pi
-        # 1 wave down, 1 wave up, 1 wave down, 1 wave up, 1 wave down
-        self.pitch_search_step = ((self.pitch_search_right - self.pitch_search_left)/len(self.yaw_search_data))
-        self.pitch_search_data =np.round(np.sin(np.arange(self.pitch_search_left, self.pitch_search_right, self.pitch_search_step)),3) 
-        for i, pitch in enumerate(self.pitch_search_data):
-            if pitch < 0:
-                self.pitch_search_data[i] = pitch * self.pitch_down
-            else:
-                self.pitch_search_data[i] = pitch * self.pitch_up
+    
     
     def _start(self):
         

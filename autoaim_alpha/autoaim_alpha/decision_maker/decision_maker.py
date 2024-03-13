@@ -8,15 +8,15 @@ class Decision_Maker_Params(Params):
     def __init__(self) -> None:
         super().__init__()
         
-
-
-        self.cur_yaw = 0.0
-        self.cur_pitch = 0.0
-        self.remaining_health = 0.0
-        self.remaining_ammo = 0
-        self.electric_system_zero_unix_time = None
-        self.electric_system_unix_time = time.time()
+        self.yaw_left_degree = -100
+        self.yaw_right_degree = 100
+        self.pitch_down_degree = 10
+        self.pitch_up_degree = 15
+        self.yaw_search_step = 0.01
         
+        self.pitch_search_left_waves = 5
+        self.pitch_search_right_waves = 6
+
         
         self.fire_mode = 1
         """fire mode:
@@ -46,6 +46,13 @@ class Decision_Maker:
                                                         for enemy_car in self.enemy_car_list \
                                                             for armor_id in range(enemy_car['armor_nums'])]
         
+        self.cur_yaw = 0.0
+        self.cur_pitch = 0.0
+        self.remaining_health = 0.0
+        self.remaining_ammo = 0
+        self.electric_system_zero_unix_time = None
+        self.electric_system_unix_time = time.time()
+        
         
 
         
@@ -74,14 +81,14 @@ class Decision_Maker:
                              remaining_ammo:Union[float,None] = None,
                              fire_mode:Union[int,None] = None)->None:
         
-        self.params.cur_yaw = cur_yaw
-        self.params.cur_pitch = cur_pitch
-        self.params.electric_system_unix_time = ele_unix_time
+        self.cur_yaw = cur_yaw
+        self.cur_pitch = cur_pitch
+        self.electric_system_unix_time = ele_unix_time
         
         if remaining_health is not None:
-            self.params.remaining_health = remaining_health
+            self.remaining_health = remaining_health
         if remaining_ammo is not None:
-            self.params.remaining_ammo = remaining_ammo
+            self.remaining_ammo = remaining_ammo
         if fire_mode is not None:
             self.params.fire_mode = fire_mode    
 
@@ -107,4 +114,65 @@ class Decision_Maker:
     
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
+    
+    
+    def search_target(self):
+        yaw,pitch = self._get_next_yaw_pitch()
+        return yaw,pitch
+    
+    def _init_yaw_pitch_search_data(self):
+        self.search_index = 0
+        # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
+        self.search_mode = 1
         
+        self.yaw_left = -self.params.yaw_left_degree/180 * np.pi
+        self.yaw_right = self.params.yaw_right_degree/180 * np.pi
+        self.pitch_down = self.params.pitch_down_degree/180 * np.pi
+        self.pitch_up = self.params.pitch_up_degree/180 * np.pi
+        self.yaw_search_step = self.params.yaw_search_step
+        self.yaw_search_data = np.round(np.arange(self.yaw_left,self.yaw_right,self.yaw_search_step),3)
+        
+        self.pitch_search_left = -self.params.pitch_search_left_waves * np.pi
+        self.pitch_search_right = self.params.pitch_search_right_waves * np.pi
+        # 1 wave down, 1 wave up, 1 wave down, 1 wave up, 1 wave down
+        self.pitch_search_step = ((self.pitch_search_right - self.pitch_search_left)/len(self.yaw_search_data))
+        self.pitch_search_data =np.round(np.sin(np.arange(self.pitch_search_left, self.pitch_search_right, self.pitch_search_step)),3) 
+        for i, pitch in enumerate(self.pitch_search_data):
+            if pitch < 0:
+                self.pitch_search_data[i] = pitch * self.pitch_down
+            else:
+                self.pitch_search_data[i] = pitch * self.pitch_up
+                
+                
+     
+    def _get_next_yaw_pitch(self):
+        if self.search_mode:
+            next_yaw = self.yaw_search_data[self.search_index]
+            next_pitch = self.pitch_search_data[self.search_index]
+            
+            if self.search_mode == 1:
+                self.search_index += 1
+            else:
+                self.search_index -= 1
+                
+        else:
+            self.search_mode = 1
+            self.search_index = int((self.cur_yaw - self.yaw_left)/self.yaw_search_step)
+            if self.search_index >= len(self.yaw_search_data):
+                self.search_index = len(self.yaw_search_data) - 1
+            elif self.search_index < 0:
+                self.search_index = 0
+            next_yaw = self.yaw_search_data[self.search_index]
+            next_pitch = self.pitch_search_data[self.search_index]
+        
+        if self.search_index >= len(self.yaw_search_data):
+                
+            self.search_mode = 2
+            self.search_index = len(self.yaw_search_data) - 1
+            
+        elif self.search_index < 0:
+            self.search_mode = 1 
+            self.search_index = 0
+            
+        return next_yaw,next_pitch
+ 
