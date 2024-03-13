@@ -125,16 +125,18 @@ class Decision_Maker:
         # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
         self.search_mode = 1
         
-        self.yaw_left = -self.params.yaw_left_degree/180 * np.pi
+        self.yaw_left = self.params.yaw_left_degree/180 * np.pi
         self.yaw_right = self.params.yaw_right_degree/180 * np.pi
         self.pitch_down = self.params.pitch_down_degree/180 * np.pi
         self.pitch_up = self.params.pitch_up_degree/180 * np.pi
         self.yaw_search_step = self.params.yaw_search_step
+        
         self.yaw_search_data = np.round(np.arange(self.yaw_left,self.yaw_right,self.yaw_search_step),3)
         
         self.pitch_search_left = -self.params.pitch_search_left_waves * np.pi
         self.pitch_search_right = self.params.pitch_search_right_waves * np.pi
         # 1 wave down, 1 wave up, 1 wave down, 1 wave up, 1 wave down
+        
         self.pitch_search_step = ((self.pitch_search_right - self.pitch_search_left)/len(self.yaw_search_data))
         self.pitch_search_data =np.round(np.sin(np.arange(self.pitch_search_left, self.pitch_search_right, self.pitch_search_step)),3) 
         for i, pitch in enumerate(self.pitch_search_data):

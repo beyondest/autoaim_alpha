@@ -63,8 +63,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                 3:"Test pitch",
                                 4:"Doing nothing"}
         
-        self._init_yaw_pitch_search_data()
-        
         
         self.timer = self.create_timer(1/make_decision_freq, action_mode_to_callback[gimbal_action_mode])
         self.get_logger().warn(f"Use gimbal_action_mode {action_mode_to_note[gimbal_action_mode]}")
@@ -146,8 +144,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                 self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
             
             elif target_armor.confidence == 0.25:
-                abs_yaw, abs_pitch = self.decision_maker.search_target()
-                self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
+                com_msg.fire_times = 0
+                self.search_mode = 0
+                self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, Only follow ")
             
             else:
                 abs_yaw, abs_pitch = self.decision_maker.search_target()
@@ -158,7 +157,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             abs_yaw, abs_pitch = self.decision_maker.search_target()
                             
 
-            
         com_msg.reach_unix_time = target_armor.time
         com_msg.target_abs_pitch = abs_pitch
         com_msg.target_abs_yaw = abs_yaw

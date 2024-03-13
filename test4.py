@@ -33,6 +33,7 @@ print(a.yaw_search_data)
 print(len(a.pitch_search_data))
 print(len(a.yaw_search_data))
 
-b = Decision_Maker('Dbg','./autoaim_alpha/config/other_config/decision_maker_params.yaml',['B3'])
+b = Decision_Maker('Dbg','./autoaim_alpha/config/other_config/decision_maker_params.yaml',)
+print(b.yaw_search_data)
 
 

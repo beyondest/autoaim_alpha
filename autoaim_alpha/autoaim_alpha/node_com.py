@@ -153,6 +153,7 @@ class Node_Com(Node,Custom_Context_Obj):
                 
             msg.cur_pitch = self.cur_pitch
             msg.cur_yaw = self.cur_yaw
+            
             self.ele_sys_state_pub.publish(msg)
             
             if node_com_mode == 'Dbg':
