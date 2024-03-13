@@ -254,20 +254,22 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
                                                                                        self.decision_maker.params.cur_yaw,
                                                                                        self.decision_maker.params.cur_pitch)
-        
+        fire_times = 0
         if not if_success:
             self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
             return
             
         if target_armor.confidence == 0.75:
+            fire_times = 2
             self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {com_msg.fire_times}")
             
         elif target_armor.confidence == 0.5:
+            fire_times = 1
             self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked , FIRE {com_msg.fire_times}")
         
         
         elif target_armor.confidence ==0.4:
-
+            fire_times = 0
             self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
         
         elif target_armor.confidence == 0.3:
@@ -291,7 +293,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
-            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+        self.get_logger().debug(f"Make decision : fire_times {fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
                 
        
     def repeat_recv_from_ele_callback(self):
