@@ -1,5 +1,5 @@
 import numpy as np
-  
+from autoaim_alpha.decision_maker.decision_maker import *
 class AutoAim:
     def __init__(self):
         self._init_yaw_pitch_search_data()
@@ -32,3 +32,7 @@ print(a.pitch_search_data)
 print(a.yaw_search_data)
 print(len(a.pitch_search_data))
 print(len(a.yaw_search_data))
+
+b = Decision_Maker('Dbg','./autoaim_alpha/config/other_config/decision_maker_params.yaml',['B3'])
+
+

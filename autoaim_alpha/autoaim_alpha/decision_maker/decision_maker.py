@@ -52,7 +52,7 @@ class Decision_Maker:
         self.remaining_ammo = 0
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
-        
+        self._init_yaw_pitch_search_data()
         
 
         
