@@ -248,6 +248,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
         
+        print(f"fuck : donging nothing")
         com_msg = ElectricsysCom()
         
         target_armor = self.decision_maker.choose_target()

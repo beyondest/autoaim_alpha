@@ -99,7 +99,8 @@ class Node_Com(Node,Custom_Context_Obj):
             self.get_logger().debug(f"First Recv from electric sys, init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
         
     def show_callback(self, msg: ElectricsysCom):
-        self.get_logger().warn(f"Show msg : {msg.msg}")
+        
+        self.get_logger().warn(f"Show msg: {msg.target_abs_yaw:.3f}")
         
     def timer_send_msg_callback(self):
         if self.zero_unix_time is None:
