@@ -1,25 +1,36 @@
 import numpy as np
-
-yaw_left = -np.pi
-yaw_right = np.pi
-yaw_search_step = 0.05
-
-yaw_search_data = np.round(np.arange(yaw_left,yaw_right,yaw_search_step),3)
+  
+class AutoAim:
+    def __init__(self):
+        self._init_yaw_pitch_search_data()
         
+    def _init_yaw_pitch_search_data(self):
+        self.search_index = 0
+        # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
+        self.search_mode = 1
+       
+        
+        self.yaw_left = -np.pi/2 *3
+        self.yaw_right = np.pi/2 * 3
+        self.pitch_down = 10/180 * np.pi
+        self.pitch_up = 20/180 * np.pi
+        self.yaw_search_step = 0.03
+        self.yaw_search_data = np.round(np.arange(self.yaw_left,self.yaw_right,self.yaw_search_step),3)
+        
+        self.pitch_search_left = -5 * np.pi
+        self.pitch_search_right = 6* np.pi
         # 1 wave down, 1 wave up, 1 wave down, 1 wave up, 1 wave down
+        self.pitch_search_step = ((self.pitch_search_right - self.pitch_search_left)/len(self.yaw_search_data))
+        self.pitch_search_data =np.round(np.sin(np.arange(self.pitch_search_left, self.pitch_search_right, self.pitch_search_step)),3 )
         
-        
-nums = len(yaw_search_data)
-step = ((2 * np.pi + 3* np.pi)/(nums))
-pitch_search_data = np.round(np.sin(np.arange(-3 * np.pi, 2 * np.pi, step)) * 10/180 * np.pi,3)
-        
-index_yaw = int((-3.0423 - yaw_left)/yaw_search_step)
-
-print(pitch_search_data)
-print(yaw_search_data)
-
-print(len(pitch_search_data))
-print(len(yaw_search_data))
-
-print(index_yaw)
-print(yaw_search_data[index_yaw])
+        for i, pitch in enumerate(self.pitch_search_data):
+            if pitch < 0:
+                self.pitch_search_data[i] = pitch * self.pitch_down
+            else:
+                self.pitch_search_data[i] = pitch * self.pitch_up
+  
+a = AutoAim()  
+print(a.pitch_search_data)
+print(a.yaw_search_data)
+print(len(a.pitch_search_data))
+print(len(a.yaw_search_data))
