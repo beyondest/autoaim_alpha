@@ -212,7 +212,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysState()
         
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
+        next_yaw,next_pitch,fire_times,if_possible_find_target = self.decision_maker.make_decision() 
        
         com_msg.cur_yaw = next_yaw
         com_msg.cur_pitch = next_pitch
