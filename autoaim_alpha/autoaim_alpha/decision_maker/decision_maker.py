@@ -52,7 +52,7 @@ class Decision_Maker:
         else:
             lr1.warning("Ballistic_Predictor use default params")
             
-        self.armor_state_corrected_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
+        self.armor_state_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
                                                         for enemy_car in self.enemy_car_list \
                                                             for armor_id in range(enemy_car['armor_nums'])]
         
@@ -72,15 +72,21 @@ class Decision_Maker:
                       armor_tvec:np.ndarray,
                       armor_rvec:np.ndarray,
                       armor_confidence:float = 0.5,
-                      armor_time:float = 0.0)->None:
+                      armor_time:float = 0.0,
+                      continuous_detected_num:int = 0,
+                      continuous_lost_num:int = 0,
+                      if_update:bool = False)->None:
         
-        for armor_params in self.armor_state_corrected_list:
+        for armor_params in self.armor_state_list:
             
             if armor_params.name == armor_name and armor_params.id == armor_id:
                 armor_params.tvec = armor_tvec
                 armor_params.rvec = armor_rvec
                 armor_params.confidence = armor_confidence
                 armor_params.time = armor_time
+                armor_params.continuous_detected_num = continuous_detected_num
+                armor_params.continuous_lost_num = continuous_lost_num
+                armor_params.if_update = if_update
                 
                 
     def update_our_side_info(self,
@@ -102,20 +108,11 @@ class Decision_Maker:
         if fire_mode is not None:
             self.params.fire_mode = fire_mode    
 
-    def choose_target(self)->Armor_Params:
-        """Choose the max confident target from the list of armor_state_corrected_list.
 
-        Returns:
-            Armor_Params: _description_
-        """
-        
-        max_confidence_target = max(self.armor_state_corrected_list, key=lambda x: x.confidence)
-        return max_confidence_target
-    
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
     
-    def make_decision(self,target_armor_params:Armor_Params)->tuple:
+    def make_decision(self)->tuple:
         """
 
         Args:
@@ -124,66 +121,24 @@ class Decision_Maker:
         Returns:
             tuple: next_yaw,next_pitch, fire_times
         """
-        
-            
-        if target_armor_params.confidence == 0.9:
-            abs_yaw,abs_pitch, flight_time, if_success = self.ballistic_predictor.get_fire_yaw_pitch(target_armor_params.tvec,
-                                                                                                     self.cur_yaw,
-                                                                                                    self.cur_pitch)
-            
-            if not if_success:
-                lr1.info(f"Ballistic predict fail, bad target, target pos: {target_armor_params.tvec}")
-                next_yaw,next_pitch = self._search_target()
-                fire_times = 0
-            else:
-                next_yaw = abs_yaw
-                next_pitch = abs_pitch
-                fire_times = 2
-                lr1.warn(f"Target Locked {target_armor_params.name} id {target_armor_params.id} {target_armor_params.confidence}, FIRE")
-            
-        elif target_armor_params.confidence ==0.8:
-            abs_yaw,abs_pitch, flight_time, if_success = self.ballistic_predictor.get_fire_yaw_pitch(target_armor_params.tvec,
-                                                                                                     self.cur_yaw,
-                                                                                                    self.cur_pitch)
-            if not if_success:
-                lr1.info(f"Ballistic predict fail, bad target, target pos: {target_armor_params.tvec}")
-                next_yaw,next_pitch = self._search_target()
-                fire_times = 0
-            else:
-                next_yaw = abs_yaw
-                next_pitch = abs_pitch
+        max_continous_detected_armor = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
+        if max_continous_detected_armor.if_update:
+            fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(max_continous_detected_armor.tvec,
+                                                        self.cur_yaw,
+                                                        self.cur_pitch)
+            if if_success:
+                next_yaw = fire_yaw
+                next_pitch = fire_pitch
                 fire_times = 1
-                lr1.warn(f"Target Locked {target_armor_params.name} id {target_armor_params.id} {target_armor_params.confidence} locked, FIRE")
-            
-        elif target_armor_params.confidence == 0.7:
-            abs_yaw,abs_pitch, flight_time, if_success = self.ballistic_predictor.get_fire_yaw_pitch(target_armor_params.tvec,
-                                                                                                     self.cur_yaw,
-                                                                                                    self.cur_pitch)
-            if not if_success:
-                lr1.info(f"Ballistic predict fail, bad target, target pos: {target_armor_params.tvec}")
-                next_yaw,next_pitch = self._search_target()
-                fire_times = 0
+                lr1.warn(f"Target Locked {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
             else:
-                next_yaw = abs_yaw
-                next_pitch = abs_pitch
+                next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
                 fire_times = 0
-                lr1.warn(f"Target Blink {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id}, FOllow")
-
-        elif target_armor_params.confidence == 0.6:
-            next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
-            fire_times = 0
-            lr1.warn(f"Target Blink {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id} , Follow ")
-            
-            
-        elif target_armor_params.confidence == 0.5:
-            next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
-            fire_times = 0
-            lr1.warn(f"Target Blink {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id} , Follow ")
-        
+                lr1.info(f"Ballistic_Predictor failed, use current yaw and pitch, d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
         else:
             next_yaw,next_pitch = self._search_target()
             fire_times = 0
-            lr1.warn(f"Target Lost {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id} , Search ")
+            lr1.warn(f'Target Lost {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}')
             
         return next_yaw,next_pitch, fire_times
             

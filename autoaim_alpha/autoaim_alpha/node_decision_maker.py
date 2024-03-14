@@ -101,12 +101,16 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                         armor_pos.pose.pose.orientation.z)
             
             rvec = q.get_axis() * q.angle
+            
             self.decision_maker.update_enemy_side_info(armor_pos.armor_name,
                                                     armor_pos.armor_id,
                                                     target_pos_in_camera_frame,
                                                     rvec,
                                                     armor_pos.confidence,
-                                                    armor_pos.pose.header.stamp.sec + armor_pos.pose.header.stamp.nanosec/1e9
+                                                    armor_pos.pose.header.stamp.sec + armor_pos.pose.header.stamp.nanosec/1e9,
+                                                    armor_pos.continuous_detected_num,
+                                                    armor_pos.continuous_lost_num,
+                                                    armor_pos.if_update
                                                     )
             
         self.action_mode_to_callback[gimbal_action_mode]()
@@ -120,8 +124,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        target_armor = self.decision_maker.choose_target()
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision(target_armor) 
+        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
 
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch
@@ -133,8 +136,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.pub_ele_sys_com.publish(com_msg)
         
         if node_decision_maker_mode == 'Dbg':
-            self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
-            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
        
     def repeat_recv_from_ele_callback(self):
         

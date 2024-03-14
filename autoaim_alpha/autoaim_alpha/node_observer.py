@@ -90,34 +90,32 @@ class Node_Observer(Node,Custom_Context_Obj):
             all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':t})
 
         self.observer.update_by_detection_list(all_target_list)
-        self.observer.update_by_correct_all()
-        armor_state_corrected_list = self.observer.get_armor_latest_state(if_correct_state=True)
+        armor_params_detect_list = self.observer.get_armor_latest_state(if_correct_state=False)
         
         msg2 = ArmorPosList()
-        for armor_state in armor_state_corrected_list:
+        for armor_params in armor_params_detect_list:
+            armor_params = Armor_Params()
             armor_pos = ArmorPos()
-            armor_pos.armor_name = armor_state['armor_name']
-            armor_pos.armor_id = armor_state['armor_id']
-            armor_pos.confidence = float(armor_state['armor_confidence'])
-            armor_pos.pose.pose.position.x = armor_state['armor_tvec'][0]
-            armor_pos.pose.pose.position.y = armor_state['armor_tvec'][1]
-            armor_pos.pose.pose.position.z = armor_state['armor_tvec'][2]
-            q = Quaternion(axis = armor_state['armor_rvec'],angle = np.linalg.norm(armor_state['armor_rvec']))
+            armor_pos.armor_name = armor_params.name
+            armor_pos.armor_id = armor_params.id
+            armor_pos.confidence = armor_params.confidence
+            armor_pos.pose.pose.position.x = armor_params.tvec[0]
+            armor_pos.pose.pose.position.y = armor_params.tvec[1]
+            armor_pos.pose.pose.position.z = armor_params.tvec[2]
+            q = Quaternion(axis = armor_params.rvec,angle = np.linalg.norm(armor_params.rvec))
             armor_pos.pose.pose.orientation.w = q.w
             armor_pos.pose.pose.orientation.x = q.x
             armor_pos.pose.pose.orientation.y = q.y
             armor_pos.pose.pose.orientation.z = q.z
-            armor_pos.pose.header.stamp.sec = int(armor_state['armor_time'])
-            armor_pos.pose.header.stamp.nanosec = int((armor_state['armor_time'] - int(armor_state['armor_time'])) * 1e9)
+            armor_pos.pose.header.stamp.sec = int(armor_params.time)
+            armor_pos.pose.header.stamp.nanosec = int((armor_params.time - int(armor_params.time)) * 1e9) 
+            armor_pos.continuous_detected_num = armor_params.continuous_detected_num
+            armor_pos.continuous_lost_num = armor_params.continuous_lost_num
+            armor_pos.if_update = armor_params.if_update
             msg2.armor_pos_list.append(armor_pos)
         self.pub.publish(msg2)
         
-        if if_pub_armor_state_without_correct:
-            armor_state_without_correct_list = self.observer.get_armor_latest_state(if_correct_state=False)
-            self.publish_armor_state(self.pub_armor_pos_without_correct,armor_state_without_correct_list)
-        if if_pub_armor_state_corrected:
-            self.publish_armor_state(self.pub_armor_pos_corrected,armor_state_corrected_list)
-            
+
         if if_pub_car_state:
             car_state_list = self.observer.get_car_latest_state()
             self.publish_car_state(self.pub_car_pos,car_state_list)
