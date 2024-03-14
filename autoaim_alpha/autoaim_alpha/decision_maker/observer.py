@@ -290,7 +290,7 @@ class Observer:
         
         right_armor_name,right_armor_idx,confidence = self._automatic_matching(armor_name, tvec, rvec)
         armor_idx_to_list = self.observer_params.armor_name_to_car_params[right_armor_name].armor_idx_to_detect_history
-        armor_idx_to_list[right_armor_idx][0].if_update = True
+        
         
         self._update_other_armor_state_by_one_armor(right_armor_name, 
                                                     right_armor_idx, 
@@ -300,6 +300,8 @@ class Observer:
                                                     confidence, 
                                                     armor_idx_to_list
                                                     )
+        
+        
         if self.mode == 'Dbg':
             lr1.info(f"Observer: Update armor detect params {right_armor_name} at t {t} with confidence {confidence}")
         
@@ -317,20 +319,26 @@ class Observer:
         correct_history_list = car_params.armor_idx_to_correct_history[armor_idx]
         detect_history_list = car_params.armor_idx_to_detect_history[armor_idx]
         if detect_history_list[0].if_update:
-            correct_history_list[0].continuous_detected_num = correct_history_list[1].continuous_detected_num + 1
-            correct_history_list[0].continuous_lost_num = correct_history_list[1].continuous_lost_num - 1
+            continuous_detected_num = correct_history_list[0].continuous_detected_num + 1
+            continuous_lost_num = correct_history_list[0].continuous_lost_num - 1
             detect_history_list[0].if_update = False
         else:
-            correct_history_list[0].continuous_lost_num = correct_history_list[1].continuous_lost_num + 1
-            correct_history_list[0].continuous_detected_num = correct_history_list[1].continuous_detected_num - 1
+            continuous_lost_num = correct_history_list[0].continuous_lost_num + 1
+            continuous_detected_num = correct_history_list[0].continuous_detected_num - 1
             detect_history_list[0].if_update = False
             
-        correct_history_list[0].continuous_detected_num = CLAMP(correct_history_list[0].continuous_detected_num, [0,3])
-        correct_history_list[0].continuous_lost_num = CLAMP(correct_history_list[0].continuous_lost_num, [0,3])
-        
-        
+        continuous_detected_num = CLAMP(continuous_detected_num, [0,3])
+        continuous_lost_num = CLAMP(continuous_lost_num, [0,3])
         tvec_correct, rvec_correct, cur_time, confidence = self.__cal_correct_params(armor_name, armor_idx)
-        self._update_armor_history_params(correct_history_list, tvec_correct, rvec_correct, cur_time, confidence)
+        
+        self._update_armor_history_params(correct_history_list,
+                                          tvec_correct, 
+                                          rvec_correct,
+                                          cur_time,
+                                          confidence,
+                                          continuous_detected_num,
+                                          continuous_lost_num,
+                                          False)
                 
         if self.mode == 'Dbg':
             
@@ -577,13 +585,19 @@ class Observer:
                             tvec:np.ndarray,
                             rvec:np.ndarray,
                             time:float,
-                            confidence:float):
+                            confidence:float,
+                            continuous_detected_num:int,
+                            continuous_lost_num:int,
+                            if_update:bool):
         
         new_armor_params = Armor_Params(armor_list[0].name,armor_list[0].id)
         new_armor_params.tvec = tvec
         new_armor_params.rvec = rvec
         new_armor_params.time = time
         new_armor_params.confidence = confidence
+        new_armor_params.continuous_detected_num = continuous_detected_num
+        new_armor_params.continuous_lost_num = continuous_lost_num
+        new_armor_params.if_update = if_update
         
         SHIFT_LIST_AND_ASSIG_VALUE(armor_list,new_armor_params)
 
@@ -853,7 +867,13 @@ class Observer:
                                                 tvec_list[i], 
                                                 rvec_list[i], 
                                                 t, 
-                                                confidence)
+                                                confidence,
+                                                0,
+                                                0,
+                                                False)
+            
+        armor_idx_to_list[armor_idx][0].if_update = True
+            
     
     
     def save_params_to_yaml(self,yaml_path:str)->None:
