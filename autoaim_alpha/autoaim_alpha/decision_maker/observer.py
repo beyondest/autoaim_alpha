@@ -293,7 +293,10 @@ class Observer:
             armor_idx_to_list[right_armor_idx][0].if_update = True
             if self.mode == 'Dbg':
                 lr1.info(f"Observer: Update armor detect params {right_armor_name} at t {t} with confidence {confidence}")
-        
+            self.latest_focus_armor_name = right_armor_name
+            self.latest_focus_armor_index = right_armor_idx
+            self.latest_focus_t = t
+                   
             
         else:
             armor_idx_to_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_detect_history
@@ -313,13 +316,12 @@ class Observer:
                 SHIFT_LIST_AND_ASSIG_VALUE(armor_idx_to_list[armor_idx],new_armor_params)
             if self.mode == 'Dbg':
                 lr1.info(f"Observer: Update armor detect params {armor_name} at t {t} with confidence {0.0}")
-        
+            self.latest_focus_armor_name = armor_name
+            self.latest_focus_armor_index = 0
+            self.latest_focus_t = t
             
    
-        self.latest_focus_armor_name = right_armor_name
-        self.latest_focus_armor_index = right_armor_idx
-        self.latest_focus_t = t
-                   
+        
     def update_by_correct_all(self)->dict:
         """
         Args:
