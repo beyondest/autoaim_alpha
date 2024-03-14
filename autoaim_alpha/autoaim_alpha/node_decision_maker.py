@@ -81,7 +81,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.decision_maker.electric_system_zero_unix_time = msg.unix_time
             self.get_logger().info(f"Connect to electric system, zero_unix_time {msg.unix_time}, cur_time {time.time()}")
             
-        self.decision_maker.ballistic_predictor._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
         self.decision_maker.update_our_side_info(
                                                  cur_yaw=msg.cur_yaw,
                                                  cur_pitch=msg.cur_pitch,
