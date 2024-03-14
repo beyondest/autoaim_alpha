@@ -633,8 +633,7 @@ class Observer:
         new_armor_params.continuous_detected_num = continuous_detected_num
         new_armor_params.continuous_lost_num = continuous_lost_num
         new_armor_params.if_update = if_update
-        for armor_params in armor_list:
-            print(f'Fuck : {armor_params.continuous_detected_num}')
+
         SHIFT_LIST_AND_ASSIG_VALUE(armor_list,new_armor_params)
 
     def _update_car_params_and_armor_relative_params(self):

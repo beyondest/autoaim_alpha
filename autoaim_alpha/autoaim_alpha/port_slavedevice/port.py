@@ -32,7 +32,7 @@ class Port:
         self.action_data = action_data()
         self.syn_data = syn_data()
         self.pos_data = pos_data()
-        
+        self.mode = mode
         try:
             self.ser = serial.Serial(
                                     port=self.params.port_abs_path,
@@ -67,7 +67,8 @@ class Port:
                 
                 msg = self.syn_data.convert_syn_data_to_bytes(if_part_crc=False)
                 send_data(self.ser,msg)
-            lr1.debug(f"Send {sof} {msg} yaw_10000: {self.action_data.abs_yaw_10000}")
+            if self.mode == 'Dbg':
+                lr1.debug(f"Send {sof} {msg} yaw_10000: {self.action_data.abs_yaw_10000}")
             
         
     def recv_feedback(self)->tuple:
@@ -92,7 +93,8 @@ class Port:
             cur_time_minute = self.pos_data.stm_minute
             cur_time_second = self.pos_data.stm_second
             cur_time_second_frac = self.pos_data.stm_second_frac 
-            lr1.debug(f"Recv {msg} yaw_10000: {cur_yaw}")
+            if self.mode == 'Dbg':
+                lr1.debug(f"Recv {msg} yaw_10000: {cur_yaw}")
             
             return if_error,cur_yaw,cur_pitch,cur_time_minute,cur_time_second,cur_time_second_frac
         
