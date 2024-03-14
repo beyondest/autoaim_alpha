@@ -127,7 +127,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
+        next_yaw,next_pitch,fire_times,if_possible_find_target = self.decision_maker.make_decision() 
         
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch
@@ -136,8 +136,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.reserved_slot = 0
         com_msg.fire_times = fire_times
         
-        self.pub_ele_sys_com.publish(com_msg)
-        
+        if if_possible_find_target:
+            for i in range(self.decision_maker.params.repeat_times_for_move_command):
+                self.pub_ele_sys_com.publish(com_msg)
+            time.sleep(self.decision_maker.params.sleep_time_after_move_command)
+            
+        else:
+            self.pub_ele_sys_com.publish(com_msg)   
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
        

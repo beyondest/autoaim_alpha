@@ -16,8 +16,8 @@ class Decision_Maker_Params(Params):
         
         self.pitch_search_left_waves = 5
         self.pitch_search_right_waves = 6
-
-        
+        self.sleep_time_after_move_command = 0.1
+        self.repeat_times_for_move_command = 3
         self.fire_mode = 1
         """fire mode:
             0: firepower priority
@@ -113,7 +113,7 @@ class Decision_Maker:
             target_armor_params (Armor_Params): _description_
 
         Returns:
-            tuple: next_yaw,next_pitch, fire_times
+            tuple: next_yaw,next_pitch, fire_times, if_possible_find_target
         """
         max_continous_detected_armor = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
         if max_continous_detected_armor.if_update:
@@ -124,6 +124,7 @@ class Decision_Maker:
                 next_yaw = fire_yaw
                 next_pitch = fire_pitch
                 fire_times = 1
+                if_possible_find_target = True
                 lr1.warn(f"Target Locked {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
                 if self.mode == 'Dbg':
                     lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, fire_yaw = {fire_yaw}, fire_pitch = {fire_pitch}")
@@ -131,16 +132,19 @@ class Decision_Maker:
             else:
                 next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
                 fire_times = 0
+                if_possible_find_target = True
                 lr1.warn(f"Bad Target, Stay, d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
         else:
             if max_continous_detected_armor.continuous_detected_num > 0:
                 next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
                 fire_times = 0
+                if_possible_find_target = True
                 lr1.warn(f"Target Blink, Stay {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
             
             else: 
                 next_yaw,next_pitch = self._search_target()
                 fire_times = 0
+                if_possible_find_target = False
                 lr1.warn(f'Target Lost {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}')
             
             

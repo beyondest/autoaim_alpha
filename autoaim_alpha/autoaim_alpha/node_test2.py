@@ -36,7 +36,9 @@ class PosePublisher(Node):
         msg2 = DetectResult()
         
         self.pub2.publish(msg2)
-
+        self.get_logger().warn("publish pose")
+        
+        
 def main(args=None):
     rclpy.init(args=args)
     pose_publisher = PosePublisher()

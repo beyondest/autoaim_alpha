@@ -44,6 +44,8 @@ class MarkerPublisher(Node):
     def listener_callback2(self, msg: DetectResult):
         self.get_logger().warn(f"len : {len(msg.detect_result)}")
         
+        
+        
     def _add_text_to_marker(self,
                             marker:Marker,
                             text:str,
