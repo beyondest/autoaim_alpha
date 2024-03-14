@@ -51,7 +51,7 @@ class Net_Params(Params):
         self.yolov5_input_size = [640,640]
         self.yolov5_input_dtype = 'float32'
         
-        self.conf_thres = 0.25
+        self.conf_thres = 0.70
         self.iou_thres = 0.45
         self.enemy_armor_index_list = [0,1]
         self.agnostic = False
@@ -677,6 +677,7 @@ class Net_Detector:
         self.params = Net_Params()
         
         self.load_params_from_folder(net_config_folder)
+        
         if self.if_yolov5:
             self.yolov5_post_processor = Yolov5_Post_Processor(self.class_info,
                                                                self.params.conf_thres,

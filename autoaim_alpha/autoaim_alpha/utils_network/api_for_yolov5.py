@@ -186,7 +186,7 @@ def _bbox_to_corners(bbox):
 class Yolov5_Post_Processor:
     def __init__(self,
                  class_info:dict,
-                 conf_thres:float = 0.25,
+                 conf_thres:float = 0.70,
                  iou_thres:float = 0.45,
                  classes:list = None,
                  agnostic:bool = False,
