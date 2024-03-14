@@ -94,7 +94,6 @@ class Node_Observer(Node,Custom_Context_Obj):
         
         msg2 = ArmorPosList()
         for armor_params in armor_params_detect_list:
-            armor_params = Armor_Params()
             armor_pos = ArmorPos()
             armor_pos.armor_name = armor_params.name
             armor_pos.armor_id = armor_params.id
