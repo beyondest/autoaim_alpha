@@ -30,7 +30,7 @@ class Decision_Maker:
     def __init__(self,
                  mode:str,
                  decision_maker_params_yaml_path:Union[str,None] = None,
-                 ballistic_predictor_params_yaml_path:Union[str,None] = None,
+                 ballistic_predictor:Union[Ballistic_Predictor,None] = None,
                  enemy_car_list:list = None
                  ) -> None:
         CHECK_INPUT_VALID(mode,"Dbg",'Rel')
@@ -39,19 +39,13 @@ class Decision_Maker:
             
         self.mode = mode
         self.params = Decision_Maker_Params()
-        self.ballistic_predictor = Ballistic_Predictor(mode,
-                                                       ballistic_predictor_params_yaml_path)
+        self.ballistic_predictor = ballistic_predictor
         
         self.enemy_car_list = enemy_car_list
         if decision_maker_params_yaml_path is not None:
             self.params.load_params_from_yaml(decision_maker_params_yaml_path)
         
-        if ballistic_predictor_params_yaml_path is not None:
-            self.ballistic_predictor.params.load_params_from_yaml(ballistic_predictor_params_yaml_path)
-        
-        else:
-            lr1.warning("Ballistic_Predictor use default params")
-            
+
         self.armor_state_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
                                                         for enemy_car in self.enemy_car_list \
                                                             for armor_id in range(enemy_car['armor_nums'])]

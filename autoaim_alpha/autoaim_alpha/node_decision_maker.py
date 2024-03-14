@@ -50,13 +50,16 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                         topic_armor_pos_corrected_list['name'],
                                                         self.sub_armor_pos_list_callback,
                                                         topic_armor_pos_corrected_list['qos_profile'])
-
+        self.ballistic_predictor = Ballistic_Predictor(node_decision_maker_mode,
+                                                       ballistic_predictor_config_yaml_path,
+                                                       False)
+        
         self.decision_maker = Decision_Maker(node_decision_maker_mode,
                                              decision_maker_params_yaml_path,
-                                             ballistic_predictor_config_yaml_path,
+                                             self.ballistic_predictor,
                                              enemy_car_list)
 
-
+        
         
         self.get_logger().warn(f"Use gimbal_action_mode {self.action_mode_to_note[gimbal_action_mode]}")
         
