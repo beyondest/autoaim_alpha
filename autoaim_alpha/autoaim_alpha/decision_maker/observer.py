@@ -167,7 +167,8 @@ class Observer_Params(Params):
         self.min_continuous_num_to_apply_predict = 3
         self.min_dis_between_continous_detection = 0.1 # unit: meter
         self.min_time_between_continous_detection = 0.1 # unit: second 
-        
+        self.continuous_detected_num_max = 3
+        self.continuous_lost_num_max = 3
         # [score_weight_for_armor_name, score_weight_for_tvec, score_weight_for_rvec]
         self.score_weights_list_for_automatic_matching = [100,10,10]
         self.score_accumulation_method_list_for_automatic_matching = ['add','add','add']
@@ -275,9 +276,9 @@ class Observer:
             armor_idx_to_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_detect_history
             
             continuous_detected_num = armor_idx_to_list[right_armor_idx][0].continuous_detected_num + 1
-            continuous_detected_num = CLAMP(continuous_detected_num, [0,3])
+            continuous_detected_num = CLAMP(continuous_detected_num, [0,self.observer_params.continuous_detected_num_max])
             continuous_lost_num = armor_idx_to_list[right_armor_idx][0].continuous_lost_num - 1
-            continuous_lost_num = CLAMP(continuous_lost_num, [0,3])
+            continuous_lost_num = CLAMP(continuous_lost_num, [0,self.observer_params.continuous_lost_num_max])
             
             armor_idx_to_list = self.observer_params.armor_name_to_car_params[right_armor_name].armor_idx_to_detect_history
             self._update_all_id_armor_by_detection(right_armor_name, 
@@ -307,10 +308,10 @@ class Observer:
                 new_armor_params.time = armor_idx_to_list[armor_idx][0].time
                 new_armor_params.confidence = 0.0
                 continuous_detected_num = armor_idx_to_list[armor_idx][0].continuous_detected_num - 1
-                continuous_detected_num = CLAMP(continuous_detected_num, [0,3])
+                continuous_detected_num = CLAMP(continuous_detected_num, [0,self.observer_params.continuous_detected_num_max])
                 new_armor_params.continuous_detected_num = continuous_detected_num
                 continuous_lost_num = armor_idx_to_list[armor_idx][0].continuous_lost_num + 1
-                continuous_lost_num = CLAMP(continuous_lost_num, [0,3])
+                continuous_lost_num = CLAMP(continuous_lost_num, [0,self.observer_params.continuous_lost_num_max])
                 new_armor_params.continuous_lost_num = continuous_lost_num
                 new_armor_params.if_update = False
                 SHIFT_LIST_AND_ASSIG_VALUE(armor_idx_to_list[armor_idx],new_armor_params)

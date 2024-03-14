@@ -28,7 +28,8 @@ history_depth: 5
 min_continuous_num_to_apply_predict: 2
 min_dis_between_continous_detection: 0.1
 min_time_between_continous_detection: 0.3
-
+continuous_detected_num_max: 5
+continuous_lost_num_max: 5
 
 score_accumulation_method_list_for_automatic_matching:
 - add

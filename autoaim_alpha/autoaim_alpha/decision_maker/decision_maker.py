@@ -18,6 +18,12 @@ class Decision_Maker_Params(Params):
         self.pitch_search_right_waves = 6
         self.sleep_time_after_move_command = 0.1
         self.repeat_times_for_move_command = 3
+        
+        self.yaw_pitch_history_length = 20
+        
+        self.continuous_detected_num_min_threshold = 2
+        self.continuous_lost_num_max_threshold = 4
+        
         self.fire_mode = 1
         """fire mode:
             0: firepower priority
@@ -53,10 +59,14 @@ class Decision_Maker:
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
         self.remaining_health = 0.0
-        self.remaining_ammo = 0
+        self.remaining_ammo = 200
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
         self._init_yaw_pitch_search_data()
+        
+        self.next_yaw_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
+        self.next_pitch_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
+        
         
 
         
@@ -116,7 +126,7 @@ class Decision_Maker:
             tuple: next_yaw,next_pitch, fire_times, if_possible_find_target
         """
         max_continous_detected_armor = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
-        if max_continous_detected_armor.if_update:
+        if max_continous_detected_armor.if_update and max_continous_detected_armor.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
             fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(max_continous_detected_armor.tvec,
                                                         self.cur_yaw,
                                                         self.cur_pitch)
@@ -134,8 +144,9 @@ class Decision_Maker:
                 fire_times = 0
                 if_possible_find_target = True
                 lr1.warn(f"Bad Target, Stay, d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
+        
         else:
-            if max_continous_detected_armor.continuous_detected_num > 0:
+            if max_continous_detected_armor.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
                 next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
                 fire_times = 0
                 if_possible_find_target = True
@@ -148,7 +159,8 @@ class Decision_Maker:
                 lr1.warn(f'Target Lost {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}')
             
             
-            
+        SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
+        SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         return next_yaw,next_pitch, fire_times,if_possible_find_target
             
     

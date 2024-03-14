@@ -11,6 +11,7 @@ pitch_search_right_waves: 6
 fire_mode: 1
 sleep_time_after_move_command: 0.1
 repeat_times_for_move_command: 3
+yaw_pitch_history_length: 20
 
 
 
