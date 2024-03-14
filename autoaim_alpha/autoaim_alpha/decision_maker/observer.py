@@ -325,7 +325,7 @@ class Observer:
             correct_history_list[0].continuous_detected_num = correct_history_list[1].continuous_detected_num - 1
             detect_history_list[0].if_update = False
             
-        correct_history_list[0].continuous_deteced_num = CLAMP(correct_history_list[0].continuous_detected_num, [0,3])
+        correct_history_list[0].continuous_detected_num = CLAMP(correct_history_list[0].continuous_detected_num, [0,3])
         correct_history_list[0].continuous_lost_num = CLAMP(correct_history_list[0].continuous_lost_num, [0,3])
         
         

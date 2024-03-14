@@ -2,7 +2,7 @@
 # Q_scale : process noise parameter for Kalman filter
 # R_scale_dis_diff_denominator: bigger value means R is smaller, which means trust more the measurement
 # history_depth: > 3
-# min_continous_num_to_apply_predict
+# min_continuous_num_to_apply_predict
 # min_dis_between_continous_detection
 # min_time_between_continous_detection
 
@@ -25,7 +25,7 @@ predict_offset_time: 1.0
 armor_name_to_car_params: {}
 
 history_depth: 5
-min_continous_num_to_apply_predict: 2
+min_continuous_num_to_apply_predict: 2
 min_dis_between_continous_detection: 0.1
 min_time_between_continous_detection: 0.3
 
