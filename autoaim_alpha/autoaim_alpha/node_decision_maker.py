@@ -5,7 +5,6 @@ from rclpy.node import Node
 from .decision_maker.ballistic_predictor import *
 from .decision_maker.decision_maker import *
 
-
 yaw_left = -np.pi
 yaw_right = np.pi
 yaw_step = 0.01
@@ -15,15 +14,25 @@ pitch_step = 0.01
 
 yaw_test_data = np.round(np.arange(yaw_left,yaw_right,yaw_step),3)
 
-
 pitch_test_data = np.r_[(np.round(np.arange(pitch_down,pitch_up,pitch_step),3)),np.round(np.arange(pitch_up,pitch_down,-pitch_step)),np.round(np.arange(pitch_down,0,pitch_step),3)]
-
 
 class Node_Decision_Maker(Node,Custom_Context_Obj):
 
     def __init__(self,
                  name):
         super().__init__(name)
+        self.action_mode_to_callback = {0:self.make_decision_callback,
+                                1:self.repeat_recv_from_ele_callback,
+                                2:self.test_yaw_callback,
+                                3:self.test_pitch_callback,
+                                4:self.doing_nothing_callback}
+        
+        self.action_mode_to_note = {0:"Make decision",
+                                1:"Repeat recv from ele",
+                                2:"Test yaw",
+                                3:"Test pitch",
+                                4:"Doing nothing"}
+        
         self.pub_ele_sys_com = self.create_publisher(topic_electric_sys_com['type'],
                                                 topic_electric_sys_com['name'],
                                                 topic_electric_sys_com['qos_profile'])
@@ -37,35 +46,19 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                       self.recv_from_ele_sys_callback,
                                                       topic_electric_sys_state['qos_profile'])
         
-        self.sub_predict_pos = self.create_subscription(topic_armor_pos_corrected['type'],
-                                                      topic_armor_pos_corrected['name'],
-                                                      self.sub_predict_pos_callback,
-                                                      topic_armor_pos_corrected['qos_profile'])
-                       
-        self.ballestic = Ballistic_Predictor(node_decision_maker_mode,
-                                             ballistic_predictor_config_yaml_path)
-        
+        self.sub_armor_pos_list = self.create_subscription(topic_armor_pos_corrected_list['type'],
+                                                        topic_armor_pos_corrected_list['name'],
+                                                        self.sub_armor_pos_list_callback,
+                                                        topic_armor_pos_corrected_list['qos_profile'])
+
         self.decision_maker = Decision_Maker(node_decision_maker_mode,
                                              decision_maker_params_yaml_path,
+                                             ballistic_predictor_config_yaml_path,
                                              enemy_car_list)
 
-        action_mode_to_callback = {0:self.make_decision_callback,
-                                1:self.repeat_recv_from_ele_callback,
-                                2:self.test_yaw_callback,
-                                3:self.test_pitch_callback,
-                                4:self.doing_nothing_callback}
+
         
-        
-        
-        action_mode_to_note = {0:"Make decision",
-                                1:"Repeat recv from ele",
-                                2:"Test yaw",
-                                3:"Test pitch",
-                                4:"Doing nothing"}
-        
-        
-        self.timer = self.create_timer(1/make_decision_freq, action_mode_to_callback[gimbal_action_mode])
-        self.get_logger().warn(f"Use gimbal_action_mode {action_mode_to_note[gimbal_action_mode]}")
+        self.get_logger().warn(f"Use gimbal_action_mode {self.action_mode_to_note[gimbal_action_mode]}")
         
         if if_ignore_elesys:
             self.decision_maker.electric_system_zero_unix_time = time.time()
@@ -88,7 +81,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.decision_maker.electric_system_zero_unix_time = msg.unix_time
             self.get_logger().info(f"Connect to electric system, zero_unix_time {msg.unix_time}, cur_time {time.time()}")
             
-        self.ballestic._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
+        self.decision_maker.ballistic_predictor._update_camera_pos_in_gun_pivot_frame(msg.cur_yaw,msg.cur_pitch)
         self.decision_maker.update_our_side_info(
                                                  cur_yaw=msg.cur_yaw,
                                                  cur_pitch=msg.cur_pitch,
@@ -97,25 +90,28 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                  remaining_ammo=None)
         
         
-    def sub_predict_pos_callback(self, msg:ArmorPos):
-        target_pos_in_camera_frame = np.array([msg.pose.pose.position.x,
-                                                msg.pose.pose.position.y,
-                                                msg.pose.pose.position.z])
+    def sub_armor_pos_list_callback(self, msg:ArmorPosList):
+        for armor_pos in msg.armor_pos_list:
+            target_pos_in_camera_frame = np.array([armor_pos.pose.pose.position.x,
+                                                    armor_pos.pose.pose.position.y,
+                                                    armor_pos.pose.pose.position.z])
+            
+            q = Quaternion(armor_pos.pose.pose.orientation.w,
+                        armor_pos.pose.pose.orientation.x,
+                        armor_pos.pose.pose.orientation.y,
+                        armor_pos.pose.pose.orientation.z)
+            
+            rvec = q.get_axis() * q.angle
+            self.decision_maker.update_enemy_side_info(armor_pos.armor_name,
+                                                    armor_pos.armor_id,
+                                                    target_pos_in_camera_frame,
+                                                    rvec,
+                                                    armor_pos.confidence,
+                                                    armor_pos.pose.header.stamp.sec + armor_pos.pose.header.stamp.nanosec/1e9
+                                                    )
+            
+        self.action_mode_to_callback[gimbal_action_mode]()
         
-        q = Quaternion(msg.pose.pose.orientation.w,
-                       msg.pose.pose.orientation.x,
-                       msg.pose.pose.orientation.y,
-                       msg.pose.pose.orientation.z)
-        
-        rvec = q.get_axis() * q.angle
-        
-        self.decision_maker.update_enemy_side_info(msg.armor_name,
-                                                   msg.armor_id,
-                                                   target_pos_in_camera_frame,
-                                                   rvec,
-                                                   msg.confidence,
-                                                   msg.pose.header.stamp.sec + msg.pose.header.stamp.nanosec/1e9
-                                                   )
         
         
     def make_decision_callback(self):
@@ -126,52 +122,22 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg = ElectricsysCom()
         
         target_armor = self.decision_maker.choose_target()
-        
-        abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
-                                                                                       self.decision_maker.cur_yaw,
-                                                                                       self.decision_maker.cur_pitch)
-        abs_pitch = self.decision_maker.cur_pitch
-        
-        if if_success:
-            
-            if target_armor.confidence == 0.75:
-                com_msg.fire_times = 2
-                self.search_mode = 0
-                self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE {com_msg.fire_times}")
-                
-            elif target_armor.confidence ==0.5:
-                com_msg.fire_times = 0
-                self.search_mode = 0
-                self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
-            
-            elif target_armor.confidence == 0.25:
-                com_msg.fire_times = 0
-                self.search_mode = 0
-                self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, Only follow ")
-            
-            else:
-                abs_yaw, abs_pitch = self.decision_maker.search_target()
-                self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
-            
-        else:
-            self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
-            abs_yaw, abs_pitch = self.decision_maker.search_target()
-                            
+        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision(target_armor) 
 
-        com_msg.reach_unix_time = target_armor.time
-        com_msg.target_abs_pitch = abs_pitch
-        com_msg.target_abs_yaw = abs_yaw
+        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
+        com_msg.target_abs_pitch = next_pitch
+        com_msg.target_abs_yaw = next_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
+        com_msg.fire_times = fire_times
+        
         self.pub_ele_sys_com.publish(com_msg)
         
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
             self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_pitch {com_msg.target_abs_pitch:.3f} target_abs_yaw {com_msg.target_abs_yaw:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
-                
        
     def repeat_recv_from_ele_callback(self):
-        
         
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
@@ -190,7 +156,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
         
-        
         self.pub_ele_sys_com.publish(com_msg)
         
     def test_yaw_callback(self):
@@ -199,9 +164,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
         
-        
         com_msg = ElectricsysCom()
-        abs_yaw, abs_pitch = self.decision_maker.search_target()
+        abs_yaw, abs_pitch = self.decision_maker._search_target()
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = abs_pitch
         com_msg.target_abs_yaw = abs_yaw
@@ -213,8 +177,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.yaw_test_idx = 0
         
         self.pub_ele_sys_com.publish(com_msg)
-        
-        
         
     def test_pitch_callback(self):
         if self.if_connetect_to_ele_sys == False:
@@ -243,43 +205,17 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg = ElectricsysState()
         
         target_armor = self.decision_maker.choose_target()
-        
-        abs_yaw,abs_pitch, flight_time, if_success = self.ballestic.get_fire_yaw_pitch(target_armor.tvec,
-                                                                                       self.decision_maker.cur_yaw,
-                                                                                       self.decision_maker.cur_pitch)
-        if not if_success:
-            self.get_logger().info(f"Ballistic predict fail, bad target, target pos: {target_armor.tvec}")
-            return
-            
-        if target_armor.confidence == 0.75:
-            self.get_logger().warn(f"Target {target_armor.name} id {target_armor.id} {target_armor.confidence} locked, FIRE")
-            
-        
-        elif target_armor.confidence ==0.5:
-            self.get_logger().info(f"Target {target_armor.confidence} blink {target_armor.name} id {target_armor.id} , Only follow")
-        
-        
-        elif target_armor.confidence == 0.25:
-            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} first show, not follow ")
-            return
-        
-        else:
-            self.get_logger().info(f"Target {target_armor.confidence} {target_armor.name} id {target_armor.id} Lost, not follow ")
-            return
-            
-            
-            
-        com_msg.cur_yaw = abs_yaw
-        com_msg.cur_pitch = abs_pitch
+        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision(target_armor) 
+       
+        com_msg.cur_yaw = next_yaw
+        com_msg.cur_pitch = next_pitch
         com_msg.unix_time = time.time()
         
         self.pub_show.publish(com_msg)
 
-        
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Choose Target {target_armor.name} id {target_armor.id} tvec {target_armor.tvec} rvec {target_armor.rvec} time {target_armor.time} ")
         self.get_logger().debug(f"Make decision : target_abs_pitch {com_msg.cur_pitch:.3f} target_abs_yaw {com_msg.cur_yaw:.3f} reach_unix_time {com_msg.unix_time:.3f}")
-                
        
     def repeat_recv_from_ele_callback(self):
         
@@ -301,13 +237,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
         
-        
         self.pub_ele_sys_com.publish(com_msg)
-    
-   
-        
-    
-    
     
     def _start(self):
         

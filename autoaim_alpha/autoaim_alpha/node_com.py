@@ -130,7 +130,7 @@ class Node_Com(Node,Custom_Context_Obj):
             
             self.port.send_msg('A')
             if node_com_mode == 'Dbg':
-                self.get_logger().debug(f"Obey , cur pos(p,y) {self.port.pos_data.present_pitch:.3f}, {self.port.pos_data.present_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
+                self.get_logger().debug(f"Obey , cur pos(p,y) {self.cur_pitch:.3f}, {self.cur_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
             
     def timer_recv_msg_callback(self):
         

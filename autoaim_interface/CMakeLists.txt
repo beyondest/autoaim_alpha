@@ -32,6 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CarPos.msg"
   "msg/ElectricsysState.msg"
   "msg/ElectricsysCom.msg"
+  "msg/ArmorPosList.msg"
   DEPENDENCIES geometry_msgs
  )
  

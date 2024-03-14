@@ -101,8 +101,6 @@ class Node_Detector(Node,Custom_Context_Obj):
             
         self.pre_time = self.cur_time
         
-        
-        
         if if_show_img_remote or if_show_img_local:
             img_for_visualize = self.armor_detector.visualize(img,
                                           fps=self.fps,
@@ -113,7 +111,6 @@ class Node_Detector(Node,Custom_Context_Obj):
             if if_show_img_local:
                 cv2.imshow(self.window_name,img_for_visualize)
                 cv2.waitKey(1)
-            
         
         if result is not None:
             msg = DetectResult()
@@ -136,7 +133,6 @@ class Node_Detector(Node,Custom_Context_Obj):
                 ed.pose.pose.orientation.x = q.x
                 ed.pose.pose.orientation.y = q.y
                 ed.pose.pose.orientation.z = q.z
-                
                 msg.detect_result.append(ed)
                 
                 log_info += f"\narmor_name:{ed.armor_name},conf:{ed.confidence:.2f}, x:{each_result['pos'][0]:.2f},y:{each_result['pos'][1]:.2f},z:{each_result['pos'][2]:.2f}"
@@ -147,6 +143,7 @@ class Node_Detector(Node,Custom_Context_Obj):
             self.get_logger().debug(f"publish detect result success")
             
         else:
+            self.pub_detect_result.publish(DetectResult())
             self.get_logger().warn(f"No target found")
     
     def sub_ele_sys_com_callback(self,msg:ElectricsysCom):

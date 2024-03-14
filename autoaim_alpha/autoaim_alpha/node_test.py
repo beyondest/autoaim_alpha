@@ -4,7 +4,7 @@ from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from std_msgs.msg import ColorRGBA
-from autoaim_interface.msg import ElectricsysState
+from autoaim_interface.msg import DetectResult
 import time
 class MarkerPublisher(Node):
 
@@ -12,7 +12,7 @@ class MarkerPublisher(Node):
         super().__init__('marker_publisher')
         self.publisher_ = self.create_publisher(Marker, 'visualization_marker', 10)
         self.subscription = self.create_subscription(PoseStamped, 'pose', self.listener_callback, 10)
-        self.sub2 = self.create_subscription(ElectricsysState, 'test', self.listener_callback2, 10)
+        self.sub2 = self.create_subscription(DetectResult, 'test', self.listener_callback2, 10)
         self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
 
 
@@ -41,8 +41,9 @@ class MarkerPublisher(Node):
         self._add_text_to_marker(marker, f"{marker.scale.x}", self.publisher_)
 
 
-    def listener_callback2(self, msg: ElectricsysState):
-        pass
+    def listener_callback2(self, msg: DetectResult):
+        self.get_logger().warn(f"len : {len(msg.detect_result)}")
+        
     def _add_text_to_marker(self,
                             marker:Marker,
                             text:str,

@@ -80,6 +80,9 @@ class Armor_Params(Params):
         self.confidence = 0.0
         self.id = id 
         self.name = name 
+        self.continuous_detected_num = 0
+        self.continuous_lost_num = 0
+        self.if_update = False
         
 
 
@@ -161,8 +164,7 @@ class Observer_Params(Params):
         
         self.predict_offset_time = 1.0
         self.history_depth = 5
-        self.if_force_correct_after_detect = 1
-        self.min_continous_num_to_apply_predict = 3
+        self.min_continuous_num_to_apply_predict = 3
         self.min_dis_between_continous_detection = 0.1 # unit: meter
         self.min_time_between_continous_detection = 0.1 # unit: second 
         
@@ -174,7 +176,7 @@ class Observer_Params(Params):
         self.score_criterion_for_automatic_matching = 200
         self.wrongpic_threshold_dis = 0.2 # unit: meter
         self.armor_name_to_car_params = {}
-        
+
         
     def init_each_car_params(self,enemy_car_list:list):
         self.H = np.array(self.H)
@@ -237,12 +239,12 @@ class Observer:
                 'rvec':np.ndarray, (3,)
                 'time':float
         """
-        
         for target in all_targets_list:
             self.update_by_detection(target['armor_name'],
                                        target['tvec'],
                                        target['rvec'],
                                        target['time'])
+            
             
     def update_by_correct_all(self)->dict:
         """
@@ -253,27 +255,30 @@ class Observer:
             dict: armor_name_to_idx, this is the most latest armor id for each armor name
         """
         armor_name_to_idx = {}
-        for target in self.enemy_car_list:
+        for car_params in self.observer_params.armor_name_to_car_params.values():
             
-            armor_name = target['armor_name']
-            latest_focus_armor_id = self.__get_latest_focus_armor_idx(armor_name)
-            self.update_by_correct(armor_name, latest_focus_armor_id)
+            armor_name  = car_params.armor_name
+            latest_update_armor_id = self.__get_latest_update_armor_id(armor_name)
+            if latest_update_armor_id is not None:
+                self.update_by_correct(armor_name, latest_update_armor_id)
+                
+                t = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_update_armor_id][0].time
+                tvec = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_update_armor_id][0].tvec
+                rvec = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_update_armor_id][0].rvec
+                confidence = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_update_armor_id][0].confidence
+                
+                self._update_other_armor_state_by_one_armor(armor_name, 
+                                                            latest_update_armor_id, 
+                                                            tvec, 
+                                                            rvec, 
+                                                            t, 
+                                                            confidence, 
+                                                            self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history)
+            else:
+                for armor_idx in range(car_params.armor_nums):
+                    self.update_by_correct(armor_name, armor_idx)
+            armor_name_to_idx.update({armor_name:latest_update_armor_id})
             
-            t = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_focus_armor_id][0].time
-            tvec = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_focus_armor_id][0].tvec
-            rvec = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_focus_armor_id][0].rvec
-            confidence = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[latest_focus_armor_id][0].confidence
-            
-            self._update_other_armor_state_by_one_armor(armor_name, 
-                                                        latest_focus_armor_id, 
-                                                        tvec, 
-                                                        rvec, 
-                                                        t, 
-                                                        confidence, 
-                                                        self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history)
-            
-            armor_name_to_idx.update({armor_name:latest_focus_armor_id})
-        
         return armor_name_to_idx   
     
     def update_by_detection(self,
@@ -284,9 +289,8 @@ class Observer:
         
         
         right_armor_name,right_armor_idx,confidence = self._automatic_matching(armor_name, tvec, rvec)
-        
-        armor_nums = self.observer_params.armor_name_to_car_params[right_armor_name].armor_nums
         armor_idx_to_list = self.observer_params.armor_name_to_car_params[right_armor_name].armor_idx_to_detect_history
+        armor_idx_to_list[right_armor_idx][0].if_update = True
         
         self._update_other_armor_state_by_one_armor(right_armor_name, 
                                                     right_armor_idx, 
@@ -296,14 +300,9 @@ class Observer:
                                                     confidence, 
                                                     armor_idx_to_list
                                                     )
-        
         if self.mode == 'Dbg':
             lr1.info(f"Observer: Update armor detect params {right_armor_name} at t {t} with confidence {confidence}")
         
-        if self.observer_params.if_force_correct_after_detect:
-            for i in range(armor_nums):
-                self.update_by_correct(right_armor_name, i)
-            
         self.latest_focus_armor_name = right_armor_name
         self.latest_focus_armor_index = right_armor_idx
         self.latest_focus_t = t
@@ -316,6 +315,19 @@ class Observer:
         self._update_car_params_and_armor_relative_params()
         car_params = self.observer_params.armor_name_to_car_params[armor_name]
         correct_history_list = car_params.armor_idx_to_correct_history[armor_idx]
+        detect_history_list = car_params.armor_idx_to_detect_history[armor_idx]
+        if detect_history_list[0].if_update:
+            correct_history_list[0].continuous_detected_num = correct_history_list[1].continuous_detected_num + 1
+            correct_history_list[0].continuous_lost_num = correct_history_list[1].continuous_lost_num - 1
+            detect_history_list[0].if_update = False
+        else:
+            correct_history_list[0].continuous_lost_num = correct_history_list[1].continuous_lost_num + 1
+            correct_history_list[0].continuous_detected_num = correct_history_list[1].continuous_detected_num - 1
+            detect_history_list[0].if_update = False
+            
+        correct_history_list[0].continuous_deteced_num = CLAMP(correct_history_list[0].continuous_detected_num, [0,3])
+        correct_history_list[0].continuous_lost_num = CLAMP(correct_history_list[0].continuous_lost_num, [0,3])
+        
         
         tvec_correct, rvec_correct, cur_time, confidence = self.__cal_correct_params(armor_name, armor_idx)
         self._update_armor_history_params(correct_history_list, tvec_correct, rvec_correct, cur_time, confidence)
@@ -453,8 +465,8 @@ class Observer:
         """
         
         correct_history_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_detect_history[armor_index]
-        continuous_num = self.__find_continous_num(correct_history_list,if_check_dis_continuous=True)
-        if continuous_num < self.observer_params.min_continous_num_to_apply_predict:
+        continuous_num = self.__find_continuous_num(correct_history_list,if_check_dis_continuous=True)
+        if continuous_num < self.observer_params.min_continuous_num_to_apply_predict:
             tvec = correct_history_list[0].tvec
             rvec = correct_history_list[0].rvec
             
@@ -651,48 +663,78 @@ class Observer:
         """
         detect_history_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_detect_history[armor_idx]
         correct_history_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[armor_idx]
+        cur_time = time.time()
+        continuous_lost_num = correct_history_list[0].continuous_lost_num
+        continuous_detected_num = correct_history_list[0].continuous_detected_num
         
-        focus_period = self.__get_armor_last_focus_period(detect_history_list[0].name,detect_history_list[0].id)
-        
-        # actually , this is predict time
-        cur_time = time.time() + self.observer_params.predict_offset_time
-        
+        # all conditions : detected,lost : 00,01,02,03,10,20,30,12,21
         # target lost
-        if focus_period > self.observer_params.min_time_between_continous_detection:
+        if continuous_lost_num == 3:
             tvec_correct = correct_history_list[0].tvec
             rvec_correct = correct_history_list[0].rvec
-            confidence = 0
+            confidence = 0.1  # search
             if self.mode == 'Dbg':
-                lr1.debug(f"Observer: Lost Armor {armor_name} id {armor_idx}")
+                lr1.debug(f"Observer: Lost Armor {armor_name} id {armor_idx}, detect,lost = 0,3")
                 
-        # target focused
-        else:
+        elif continuous_lost_num == 2 and continuous_detected_num == 0:
+            tvec_correct = correct_history_list[0].tvec
+            rvec_correct = correct_history_list[0].rvec
+            confidence = 0.2 # search
+            if self.mode == 'Dbg':
+                lr1.debug(f"Observer: Lost Armor {armor_name} id {armor_idx}, detect,lost = 0,2")
+                
+        elif continuous_lost_num == 1 and continuous_detected_num == 0:
+            tvec_correct = correct_history_list[0].tvec
+            rvec_correct = correct_history_list[0].rvec
+            confidence = 0.3 # search
+            if self.mode == 'Dbg':
+                lr1.debug(f"Observer: Lost Armor {armor_name} id {armor_idx}, detect,lost = 0,1")
+                
+        elif continuous_detected_num == 0 and continuous_lost_num == 0:
+            tvec_correct = correct_history_list[0].tvec
+            rvec_correct = correct_history_list[0].rvec
+            confidence = 0.4 # search
             
-            continous_num = self.__find_continous_num(detect_history_list,if_check_dis_continuous=False)
+
+        # target focused
+        elif continuous_detected_num== 3:
+            tvec_correct = detect_history_list[0].tvec
+            rvec_correct = detect_history_list[0].rvec
+            confidence = 0.9 # fire
             if self.mode == 'Dbg':
-                lr1.debug(f"Observer: Focus Armor {armor_name} id {armor_idx} continous_num {continous_num}")
+                lr1.debug(f"Observer: Focus Armor {armor_name} id {armor_idx}, detect,lost = 3,0")
+        
+        elif continuous_detected_num == 2 and continuous_lost_num == 0:
+            tvec_correct = detect_history_list[0].tvec
+            rvec_correct = detect_history_list[0].rvec
+            confidence = 0.8 # fire
+            if self.mode == 'Dbg':
+                lr1.debug(f"Observer: Focus Armor {armor_name} id {armor_idx}, detect,lost = 2,0")
+        
+        elif continuous_detected_num == 2 and continuous_lost_num == 1:
+            tvec_correct = detect_history_list[0].tvec/3 * 2 + correct_history_list[0].tvec/3 * 1
+            rvec_correct = detect_history_list[0].rvec/3 * 2 + correct_history_list[0].rvec/3 * 1
+            confidence = 0.7 # follow but not fire
+            if self.mode == 'Dbg':
+                lr1.debug(f"Observer: Focus Armor {armor_name} id {armor_idx}, detect,lost = 1,2")
+        
+        elif continuous_detected_num == 1 and continuous_lost_num == 0:
+            tvec_correct = detect_history_list[0].tvec
+            rvec_correct = detect_history_list[0].rvec
                 
-            if continous_num == 1:
+            confidence = 0.6 # stay
+            if self.mode == 'Dbg':
+                lr1.debug(f"Observer: Focus Armor {armor_name} id {armor_idx}, detect,lost = 1,0")
                 
-                tvec = detect_history_list[0].tvec
-                rvec = detect_history_list[0].rvec
-                confidence = 0.25
-               
-            else:
-                dis_continous_nums = self.__find_continous_num(detect_history_list,if_check_dis_continuous=True)
                 
-                if dis_continous_nums == 1:
-                    tvec = (correct_history_list[0].tvec + detect_history_list[0].tvec)/2
-                    rvec = (correct_history_list[0].rvec + detect_history_list[0].rvec)/2
-                    confidence = 0.5
-                    
-                else:
-                    tvec = detect_history_list[0].tvec
-                    rvec = detect_history_list[0].rvec
-                    confidence = 0.75
-                    
-            tvec_correct = tvec
-            rvec_correct = rvec
+        elif continuous_lost_num == 2 and continuous_detected_num == 1:
+            tvec_correct = correct_history_list[0].tvec/3 * 2 + detect_history_list[0].tvec/3 * 1
+            rvec_correct = correct_history_list[0].rvec/3 * 2 + detect_history_list[0].rvec/3 * 1
+            confidence = 0.5 # follow but not fire
+            if self.mode == 'Dbg':
+                lr1.debug(f"Observer: Lost Armor {armor_name} id {armor_idx}, detect,lost = 1,2")
+
+
             
         return tvec_correct,rvec_correct,cur_time,confidence
           
@@ -727,7 +769,7 @@ class Observer:
         return car_rotation_speed
  
  
-    def __find_continous_num(self,
+    def __find_continuous_num(self,
                           armor_history_list:list,
                           if_check_dis_continuous:bool=False)->int:
         """Find how many times the armor(id) has been detected continuously latest
@@ -737,10 +779,10 @@ class Observer:
             armor_idx (int): _description_
 
         Returns:
-            int: 1 < continous_num <= history_depth
+            int: 1 < continuous_num <= history_depth
         """
         
-        continous_num = 1
+        continuous_num = 1
         for i in range(self.observer_params.history_depth - 1):
             dt = armor_history_list[i].time - armor_history_list[i+1].time
             
@@ -753,9 +795,9 @@ class Observer:
                     if dis > self.observer_params.min_dis_between_continous_detection:
                         break
                     
-                continous_num += 1
+                continuous_num += 1
                 
-        return continous_num
+        return continuous_num
                 
     def __get_armor_last_focus_period(self,
                                         armor_name:str,
@@ -769,13 +811,16 @@ class Observer:
         
         return period
     
-    def __get_latest_focus_armor_idx(self,
+    def __get_latest_update_armor_id(self,
                                      armor_name:str):
         
         car_params = self.observer_params.armor_name_to_car_params[armor_name]
-        max_id = np.argmax([car_params.armor_idx_to_detect_history[i][0].time for i in range(car_params.armor_nums)])
+        armor_idx_to_detect_history_list = car_params.armor_idx_to_detect_history
+        for armor_idx,history_list in armor_idx_to_detect_history_list.items():
+            if history_list[0].if_update:
+                return armor_idx
         
-        return max_id
+        return None
                 
                 
             
@@ -845,4 +890,4 @@ class Observer:
                                                         t, 
                                                         confidence, 
                                                         car_params.armor_idx_to_correct_history)
-        
+    

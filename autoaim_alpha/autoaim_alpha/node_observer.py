@@ -25,19 +25,20 @@ class Node_Observer(Node,Custom_Context_Obj):
                                             topic_detect_result['name'],
                                             self.detect_sub_callback,
                                             topic_detect_result['qos_profile'])
-        
+        self.pub = self.create_publisher(topic_armor_pos_corrected_list['type'],
+                                          topic_armor_pos_corrected_list['name'],
+                                          topic_armor_pos_corrected_list['qos_profile'])
 
         if if_pub_armor_state_without_correct:
             self.pub_armor_pos_without_correct = self.create_publisher(topic_armor_pos_without_correct['type'],
                                                                         topic_armor_pos_without_correct['name'],
                                                                         topic_armor_pos_without_correct['qos_profile'])
-        
         if if_pub_armor_state_corrected:
             self.pub_armor_pos_corrected = self.create_publisher(topic_armor_pos_corrected['type'],
-                                                                topic_armor_pos_corrected['name'],
-                                                                topic_armor_pos_corrected['qos_profile'])
-            self.timer_correct = self.create_timer(1 / observer_correct_freq, self.timer_correct_callback)
-        
+                                                                    topic_armor_pos_corrected['name'],
+                                                                    topic_armor_pos_corrected['qos_profile'])
+            
+            
         if if_pub_armor_state_predicted:
             self.pub_armor_pos_predicted = self.create_publisher(topic_armor_pos_predicted['type'],
                                                             topic_armor_pos_predicted['name'],
@@ -87,53 +88,40 @@ class Node_Observer(Node,Custom_Context_Obj):
             rvec = q.get_axis() * q.angle
             t = each_detect_result.pose.header.stamp.sec + each_detect_result.pose.header.stamp.nanosec * 1e-9
             all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':t})
+
+        self.observer.update_by_detection_list(all_target_list)
+        self.observer.update_by_correct_all()
+        armor_state_corrected_list = self.observer.get_armor_latest_state(if_correct_state=True)
         
-        filtered_target_list = []
-        for each_target in all_target_list:
-            if self.observer._if_wrong_pic(each_target['armor_name'],each_target['tvec'],each_target['rvec']):
-                if node_observer_mode == 'Dbg':
-                    self.get_logger().debug(f"Remove wrong pic {each_target['armor_name']} {each_target['tvec']} {each_target['rvec']}")
-            else:
-                filtered_target_list.append(each_target)
-                
-        self.observer.update_by_detection_list(filtered_target_list)
+        msg2 = ArmorPosList()
+        for armor_state in armor_state_corrected_list:
+            armor_pos = ArmorPos()
+            armor_pos.armor_name = armor_state['armor_name']
+            armor_pos.armor_id = armor_state['armor_id']
+            armor_pos.confidence = float(armor_state['armor_confidence'])
+            armor_pos.pose.pose.position.x = armor_state['armor_tvec'][0]
+            armor_pos.pose.pose.position.y = armor_state['armor_tvec'][1]
+            armor_pos.pose.pose.position.z = armor_state['armor_tvec'][2]
+            q = Quaternion(axis = armor_state['armor_rvec'],angle = np.linalg.norm(armor_state['armor_rvec']))
+            armor_pos.pose.pose.orientation.w = q.w
+            armor_pos.pose.pose.orientation.x = q.x
+            armor_pos.pose.pose.orientation.y = q.y
+            armor_pos.pose.pose.orientation.z = q.z
+            armor_pos.pose.header.stamp.sec = int(armor_state['armor_time'])
+            armor_pos.pose.header.stamp.nanosec = int((armor_state['armor_time'] - int(armor_state['armor_time'])) * 1e9)
+            msg2.armor_pos_list.append(armor_pos)
+        self.pub.publish(msg2)
         
         if if_pub_armor_state_without_correct:
-            armor_state_list = self.observer.get_armor_latest_state(if_correct_state=False)
-            
-            self.publish_armor_state(self.pub_armor_pos_without_correct,armor_state_list)
-            
-        
-    def timer_correct_callback(self):
-        
-        t1 = time.perf_counter()
-        armor_name_to_idx = self.observer.update_by_correct_all()
-        t2 = time.perf_counter()
-        
-        if node_observer_mode == 'Dbg':
-            self.get_logger().debug(f"Observer update predition all, spend time {t2-t1:.4f}s")
-        
+            armor_state_without_correct_list = self.observer.get_armor_latest_state(if_correct_state=False)
+            self.publish_armor_state(self.pub_armor_pos_without_correct,armor_state_without_correct_list)
         if if_pub_armor_state_corrected:
-            armor_state_list = self.observer.get_armor_latest_state(if_correct_state=True)
-            self.publish_armor_state(self.pub_armor_pos_corrected,armor_state_list)
+            self.publish_armor_state(self.pub_armor_pos_corrected,armor_state_corrected_list)
             
-            
-        ''' if node_observer_mode == 'Dbg':
-                for armor_state in armor_state_list:
-                    if armor_state['armor_name'] in armor_name_to_idx:
-                        if armor_state['armor_id'] == armor_name_to_idx[armor_state['armor_name']]:
-                            self.get_logger().debug(f"Corrected Armor State:\n{armor_state}\n")
-        
-        '''
         if if_pub_car_state:
-            
             car_state_list = self.observer.get_car_latest_state()
             self.publish_car_state(self.pub_car_pos,car_state_list)
-            if node_observer_mode == 'Dbg':
-                self.get_logger().debug(f"Car State:\n{car_state_list}\n")      
-                
-            
-        
+
     
     def timer_predict_callback(self):
         

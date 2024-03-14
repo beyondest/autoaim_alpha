@@ -2,7 +2,7 @@ from .ballistic_predictor import *
 from .observer import *
 from ..os_op.basic import *
 from ..os_op.global_logger import *
-
+from .ballistic_predictor import *
 
 class Decision_Maker_Params(Params):
     def __init__(self) -> None:
@@ -30,6 +30,7 @@ class Decision_Maker:
     def __init__(self,
                  mode:str,
                  decision_maker_params_yaml_path:Union[str,None] = None,
+                 ballistic_predictor_params_yaml_path:Union[str,None] = None,
                  enemy_car_list:list = None
                  ) -> None:
         CHECK_INPUT_VALID(mode,"Dbg",'Rel')
@@ -38,11 +39,20 @@ class Decision_Maker:
             
         self.mode = mode
         self.params = Decision_Maker_Params()
+        self.ballistic_predictor = Ballistic_Predictor(mode,
+                                                       ballistic_predictor_params_yaml_path)
+        
         self.enemy_car_list = enemy_car_list
         if decision_maker_params_yaml_path is not None:
             self.params.load_params_from_yaml(decision_maker_params_yaml_path)
+        
+        if ballistic_predictor_params_yaml_path is not None:
+            self.ballistic_predictor.params.load_params_from_yaml(ballistic_predictor_params_yaml_path)
+        
+        else:
+            lr1.warning("Ballistic_Predictor use default params")
             
-        self.armor_state_predict_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
+        self.armor_state_corrected_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
                                                         for enemy_car in self.enemy_car_list \
                                                             for armor_id in range(enemy_car['armor_nums'])]
         
@@ -64,7 +74,7 @@ class Decision_Maker:
                       armor_confidence:float = 0.5,
                       armor_time:float = 0.0)->None:
         
-        for armor_params in self.armor_state_predict_list:
+        for armor_params in self.armor_state_corrected_list:
             
             if armor_params.name == armor_name and armor_params.id == armor_id:
                 armor_params.tvec = armor_tvec
@@ -93,30 +103,92 @@ class Decision_Maker:
             self.params.fire_mode = fire_mode    
 
     def choose_target(self)->Armor_Params:
-        """Choose the nearest enemy car to shoot.
+        """Choose the max confident target from the list of armor_state_corrected_list.
 
         Returns:
             Armor_Params: _description_
         """
         
-        nearest_armor_params = min(self.armor_state_predict_list, key=lambda x: x.tvec[2])
-        #latest is meaningless cause we update correct params together
-        
-        
-        if self.mode == 'Dbg':
-            pass
-            #for armor_params in self.armor_state_predict_list:
-                #lr1.debug(f"Decision_Maker : For chosen : armor {armor_params.name} id {armor_params.id} : tvec {armor_params.tvec}, t : {armor_params.time}")
-                
-        #lr1.debug(f"Decision_Maker : Choosed latest_armor_state: {latest_armor_params.name} id {latest_armor_params.id} : tvec {latest_armor_params.tvec}, t : {latest_armor_params.time}")
-        
-        return nearest_armor_params
+        max_confidence_target = max(self.armor_state_corrected_list, key=lambda x: x.confidence)
+        return max_confidence_target
     
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
     
+    def make_decision(self,target_armor_params:Armor_Params)->tuple:
+        """
+
+        Args:
+            target_armor_params (Armor_Params): _description_
+
+        Returns:
+            tuple: next_yaw,next_pitch, fire_times
+        """
+        
+            
+        if target_armor_params.confidence == 0.9:
+            abs_yaw,abs_pitch, flight_time, if_success = self.ballistic_predictor.get_fire_yaw_pitch(target_armor_params.tvec,
+                                                                                                     self.cur_yaw,
+                                                                                                    self.cur_pitch)
+            
+            if not if_success:
+                lr1.info(f"Ballistic predict fail, bad target, target pos: {target_armor_params.tvec}")
+                next_yaw,next_pitch = self._search_target()
+                fire_times = 0
+            else:
+                next_yaw = abs_yaw
+                next_pitch = abs_pitch
+                fire_times = 2
+                lr1.warn(f"Target Locked {target_armor_params.name} id {target_armor_params.id} {target_armor_params.confidence}, FIRE")
+            
+        elif target_armor_params.confidence ==0.8:
+            abs_yaw,abs_pitch, flight_time, if_success = self.ballistic_predictor.get_fire_yaw_pitch(target_armor_params.tvec,
+                                                                                                     self.cur_yaw,
+                                                                                                    self.cur_pitch)
+            if not if_success:
+                lr1.info(f"Ballistic predict fail, bad target, target pos: {target_armor_params.tvec}")
+                next_yaw,next_pitch = self._search_target()
+                fire_times = 0
+            else:
+                next_yaw = abs_yaw
+                next_pitch = abs_pitch
+                fire_times = 1
+                lr1.warn(f"Target Locked {target_armor_params.name} id {target_armor_params.id} {target_armor_params.confidence} locked, FIRE")
+            
+        elif target_armor_params.confidence == 0.7:
+            abs_yaw,abs_pitch, flight_time, if_success = self.ballistic_predictor.get_fire_yaw_pitch(target_armor_params.tvec,
+                                                                                                     self.cur_yaw,
+                                                                                                    self.cur_pitch)
+            if not if_success:
+                lr1.info(f"Ballistic predict fail, bad target, target pos: {target_armor_params.tvec}")
+                next_yaw,next_pitch = self._search_target()
+                fire_times = 0
+            else:
+                next_yaw = abs_yaw
+                next_pitch = abs_pitch
+                fire_times = 0
+                lr1.warn(f"Target Blink {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id}, FOllow")
+
+        elif target_armor_params.confidence == 0.6:
+            next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
+            fire_times = 0
+            lr1.warn(f"Target Blink {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id} , Follow ")
+            
+            
+        elif target_armor_params.confidence == 0.5:
+            next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
+            fire_times = 0
+            lr1.warn(f"Target Blink {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id} , Follow ")
+        
+        else:
+            next_yaw,next_pitch = self._search_target()
+            fire_times = 0
+            lr1.warn(f"Target Lost {target_armor_params.confidence} {target_armor_params.name} id {target_armor_params.id} , Search ")
+            
+        return next_yaw,next_pitch, fire_times
+            
     
-    def search_target(self):
+    def _search_target(self):
         yaw,pitch = self._get_next_yaw_pitch()
         return yaw,pitch
     

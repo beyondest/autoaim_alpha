@@ -163,7 +163,7 @@ class Ballistic_Predictor:
         if self.mode == 'Dbg':
             lr1.debug(f"Ballistic_Predictor : required_yaw: {required_yaw} , required_pitch: {required_pitch} ,bullet_flight_time: {flight_time} ,if_success: {if_success} , solve_time: {solve_time}")
             
-            
+        required_pitch = cur_pitch
         return required_yaw, required_pitch, flight_time, if_success
     
     

@@ -5,3 +5,6 @@ Probobal reasons: mvsdk.cameraGetImageBuffer spend the most time of all, about 0
 2. package basic include utils_network.data, this is not a good practice, it should be in a separate package.
 
 
+3. openport
+
+4. cannot track is because of frequency, use one detect result too many times
