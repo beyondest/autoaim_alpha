@@ -125,14 +125,25 @@ class Decision_Maker:
                 next_pitch = fire_pitch
                 fire_times = 1
                 lr1.warn(f"Target Locked {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
+                if self.mode == 'Dbg':
+                    lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, fire_yaw = {fire_yaw}, fire_pitch = {fire_pitch}")
+                
             else:
                 next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
                 fire_times = 0
-                lr1.info(f"Ballistic_Predictor failed, use current yaw and pitch, d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
+                lr1.warn(f"Bad Target, Stay, d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
         else:
-            next_yaw,next_pitch = self._search_target()
-            fire_times = 0
-            lr1.warn(f'Target Lost {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}')
+            if max_continous_detected_armor.continuous_detected_num > 0:
+                next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
+                fire_times = 0
+                lr1.warn(f"Target Blink, Stay {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
+            
+            if max_continous_detected_armor.continuous_lost_num == 0:
+                next_yaw,next_pitch = self._search_target()
+                fire_times = 0
+                lr1.warn(f'Target Lost {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}')
+            
+            
             
         return next_yaw,next_pitch, fire_times
             
