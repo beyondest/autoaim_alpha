@@ -302,7 +302,7 @@ class Observer:
                 new_armor_params.tvec = armor_idx_to_list[armor_idx][0].tvec
                 new_armor_params.rvec = armor_idx_to_list[armor_idx][0].rvec
                 new_armor_params.time = armor_idx_to_list[armor_idx][0].time
-                new_armor_params.confidence = armor_idx_to_list[armor_idx][0].confidence
+                new_armor_params.confidence = 0.0
                 continuous_detected_num = armor_idx_to_list[armor_idx][0].continuous_detected_num - 1
                 continuous_detected_num = CLAMP(continuous_detected_num, [0,3])
                 new_armor_params.continuous_detected_num = continuous_detected_num
@@ -312,7 +312,7 @@ class Observer:
                 new_armor_params.if_update = False
                 SHIFT_LIST_AND_ASSIG_VALUE(armor_idx_to_list[armor_idx],new_armor_params)
             if self.mode == 'Dbg':
-                lr1.info(f"Observer: Update armor detect params {armor_name} at t {t} with confidence {confidence}")
+                lr1.info(f"Observer: Update armor detect params {armor_name} at t {t} with confidence {0.0}")
         
             
    
