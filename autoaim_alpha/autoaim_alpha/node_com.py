@@ -122,12 +122,20 @@ class Node_Com(Node,Custom_Context_Obj):
             
             if node_com_mode == 'Dbg':
                 self.get_logger().warn(f"Decision too old, you should control gimbal all time, last sub time {self.last_sub_topic_time:.3f}, cur_time {cur_time:.3f}, remain cur pos")
-                
+            
+            msg = ElectricsysState()
+            msg.unix_time = time.time()
+            msg.cur_pitch = self.cur_pitch
+            msg.cur_yaw = self.cur_yaw
+            self.ele_sys_state_pub.publish(msg)
+              
         else:
             
             self.port.send_msg('A')
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"Obey , cur pos(p,y) {self.cur_pitch:.3f}, {self.cur_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
+            
+            
             
     def timer_recv_msg_callback(self):
         
@@ -139,22 +147,19 @@ class Node_Com(Node,Custom_Context_Obj):
                 pass 
                 #self.get_logger().error(f"Com port {self.port.params.port_abs_path} cannot open")
         else:
-            msg = ElectricsysState()
-            
             if self.if_first_recv_from_ele_sys:
                 self.if_first_recv_from_ele_sys = False
                 self.init_synchronization_time(cur_time_minute, cur_time_second, cur_time_second_frac)
+                msg = ElectricsysState()
+            
                 msg.unix_time = self.zero_unix_time
-            else:
-                msg.unix_time = TRANS_T_TO_UNIX_TIME(cur_time_minute, cur_time_second, cur_time_second_frac, self.zero_unix_time)
+                msg.cur_pitch = self.cur_pitch
+                msg.cur_yaw = self.cur_yaw
                 
-            msg.cur_pitch = self.cur_pitch
-            msg.cur_yaw = self.cur_yaw
-            
-            self.ele_sys_state_pub.publish(msg)
-            
-            if node_com_mode == 'Dbg':
-                self.get_logger().debug(f"Recv from electric sys state p: {msg.cur_pitch:.3f}, y: {msg.cur_yaw:.3f}, t:{msg.unix_time:.3f}")
+                self.ele_sys_state_pub.publish(msg)
+            pass
+            #if node_com_mode == 'Dbg':
+            #   self.get_logger().debug(f"Recv from electric sys state p: {msg.cur_pitch:.3f}, y: {msg.cur_yaw:.3f}, t:{msg.unix_time:.3f}")
         
     def _start(self):
         #self.port.port_open()

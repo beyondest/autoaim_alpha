@@ -91,7 +91,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                  remaining_health=None,
                                                  remaining_ammo=None)
         
-        
     def sub_armor_pos_list_callback(self, msg:ArmorPosList):
         for armor_pos in msg.armor_pos_list:
             target_pos_in_camera_frame = np.array([armor_pos.pose.pose.position.x,
