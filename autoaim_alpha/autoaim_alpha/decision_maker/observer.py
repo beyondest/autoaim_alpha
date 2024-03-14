@@ -939,5 +939,6 @@ class Observer:
                                                         rvec, 
                                                         t, 
                                                         confidence, 
-                                                        car_params.armor_idx_to_correct_history)
+                                                        0,
+                                                        0)
     
