@@ -138,6 +138,7 @@ class Armor_Detector:
         if self.if_yolov5:
             img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
             self._net_part(img)
+            self._filter_part()
             lr1.warn('yolov5 need RGB, may be faster if you set camera output RGB')
             
         else:
