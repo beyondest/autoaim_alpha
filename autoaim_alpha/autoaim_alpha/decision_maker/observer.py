@@ -329,7 +329,7 @@ class Observer:
             
         continuous_detected_num = CLAMP(continuous_detected_num, [0,3])
         continuous_lost_num = CLAMP(continuous_lost_num, [0,3])
-        tvec_correct, rvec_correct, cur_time, confidence = self.__cal_correct_params(armor_name, armor_idx)
+        tvec_correct, rvec_correct, cur_time, confidence = self.__cal_correct_params(armor_name, armor_idx,continuous_detected_num,continuous_lost_num)
         
         self._update_armor_history_params(correct_history_list,
                                           tvec_correct, 
@@ -598,7 +598,8 @@ class Observer:
         new_armor_params.continuous_detected_num = continuous_detected_num
         new_armor_params.continuous_lost_num = continuous_lost_num
         new_armor_params.if_update = if_update
-        
+        for armor_params in armor_list:
+            print(f'Fuck : {armor_params.continuous_detected_num}')
         SHIFT_LIST_AND_ASSIG_VALUE(armor_list,new_armor_params)
 
     def _update_car_params_and_armor_relative_params(self):
@@ -656,7 +657,9 @@ class Observer:
             
     def __cal_correct_params(self,
                     armor_name:str,
-                    armor_idx:int
+                    armor_idx:int,
+                    continuous_detected_num:int,
+                    continuous_lost_num:int
                     )->list:
         """Use Kalman Filter to get best predict params from detect_history_list and correct_history_list
 
@@ -678,8 +681,6 @@ class Observer:
         detect_history_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_detect_history[armor_idx]
         correct_history_list = self.observer_params.armor_name_to_car_params[armor_name].armor_idx_to_correct_history[armor_idx]
         cur_time = time.time()
-        continuous_lost_num = correct_history_list[0].continuous_lost_num
-        continuous_detected_num = correct_history_list[0].continuous_detected_num
         
         # all conditions : detected,lost : 00,01,02,03,10,20,30,12,21
         # target lost
