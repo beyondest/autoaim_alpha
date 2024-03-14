@@ -138,7 +138,7 @@ class Decision_Maker:
                 fire_times = 0
                 lr1.warn(f"Target Blink, Stay {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
             
-            if max_continous_detected_armor.continuous_lost_num == 0:
+            else: 
                 next_yaw,next_pitch = self._search_target()
                 fire_times = 0
                 lr1.warn(f'Target Lost {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}')
