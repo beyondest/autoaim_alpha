@@ -74,7 +74,13 @@ class Node_Com(Node,Custom_Context_Obj):
             
             self.port.send_msg(msg.sof)
             self.port.action_data.fire_times = 0
-            
+                        
+            msg2 = ElectricsysState()
+            msg2.unix_time = time.time()
+            msg2.cur_pitch = self.cur_pitch
+            msg2.cur_yaw = self.cur_yaw
+            self.ele_sys_state_pub.publish(msg)
+              
         elif msg.sof == 'S':
             cur_unix_time = time.time()
             minute, second, second_frac = TRANS_UNIX_TIME_TO_T(cur_unix_time, self.zero_unix_time)
@@ -99,7 +105,7 @@ class Node_Com(Node,Custom_Context_Obj):
         if node_com_mode == 'Dbg':
             self.get_logger().debug(f"First Recv from electric sys, init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
         
-
+    '''
     def timer_send_msg_callback(self):
         if self.zero_unix_time is None:
             self.get_logger().debug(f"No zero_unix_time, waiting for connection")
@@ -123,19 +129,14 @@ class Node_Com(Node,Custom_Context_Obj):
             if node_com_mode == 'Dbg':
                 self.get_logger().warn(f"Decision too old, you should control gimbal all time, last sub time {self.last_sub_topic_time:.3f}, cur_time {cur_time:.3f}, remain cur pos")
             
-            msg = ElectricsysState()
-            msg.unix_time = time.time()
-            msg.cur_pitch = self.cur_pitch
-            msg.cur_yaw = self.cur_yaw
-            self.ele_sys_state_pub.publish(msg)
-              
+
         else:
             
             self.port.send_msg('A')
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"Obey , cur pos(p,y) {self.cur_pitch:.3f}, {self.cur_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
             
-            
+            '''
             
     def timer_recv_msg_callback(self):
         
