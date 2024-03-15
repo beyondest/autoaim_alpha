@@ -141,15 +141,11 @@ class Ballistic_Predictor:
         tvec_xoy = target_pos_in_gun_pivot_frame[[0,1]]
         tvec_yoz = target_pos_in_gun_pivot_frame[[1,2]]
         
-        cos_theta_with_z_axis = CAL_COS_THETA(tvec_xoy, np.array([0,1]))
-        if tvec_xoy[0] > 0:
-            relative_yaw = -np.arccos(cos_theta_with_z_axis) 
-        else:
-            relative_yaw = np.arccos(cos_theta_with_z_axis)
-            
+        relative_yaw = np.arctan2(tvec_xoy[1], tvec_xoy[0])
+        
         [required_pitch , flight_time, if_success] , solve_time = self._cal_pitch_by_newton(tvec_yoz)
         
-        required_yaw = relative_yaw + cur_yaw
+        required_yaw = cur_yaw - relative_yaw
         
         if required_yaw < -np.pi:
             required_yaw = required_yaw + 2*np.pi
