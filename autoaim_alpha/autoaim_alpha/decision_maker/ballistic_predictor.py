@@ -104,7 +104,6 @@ class Ballistic_Predictor:
         self.params.camera_pos_in_gun_pivot_frame = None
         self.params.muzzle_pos_in_gun_pivot_frame = None
         self.params.save_params_to_yaml(yaml_path)
-        
             
     def get_fire_yaw_pitch( self, 
                             target_pos_in_camera_frame:np.ndarray,
@@ -141,7 +140,7 @@ class Ballistic_Predictor:
         tvec_xoy = target_pos_in_gun_pivot_frame[[0,1]]
         tvec_yoz = target_pos_in_gun_pivot_frame[[1,2]]
         
-        relative_yaw = np.arctan2(tvec_xoy[0], tvec_xoy[1])
+        relative_yaw = -np.arctan2(tvec_xoy[0], tvec_xoy[1])
         
         [required_pitch , flight_time, if_success] , solve_time = self._cal_pitch_by_newton(tvec_yoz)
         
@@ -151,7 +150,6 @@ class Ballistic_Predictor:
             required_yaw = required_yaw + 2*np.pi
         if required_yaw > np.pi:
             required_yaw = required_yaw - 2*np.pi
-        
         
         if not if_success:
             required_pitch = cur_pitch

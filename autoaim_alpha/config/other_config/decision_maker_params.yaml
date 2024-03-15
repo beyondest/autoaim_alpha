@@ -1,7 +1,7 @@
 yaw_left_degree: -60.0
 yaw_right_degree: 60.0
 pitch_down_degree: -15.0
-pitch_up_degree: 10.0
+pitch_up_degree: 0.0
 yaw_search_step: 0.01
         
 pitch_search_left_waves: 5

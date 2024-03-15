@@ -397,3 +397,38 @@ def MAP_VALUE(value, ori_scope:tuple, target_scope:tuple):
     result = target_scope[0] + scaled_value * to_range
     
     return result
+
+
+
+class PID_Params(Params):
+    def __init__(self):
+        super().__init__()
+        self.kp = 0
+        self.ki = 0
+        self.kd = 0
+        self.max_output = 0
+        self.min_output = 0
+        
+
+class PID_Controller:
+    def __init__(self) -> None:
+        self.params = PID_Params()
+        self.last_error = 0
+        self.integral = 0
+        
+    def get_output(self,target_value,current_value)->float:
+        error = target_value - current_value
+        derivative = error - self.last_error
+        self.integral += error
+        output = self.params.kp * error + self.params.ki * self.integral + self.params.kd * derivative
+        output = CLAMP(output, [self.params.min_output,self.params.max_output])
+        self.last_error = error
+        return output
+    
+    def load_params_from_yaml(self,yaml_path:str):
+        self.params.load_params_from_yaml(yaml_path)
+        
+    def save_params_to_yaml(self,yaml_path:str,mode = 'w'):
+        self.params.save_params_to_yaml(yaml_path,mode)
+        
+

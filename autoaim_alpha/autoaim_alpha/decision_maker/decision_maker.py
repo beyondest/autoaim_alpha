@@ -36,6 +36,7 @@ class Decision_Maker:
     def __init__(self,
                  mode:str,
                  decision_maker_params_yaml_path:Union[str,None] = None,
+                 pid_controller_params_yaml_path:Union[str,None] = None,
                  ballistic_predictor:Union[Ballistic_Predictor,None] = None,
                  enemy_car_list:list = None
                  ) -> None:
@@ -46,11 +47,15 @@ class Decision_Maker:
         self.mode = mode
         self.params = Decision_Maker_Params()
         self.ballistic_predictor = ballistic_predictor
-        
+        self.pid_controller = PID_Controller()
+        self.pid_controller.load_params_from_yaml()
         self.enemy_car_list = enemy_car_list
         if decision_maker_params_yaml_path is not None:
             self.params.load_params_from_yaml(decision_maker_params_yaml_path)
-        
+        if pid_controller_params_yaml_path is None:
+            lr1.warning("pid_controller_params_yaml_path is None, use default params")
+        else:
+            self.pid_controller.load_params_from_yaml(pid_controller_params_yaml_path)
 
         self.armor_state_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
                                                         for enemy_car in self.enemy_car_list \
@@ -123,48 +128,83 @@ class Decision_Maker:
             target_armor_params (Armor_Params): _description_
 
         Returns:
-            tuple: next_yaw,next_pitch, fire_times, if_possible_find_target
+            tuple: next_yaw,next_pitch, fire_times
         """
-        max_continous_detected_armor = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
-        if max_continous_detected_armor.if_update and max_continous_detected_armor.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
-            fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(max_continous_detected_armor.tvec,
+        target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
+        if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
+            fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(target.tvec,
                                                         self.cur_yaw,
                                                         self.cur_pitch)
             if if_success:
                 next_yaw = fire_yaw
                 next_pitch = fire_pitch
                 fire_times = 1
-                if_possible_find_target = True
-                lr1.warn(f"Target Locked {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
+                lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
                 if self.mode == 'Dbg':
                     lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, fire_yaw = {fire_yaw}, fire_pitch = {fire_pitch}")
                 
             else:
                 next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
                 fire_times = 0
-                if_possible_find_target = True
-                lr1.warn(f"Bad Target, Stay, d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
+                lr1.warn(f"Bad Target, Stay, d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
         
         else:
-            if max_continous_detected_armor.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
+            if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
                 next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
                 fire_times = 0
-                if_possible_find_target = True
-                lr1.warn(f"Target Blink, Stay {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}")
+                lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             
             else: 
                 next_yaw,next_pitch = self._search_target()
                 fire_times = 0
-                if_possible_find_target = False
-                lr1.warn(f'Target Lost {max_continous_detected_armor.name} {max_continous_detected_armor.id} , d,l = {max_continous_detected_armor.continuous_detected_num}, {max_continous_detected_armor.continuous_lost_num}')
+                lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
             
             
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         
-        return next_yaw,next_pitch, fire_times,if_possible_find_target
+        return next_yaw,next_pitch, fire_times
             
 
+    def make_decision_by_pid(self):
+        target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
+        
+        if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
+            relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
+            next_yaw = self.pid_controller.get_output(0.0,relative_yaw) + self.cur_yaw
+
+            relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
+            next_pitch = self.pid_controller.get_output(0.0,relative_pitch) + self.cur_pitch
+            lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
+            if self.mode == 'Dbg':  
+                lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, relative_yaw = {relative_yaw}, relative_pitch = {relative_pitch}")
+        
+        else:
+            if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
+                next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
+                lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
+            
+            else: 
+                next_yaw,next_pitch = self._search_target()
+                lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
+            
+        SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
+        SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
+        if next_yaw < -np.pi:
+            next_yaw += 2*np.pi
+        elif next_yaw > np.pi:
+            next_yaw -= 2*np.pi
+        if next_pitch < -np.pi:
+            next_pitch += 2*np.pi
+        elif next_pitch > np.pi:
+            next_pitch -= 2*np.pi
+        next_pitch = self.cur_pitch    
+        
+        return next_yaw,next_pitch,0
+            
+            
+        
+            
     
     def _search_target(self):
         yaw,pitch = self._get_next_yaw_pitch()
