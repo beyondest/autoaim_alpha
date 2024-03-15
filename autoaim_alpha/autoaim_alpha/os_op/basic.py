@@ -431,4 +431,7 @@ class PID_Controller:
     def save_params_to_yaml(self,yaml_path:str,mode = 'w'):
         self.params.save_params_to_yaml(yaml_path,mode)
         
-
+    def reset(self):
+        self.last_error = 0
+        self.integral = 0
+        

@@ -13,7 +13,6 @@ class Decision_Maker_Params(Params):
         self.pitch_down_degree = -10
         self.pitch_up_degree = 15
         self.yaw_search_step = 0.01
-        
         self.pitch_search_left_waves = 5
         self.pitch_search_right_waves = 6
         self.sleep_time_after_move_command = 0.1
@@ -23,7 +22,14 @@ class Decision_Maker_Params(Params):
         
         self.continuous_detected_num_min_threshold = 2
         self.continuous_lost_num_max_threshold = 4
+        
+        
         self.if_relative = True
+        self.relative_yaw_move_step = 0.05
+        self.relative_pitch_move_step = 0.05
+        self.yaw_idx_max = 100
+        self.pitch_idx_max = 10
+        
         self.fire_mode = 1
         """fire mode:
             0: firepower priority
@@ -70,10 +76,11 @@ class Decision_Maker:
         self._init_yaw_pitch_search_data()
         
         self.yaw_idx = 0
-        self.yaw_idx_max = (self.params.yaw_right_degree /180 * np.pi- self.params.yaw_left_degree/180 * np.pi) // self.params.yaw_search_step + 1
-        self.yaw_ori = -(self.params.yaw_right_degree /180 * np.pi- self.params.yaw_left_degree/180 * np.pi)
+        self.yaw_add = True
         self.pitch_idx = 0
+        self.pitch_add = True
         
+        self.if_enable_record_target_tvec_to_yaw_pitch = False
         self.next_yaw_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         self.next_pitch_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         
@@ -131,7 +138,6 @@ class Decision_Maker:
 
         Args:
             target_armor_params (Armor_Params): _description_
-
         Returns:
             tuple: next_yaw,next_pitch, fire_times
         """
@@ -176,9 +182,9 @@ class Decision_Maker:
         
         if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
             relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
-            next_yaw = self.pid_controller.get_output(0.0,relative_yaw)
+            next_yaw = -self.pid_controller.get_output(0.0,relative_yaw)
             relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
-            next_pitch = self.pid_controller.get_output(0.0,relative_pitch)
+            next_pitch = -self.pid_controller.get_output(0.0,relative_pitch)
             lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             if self.mode == 'Dbg':  
                 lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, relative_yaw = {relative_yaw}, relative_pitch = {relative_pitch}")
@@ -189,6 +195,7 @@ class Decision_Maker:
                 lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             else: 
                 next_yaw,next_pitch = self._search_target()
+                self.pid_controller.reset()
                 lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
             
         
@@ -201,30 +208,46 @@ class Decision_Maker:
         if next_pitch < -np.pi:
             next_pitch += 2*np.pi
         elif next_pitch > np.pi:
-            next_pitch -= 2*np.pi
-        next_pitch = self.cur_pitch    
+            next_pitch -= 2*np.pi    
         
         return next_yaw,next_pitch,0
     
     def _search_target(self):
         if self.params.if_relative:
-            self.yaw_idx +=1
-            if self.yaw_idx >= self.yaw_idx_max:
-                self.yaw_idx = 0
-                yaw = self.yaw_ori
-            else:
-                yaw = 0.01
-            pitch = 0.0
             
+            if self.yaw_add:
+                yaw = self.params.relative_yaw_move_step
+                self.yaw_idx += 1
+                if self.yaw_idx >= self.params.yaw_idx_max:
+                    self.yaw_add = False
+                    
+            else:
+                yaw = -self.params.relative_yaw_move_step
+                self.yaw_idx -= 1
+                if self.yaw_idx < 0:
+                    self.yaw_add = True
+                    
+            if self.pitch_add:
+                pitch = self.params.relative_pitch_move_step
+                self.pitch_idx += 1
+                if self.pitch_idx >= self.params.pitch_idx_max:
+                    self.pitch_add = False
+                    
+            else:
+                pitch = -self.params.relative_pitch_move_step
+                self.pitch_idx -= 1
+                if self.pitch_idx < 0:
+                    self.pitch_add = True
+                    
         else:
             yaw,pitch = self._get_next_yaw_pitch()
+        
         return yaw,pitch
     
     def _init_yaw_pitch_search_data(self):
         self.search_index = 0
         # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
         self.search_mode = 1
-        
         self.yaw_left = self.params.yaw_left_degree/180 * np.pi
         self.yaw_right = self.params.yaw_right_degree/180 * np.pi
         self.pitch_down = self.params.pitch_down_degree/180 * np.pi
@@ -245,6 +268,8 @@ class Decision_Maker:
             else:
                 self.pitch_search_data[i] = pitch * self.pitch_up
                 
+                
+                
     def _get_next_yaw_pitch(self):
         if self.search_mode:
             next_yaw = self.yaw_search_data[self.search_index]
@@ -254,6 +279,7 @@ class Decision_Maker:
                 self.search_index += 1
             else:
                 self.search_index -= 1
+        
         else:
             self.search_mode = 1
             self.search_index = int((self.cur_yaw - self.yaw_left)/self.yaw_search_step)
@@ -274,4 +300,10 @@ class Decision_Maker:
             self.search_index = 0
             
         return next_yaw,next_pitch
- 
+
+
+    def enable_record_target_tvec_to_yaw_pitch(self):
+        self.if_enable_record_target_tvec_to_yaw_pitch = True
+        self.tvec_list = []
+        self.yaw_pitch_list = []
+        

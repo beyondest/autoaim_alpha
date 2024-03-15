@@ -125,7 +125,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision_by_pid() 
+        
+        
+        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
         
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch
@@ -204,7 +206,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             return
         
         com_msg = ElectricsysState()
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision_by_pid() 
+        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
        
         com_msg.cur_yaw = next_yaw
         com_msg.cur_pitch = next_pitch

@@ -6,8 +6,6 @@ yaw_search_step: 0.01
         
 pitch_search_left_waves: 5
 pitch_search_right_waves: 6
-
-if_relative: True       
 fire_mode: 1
 sleep_time_after_move_command: 0.0
 repeat_times_for_move_command: 1
@@ -15,6 +13,16 @@ yaw_pitch_history_length: 20
 
 continuous_detected_num_min_threshold: 1
 continuous_lost_num_max_threshold: 8
+
+
+if_relative: False       
+relative_yaw_move_step: 0.05
+relative_pitch_move_step: 0.03
+relative_pitch_move_step: 0.05
+yaw_idx_max: 100
+pitch_idx_max: 10
+
+
 
 
 

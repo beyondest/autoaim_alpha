@@ -67,10 +67,13 @@ class Node_Com(Node,Custom_Context_Obj):
             
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"SOF A from Decision maker : abs_pitch {msg.target_abs_pitch:.3f}, abs_yaw {msg.target_abs_yaw:.3f}, reach at time {msg.reach_unix_time:.3f}")
+            
+            
             self.port.send_msg(msg.sof)
-            self.port.action_data.abs_pitch_10000 = 0
+            
+            '''self.port.action_data.abs_pitch_10000 = 0
             self.port.action_data.abs_yaw_10000 = 0 
-            self.port.send_msg('A')
+            self.port.send_msg('A')'''
 
         elif msg.sof == 'S':
             cur_unix_time = time.time()
