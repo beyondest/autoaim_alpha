@@ -71,6 +71,7 @@ class Node_Com(Node,Custom_Context_Obj):
 
         elif msg.sof == 'S':
             cur_unix_time = time.time()
+            self.last_sub_topic_time = cur_unix_time
             minute, second, second_frac = TRANS_UNIX_TIME_TO_T(cur_unix_time, self.zero_unix_time)
             self.port.syn_data.present_minute = minute
             self.port.syn_data.present_second = second
@@ -103,8 +104,8 @@ class Node_Com(Node,Custom_Context_Obj):
             # gimbal just has to stay location, so next_time = cur_time + communication_delay
             next_time = cur_time + self.port.params.communication_delay
             self.port.action_data.fire_times = 0
-            self.port.action_data.abs_pitch_10000 = int(self.cur_pitch * 10000)
-            self.port.action_data.abs_yaw_10000 = int(self.cur_yaw  * 10000)  # due to int16 is from -32768 to 32767, so we need to convert angle to this range
+            self.port.action_data.abs_pitch_10000 = int(0 * 10000)
+            self.port.action_data.abs_yaw_10000 = int(0 * 10000)  # due to int16 is from -32768 to 32767, so we need to convert angle to this range
             self.port.action_data.reserved_slot = 0
             minute, second, second_frac = TRANS_UNIX_TIME_TO_T(next_time, self.zero_unix_time)
             self.port.action_data.target_minute = minute

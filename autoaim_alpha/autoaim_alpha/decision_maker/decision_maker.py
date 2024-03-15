@@ -23,7 +23,7 @@ class Decision_Maker_Params(Params):
         
         self.continuous_detected_num_min_threshold = 2
         self.continuous_lost_num_max_threshold = 4
-        
+        self.if_relative = True
         self.fire_mode = 1
         """fire mode:
             0: firepower priority
@@ -206,8 +206,8 @@ class Decision_Maker:
         
         return next_yaw,next_pitch,0
     
-    def _search_target(self,if_relative:bool = False):
-        if if_relative:
+    def _search_target(self):
+        if self.params.if_relative:
             self.yaw_idx +=1
             if self.yaw_idx >= self.yaw_idx_max:
                 self.yaw_idx = 0

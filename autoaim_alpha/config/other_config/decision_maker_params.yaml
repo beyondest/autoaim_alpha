@@ -7,7 +7,7 @@ yaw_search_step: 0.01
 pitch_search_left_waves: 5
 pitch_search_right_waves: 6
 
-        
+if_relative: True       
 fire_mode: 1
 sleep_time_after_move_command: 0.0
 repeat_times_for_move_command: 1
