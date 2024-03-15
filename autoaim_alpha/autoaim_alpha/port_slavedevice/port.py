@@ -68,7 +68,7 @@ class Port:
                 msg = self.syn_data.convert_syn_data_to_bytes(if_part_crc=False)
                 send_data(self.ser,msg)
             if self.mode == 'Dbg':
-                lr1.debug(f"Send {sof} {msg} yaw_10000: {self.action_data.abs_yaw_10000}")
+                lr1.debug(f"Send {sof} {msg} yaw_10000: {self.action_data.abs_yaw_10000}, target_second: {self.action_data.target_second}")
             
         
     def recv_feedback(self)->tuple:
@@ -94,7 +94,7 @@ class Port:
             cur_time_second = self.pos_data.stm_second
             cur_time_second_frac = self.pos_data.stm_second_frac 
             if self.mode == 'Dbg':
-                lr1.debug(f"Recv {msg} yaw_10000: {cur_yaw}")
+                lr1.debug(f"Recv {msg} yaw_10000: {cur_yaw} stm_second: {cur_time_second}")
             
             return if_error,cur_yaw,cur_pitch,cur_time_minute,cur_time_second,cur_time_second_frac
         
