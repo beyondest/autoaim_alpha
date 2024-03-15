@@ -169,9 +169,9 @@ class Decision_Maker:
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         
         return next_yaw,next_pitch, fire_times
-            
 
     def make_decision_by_pid(self):
+        
         target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
         
         if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
@@ -182,6 +182,7 @@ class Decision_Maker:
             lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             if self.mode == 'Dbg':  
                 lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, relative_yaw = {relative_yaw}, relative_pitch = {relative_pitch}")
+        
         else:
             if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
                 next_yaw,next_pitch = 0.0,0.0
@@ -204,10 +205,6 @@ class Decision_Maker:
         next_pitch = self.cur_pitch    
         
         return next_yaw,next_pitch,0
-            
-            
-        
-            
     
     def _search_target(self,if_relative:bool = False):
         if if_relative:
@@ -248,8 +245,6 @@ class Decision_Maker:
             else:
                 self.pitch_search_data[i] = pitch * self.pitch_up
                 
-                
-     
     def _get_next_yaw_pitch(self):
         if self.search_mode:
             next_yaw = self.yaw_search_data[self.search_index]
@@ -259,7 +254,6 @@ class Decision_Maker:
                 self.search_index += 1
             else:
                 self.search_index -= 1
-                
         else:
             self.search_mode = 1
             self.search_index = int((self.cur_yaw - self.yaw_left)/self.yaw_search_step)
