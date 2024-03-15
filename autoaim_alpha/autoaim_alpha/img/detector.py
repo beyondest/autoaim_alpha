@@ -187,7 +187,7 @@ class Armor_Detector:
                             color=(0,255,0)
                 )
                 if cur_yaw is not None and tar_yaw is not None:
-                    add_text(img,f'rel_yaw:{(tar_yaw-cur_yaw):.3f}',pos=(20,50),color=(255,0,0),scale_size=0.7)
+                    add_text(img,f"rel_yaw:",f'{(tar_yaw-cur_yaw):.3f}',pos=(20,50),color=(255,0,0),scale_size=0.7)
                     
                 
                 
