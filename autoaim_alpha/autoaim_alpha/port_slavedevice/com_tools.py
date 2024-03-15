@@ -483,7 +483,7 @@ class pos_data(data_list):
         self.error =error
         self.crc_v = crc_v
         self.crc_get = out[8]
-          
+        
         self.SOF = out[0]
         self.stm_minute = out[1]
         self.stm_second = out[2]
@@ -499,8 +499,6 @@ class pos_data(data_list):
                      self.present_pitch,
                      self.present_yaw,
                      self.present_debug_value]
-        
-        
         
         return error
 

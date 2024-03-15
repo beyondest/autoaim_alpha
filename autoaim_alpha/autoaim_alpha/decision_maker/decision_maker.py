@@ -69,6 +69,11 @@ class Decision_Maker:
         self.electric_system_unix_time = time.time()
         self._init_yaw_pitch_search_data()
         
+        self.yaw_idx = 0
+        self.yaw_idx_max = (self.params.yaw_right_degree /180 * np.pi- self.params.yaw_left_degree/180 * np.pi) // self.params.yaw_search_step + 1
+        self.yaw_ori = -(self.params.yaw_right_degree /180 * np.pi- self.params.yaw_left_degree/180 * np.pi)
+        self.pitch_idx = 0
+        
         self.next_yaw_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         self.next_pitch_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         
@@ -171,23 +176,21 @@ class Decision_Maker:
         
         if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
             relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
-            next_yaw = self.pid_controller.get_output(0.0,relative_yaw) + self.cur_yaw
-
+            next_yaw = self.pid_controller.get_output(0.0,relative_yaw)
             relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
-            next_pitch = self.pid_controller.get_output(0.0,relative_pitch) + self.cur_pitch
+            next_pitch = self.pid_controller.get_output(0.0,relative_pitch)
             lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             if self.mode == 'Dbg':  
                 lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, relative_yaw = {relative_yaw}, relative_pitch = {relative_pitch}")
-        
         else:
             if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
-                next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
+                next_yaw,next_pitch = 0.0,0.0
                 lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-            
             else: 
                 next_yaw,next_pitch = self._search_target()
                 lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
             
+        
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         if next_yaw < -np.pi:
@@ -206,8 +209,18 @@ class Decision_Maker:
         
             
     
-    def _search_target(self):
-        yaw,pitch = self._get_next_yaw_pitch()
+    def _search_target(self,if_relative:bool = False):
+        if if_relative:
+            self.yaw_idx +=1
+            if self.yaw_idx >= self.yaw_idx_max:
+                self.yaw_idx = 0
+                yaw = self.yaw_ori
+            else:
+                yaw = 0.01
+            pitch = 0.0
+            
+        else:
+            yaw,pitch = self._get_next_yaw_pitch()
         return yaw,pitch
     
     def _init_yaw_pitch_search_data(self):
