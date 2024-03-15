@@ -71,16 +71,7 @@ class Node_Com(Node,Custom_Context_Obj):
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"SOF A from Decision maker : abs_pitch {msg.target_abs_pitch:.3f}, abs_yaw {msg.target_abs_yaw:.3f}, reach at time {msg.reach_unix_time:.3f}")
             
-            
-            self.port.send_msg(msg.sof)
-            self.port.action_data.fire_times = 0
-                        
-            msg2 = ElectricsysState()
-            msg2.unix_time = time.time()
-            msg2.cur_pitch = self.cur_pitch
-            msg2.cur_yaw = self.cur_yaw
-            self.ele_sys_state_pub.publish(msg)
-              
+
         elif msg.sof == 'S':
             cur_unix_time = time.time()
             minute, second, second_frac = TRANS_UNIX_TIME_TO_T(cur_unix_time, self.zero_unix_time)
@@ -105,13 +96,20 @@ class Node_Com(Node,Custom_Context_Obj):
         if node_com_mode == 'Dbg':
             self.get_logger().debug(f"First Recv from electric sys, init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
         
-    '''
+    
     def timer_send_msg_callback(self):
         if self.zero_unix_time is None:
             self.get_logger().debug(f"No zero_unix_time, waiting for connection")
             return
         cur_time = time.time()
         
+        
+        msg2 = ElectricsysState()
+        msg2.unix_time = cur_time
+        msg2.cur_pitch = self.cur_pitch
+        msg2.cur_yaw = self.cur_yaw
+        self.ele_sys_state_pub.publish(msg2)
+              
         if cur_time - self.last_sub_topic_time > 0.5:
             
             # gimbal just has to stay location, so next_time = cur_time + communication_delay
@@ -133,10 +131,12 @@ class Node_Com(Node,Custom_Context_Obj):
         else:
             
             self.port.send_msg('A')
+            self.cur_yaw = self.port.action_data.abs_yaw_10000/10000
+            self.cur_pitch = self.port.action_data.abs_pitch_10000/10000
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"Obey , cur pos(p,y) {self.cur_pitch:.3f}, {self.cur_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
             
-            '''
+            
             
     def timer_recv_msg_callback(self):
         
@@ -158,7 +158,9 @@ class Node_Com(Node,Custom_Context_Obj):
                 msg.cur_yaw = self.cur_yaw
                 
                 self.ele_sys_state_pub.publish(msg)
-            pass
+                
+                
+            
             #if node_com_mode == 'Dbg':
             #   self.get_logger().debug(f"Recv from electric sys state p: {msg.cur_pitch:.3f}, y: {msg.cur_yaw:.3f}, t:{msg.unix_time:.3f}")
         

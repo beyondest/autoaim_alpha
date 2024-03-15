@@ -277,7 +277,7 @@ class Observer:
             
             continuous_detected_num = armor_idx_to_list[right_armor_idx][0].continuous_detected_num + 1
             continuous_detected_num = CLAMP(continuous_detected_num, [0,self.observer_params.continuous_detected_num_max])
-            continuous_lost_num = armor_idx_to_list[right_armor_idx][0].continuous_lost_num - 1
+            continuous_lost_num = armor_idx_to_list[right_armor_idx][0].continuous_lost_num * 0
             continuous_lost_num = CLAMP(continuous_lost_num, [0,self.observer_params.continuous_lost_num_max])
             
             armor_idx_to_list = self.observer_params.armor_name_to_car_params[right_armor_name].armor_idx_to_detect_history
