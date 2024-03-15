@@ -141,7 +141,7 @@ class Ballistic_Predictor:
         tvec_xoy = target_pos_in_gun_pivot_frame[[0,1]]
         tvec_yoz = target_pos_in_gun_pivot_frame[[1,2]]
         
-        relative_yaw = np.arctan2(tvec_xoy[1], tvec_xoy[0])
+        relative_yaw = np.arctan2(tvec_xoy[0], tvec_xoy[1])
         
         [required_pitch , flight_time, if_success] , solve_time = self._cal_pitch_by_newton(tvec_yoz)
         
