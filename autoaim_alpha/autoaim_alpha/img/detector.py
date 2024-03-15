@@ -182,7 +182,7 @@ class Armor_Detector:
                             scale_size=0.7)
                 add_text(   img,
                             f'x:',
-                            value=f'{i['pos'][0]:.3f}',
+                            value=f'{i["pos"][0]:.3f}',
                             pos=(20,20),
                             color=(0,255,0)
                 )
