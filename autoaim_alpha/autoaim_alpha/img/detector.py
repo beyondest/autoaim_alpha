@@ -161,7 +161,8 @@ class Armor_Detector:
     def visualize(self,
                   img,
                   fps,
-                  windows_name:Union[str,None] = 'detect_result'
+                  cur_yaw:Union[float,None] = None,
+                  tar_yaw:Union[float,None] = None
                  )->None:
         
         """visualize the result of armor detection,
@@ -179,10 +180,18 @@ class Armor_Detector:
                             pos=i['big_rec'][0],
                             color=(0,0,255),
                             scale_size=0.7)
+                add_text(   img,
+                            f'x:',
+                            value=f'{i['pos'][0]:.3f}',
+                            pos=(20,20),
+                            color=(0,255,0)
+                )
+                if cur_yaw is not None and tar_yaw is not None:
+                    add_text(img,f'rel_yaw:{(tar_yaw-cur_yaw):.3f}',pos=(20,50),color=(255,0,0),scale_size=0.7)
+                    
                 
                 
-        if windows_name is None:
-            return img   
+        return img   
         
 
             

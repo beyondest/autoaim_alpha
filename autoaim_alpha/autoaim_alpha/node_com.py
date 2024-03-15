@@ -24,7 +24,7 @@ class Node_Com(Node,Custom_Context_Obj):
                                                       self.listener_callback,
                                                       topic_electric_sys_com['qos_profile'])
 
-        #self.timer_send_msg = self.create_timer(1/send_msg_freq, self.timer_send_msg_callback)
+        self.timer_send_msg = self.create_timer(1/send_msg_freq, self.timer_send_msg_callback)
         self.timer_recv_msg = self.create_timer(1/recv_from_ele_sys_freq, self.timer_recv_msg_callback)
         
         self.port = Port(node_com_mode,
