@@ -48,7 +48,7 @@ class Decision_Maker:
         self.params = Decision_Maker_Params()
         self.ballistic_predictor = ballistic_predictor
         self.pid_controller = PID_Controller()
-        self.pid_controller.load_params_from_yaml()
+        self.pid_controller.load_params_from_yaml(pid_controller_params_yaml_path)
         self.enemy_car_list = enemy_car_list
         if decision_maker_params_yaml_path is not None:
             self.params.load_params_from_yaml(decision_maker_params_yaml_path)

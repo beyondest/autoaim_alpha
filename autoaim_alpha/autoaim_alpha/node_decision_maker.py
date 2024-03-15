@@ -204,7 +204,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             return
         
         com_msg = ElectricsysState()
-        
         next_yaw,next_pitch,fire_times = self.decision_maker.make_decision_by_pid() 
        
         com_msg.cur_yaw = next_yaw
@@ -216,7 +215,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().debug(f"Make decision : target_abs_pitch {com_msg.cur_pitch:.3f} target_abs_yaw {com_msg.cur_yaw:.3f} reach_unix_time {com_msg.unix_time:.3f}")
        
     def repeat_recv_from_ele_callback(self):
-        
         
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
