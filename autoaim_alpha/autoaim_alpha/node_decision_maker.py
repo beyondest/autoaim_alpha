@@ -139,6 +139,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             for i in range(self.decision_maker.params.repeat_times_for_move_command):
                 self.pub_ele_sys_com.publish(com_msg)
             time.sleep(self.decision_maker.params.sleep_time_after_move_command)
+            while 1:
+                pass
         else:
             self.pub_ele_sys_com.publish(com_msg)
     
