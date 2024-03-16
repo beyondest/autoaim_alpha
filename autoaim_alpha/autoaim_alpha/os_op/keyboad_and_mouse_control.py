@@ -1,10 +1,10 @@
-
+from .basic import *
+from .global_logger import lr1
 try:
     import pynput
 except ImportError:
     lr1.warn('pynput import failed"')
-from .basic import *
-from .global_logger import lr1
+
 class KeyboardAndMouseControl:
     def __init__(self,mode='Dbg',if_enable_key_board = False,if_enable_mouse_control = True):
         CHECK_INPUT_VALID(mode,'Dbg','Rel')
