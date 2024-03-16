@@ -84,9 +84,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.declare_parameter("kp", 1.0)
         self.declare_parameter("ki", 0.0)
         self.declare_parameter("kd", 0.0)
-        self.get_parameter('kp').add_callback(self.update_kp)
-        self.get_parameter('ki').add_callback(self.update_ki)
-        self.get_parameter('kd').add_callback(self.update_kd)
         self.decision_maker.pid_controller.params.kp = self.get_parameter('kp').value
         self.decision_maker.pid_controller.params.ki = self.get_parameter('ki').value
         self.decision_maker.pid_controller.params.kd = self.get_parameter('kd').value
@@ -104,6 +101,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                  ele_unix_time=msg.unix_time,
                                                  remaining_health=None,
                                                  remaining_ammo=None)
+        self.update_kp()
+        self.update_ki()
+        self.update_kd()
+        
         
     def sub_armor_pos_list_callback(self, msg:ArmorPosList):
         for armor_pos in msg.armor_pos_list:
@@ -235,20 +236,20 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.pub_ele_sys_com.publish(com_msg)
     
     
-    def update_kp(self,kp):
-        self.decision_maker.pid_controller.params.kp = kp
+    def update_kp(self):
+        self.decision_maker.pid_controller.params.kp = self.get_parameter('kp').value
         if node_parameter_mode == 'Dbg':
-            self.get_logger().debug(f"Update kp to {kp}")
+            self.get_logger().debug(f"Update kp to {self.decision_maker.pid_controller.params.kp}")
             
-    def update_ki(self,ki):
-        self.decision_maker.pid_controller.params.ki = ki
+    def update_ki(self):
+        self.decision_maker.pid_controller.params.ki = self.get_parameter('ki').value
         if node_parameter_mode == 'Dbg':
-            self.get_logger().debug(f"Update ki to {ki}")
+            self.get_logger().debug(f"Update ki to {self.decision_maker.pid_controller.params.ki}")
             
-    def update_kd(self,kd):
-        self.decision_maker.pid_controller.params.kd = kd
+    def update_kd(self):
+        self.decision_maker.pid_controller.params.kd = self.get_parameter('kd').value   
         if node_parameter_mode == 'Dbg':
-            self.get_logger().debug(f"Update kd to {kd}")
+            self.get_logger().debug(f"Update kd to {self.decision_maker.pid_controller.params.kd}")
             
 
     
