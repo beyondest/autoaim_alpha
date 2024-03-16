@@ -1,12 +1,19 @@
 
-class T:
-    def __init__(self,x):
-        self.c = x
-        
+from pynput import keyboard
+ 
+def on_press(key):
+    print('{0} pressed'.format(key))
+ 
+def on_release(key):
+    print('{0} released'.format(key))
+    if key == keyboard.Key.esc:
+        return False
+ 
+'''with keyboard.Listener(on_press=on_press,on_release=on_release) as listener:
+    listener.join()
+'''
+listener = keyboard.Listener(on_press=on_press,on_release=on_release)
+listener.start()
 
-b = T(10)
-c = T(20)
-d = T(20)
-a = [b,c,d]
-mm = max(a,key=lambda x:x.c)
-print(mm.c)
+while True:
+    pass

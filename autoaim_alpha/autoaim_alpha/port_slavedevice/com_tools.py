@@ -510,7 +510,7 @@ if __name__ =="__main__":
     
     
     a = action_data()
-    if 1:
+    if 0:
         for yaw in np.arange(-31416,31416,2000):
             
             a.abs_yaw_10000 = int(yaw)
@@ -544,6 +544,14 @@ if __name__ =="__main__":
                 
             print(s)
             
+    p = pos_data()
+    hex_string ='50 00 0C 0B 02 F3 FF A0 6A 00 00 00 A1 82 91 C2'
+    b = bytes.fromhex(hex_string)
+    print(b)
+    result = p.convert_pos_bytes_to_data(b,if_part_crc=False)
+    print(result)
+    p.show()
+    
     
         
         

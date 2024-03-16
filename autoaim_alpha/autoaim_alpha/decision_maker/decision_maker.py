@@ -3,6 +3,8 @@ from .observer import *
 from ..os_op.basic import *
 from ..os_op.global_logger import *
 from .ballistic_predictor import *
+from ..utils_network.data import Data_Recoreder
+
 
 class Decision_Maker_Params(Params):
     def __init__(self) -> None:
@@ -23,12 +25,12 @@ class Decision_Maker_Params(Params):
         self.continuous_detected_num_min_threshold = 2
         self.continuous_lost_num_max_threshold = 4
         
-        
-        self.if_relative = True
         self.relative_yaw_move_step = 0.05
         self.relative_pitch_move_step = 0.05
         self.yaw_idx_max = 100
         self.pitch_idx_max = 10
+        
+        self.tvec_history_length = 10
         
         self.fire_mode = 1
         """fire mode:
@@ -44,7 +46,8 @@ class Decision_Maker:
                  decision_maker_params_yaml_path:Union[str,None] = None,
                  pid_controller_params_yaml_path:Union[str,None] = None,
                  ballistic_predictor:Union[Ballistic_Predictor,None] = None,
-                 enemy_car_list:list = None
+                 enemy_car_list:list = None,
+                 if_relative: bool = False
                  ) -> None:
         CHECK_INPUT_VALID(mode,"Dbg",'Rel')
         if enemy_car_list is None:
@@ -79,13 +82,16 @@ class Decision_Maker:
         self.yaw_add = True
         self.pitch_idx = 0
         self.pitch_add = True
+        self.if_relative = if_relative
         
         self.if_enable_record_target_tvec_to_yaw_pitch = False
+        # this is for predict
         self.next_yaw_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         self.next_pitch_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         
         
-
+        # this is for record
+        self.tvec_history_list = [np.zeros(3) for i in range(self.params.tvec_history_length)]
         
     def update_enemy_side_info(self,
                       armor_name:str,
@@ -174,6 +180,9 @@ class Decision_Maker:
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         
+            
+        
+        
         return next_yaw,next_pitch, fire_times
 
     def make_decision_by_pid(self):
@@ -181,6 +190,9 @@ class Decision_Maker:
         target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
         
         if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
+            # because error = target_yaw - relative_yaw = -relative_yaw, so we need to minus the result of arctan2
+            
+            
             relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
             next_yaw = -self.pid_controller.get_output(0.0,relative_yaw)
             relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
@@ -213,7 +225,7 @@ class Decision_Maker:
         return next_yaw,next_pitch,0
     
     def _search_target(self):
-        if self.params.if_relative:
+        if self.if_relative:
             
             if self.yaw_add:
                 yaw = self.params.relative_yaw_move_step
@@ -302,8 +314,13 @@ class Decision_Maker:
         return next_yaw,next_pitch
 
 
-    def enable_record_target_tvec_to_yaw_pitch(self):
+    def enable_record_target_tvec_to_yaw_pitch(self,data_path:str):
         self.if_enable_record_target_tvec_to_yaw_pitch = True
-        self.tvec_list = []
-        self.yaw_pitch_list = []
+        
+        self.data_recorder = Data_Recoreder(data_path,
+                                            (self.params.tvec_history_length,3),
+                                            (2,),
+                                            np.float32,
+                                            np.float32)
+           
         

@@ -25,26 +25,12 @@ class Node_Observer(Node,Custom_Context_Obj):
                                             topic_detect_result['name'],
                                             self.detect_sub_callback,
                                             topic_detect_result['qos_profile'])
-        self.pub = self.create_publisher(topic_armor_pos_corrected_list['type'],
-                                          topic_armor_pos_corrected_list['name'],
-                                          topic_armor_pos_corrected_list['qos_profile'])
+        self.pub = self.create_publisher(topic_armor_pos_without_correct['type'],
+                                          topic_armor_pos_without_correct['name'],
+                                          topic_armor_pos_without_correct['qos_profile'])
 
-        if if_pub_armor_state_without_correct:
-            self.pub_armor_pos_without_correct = self.create_publisher(topic_armor_pos_without_correct['type'],
-                                                                        topic_armor_pos_without_correct['name'],
-                                                                        topic_armor_pos_without_correct['qos_profile'])
-        if if_pub_armor_state_corrected:
-            self.pub_armor_pos_corrected = self.create_publisher(topic_armor_pos_corrected['type'],
-                                                                    topic_armor_pos_corrected['name'],
-                                                                    topic_armor_pos_corrected['qos_profile'])
-            
-            
-        if if_pub_armor_state_predicted:
-            self.pub_armor_pos_predicted = self.create_publisher(topic_armor_pos_predicted['type'],
-                                                            topic_armor_pos_predicted['name'],
-                                                            topic_armor_pos_predicted['qos_profile'])
-            self.timer_predict = self.create_timer(1 / observer_predict_freq, self.timer_predict_callback)
-            
+
+
         if if_pub_car_state:
             self.pub_car_pos = self.create_publisher(topic_car_pos['type'],
                                                     topic_car_pos['name'],

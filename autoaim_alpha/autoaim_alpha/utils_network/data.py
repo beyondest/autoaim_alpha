@@ -8,6 +8,7 @@ sys.path.append('..')
 from .mymath import *
 import torch
 from .mymodel import *
+from ..os_op.basic import *
 from ..os_op import os_operation as oso
 import os
 import yaml
@@ -24,7 +25,7 @@ from PIL import Image
 import PIL as pil
 from typing import Union,Optional
 import onnxruntime
-from ..img.tools import normalize
+import h5py
 
 def tp(*args):
     for i in args:
@@ -431,13 +432,42 @@ class dataset_pkl(Dataset):
         
         return torch.from_numpy(X),torch.from_numpy(y)
    
-            
 
 
     
     
 
-
+class Data_Recoreder:
+    def __init__(self,
+                 save_path:str,
+                 X_shape:tuple,
+                 y_shape:tuple,
+                 X_dtype:type = np.float32,
+                 y_dtype:type = np.float32,
+                 save_format:str = 'hdf5'):
+        self.save_path = save_path
+        CHECK_INPUT_VALID(save_format,'hdf5')
+        self.save_format = save_format
+        self.X_shape = X_shape
+        self.y_shape = y_shape
+        if self.save_format == 'hdf5':
+            self.file = h5py.File(self.save_path,'w')
+            self.x_dset = self.file.create_dataset('x',shape=X_shape,maxshape=(None,)+X_shape,dtype=X_dtype)
+            self.y_dset = self.file.create_dataset('y',shape=y_shape,maxshape=(None,)+y_shape,dtype=y_dtype)
+        else:
+            raise NotImplementedError('Only support hdf5 format now')
+        
+    def record_data(self,X:np.ndarray,y:np.ndarray)->None:
+        self.x_dset.resize(self.x_dset.shape[0]+1, *self.X_shape)
+        self.y_dset.resize(self.y_dset.shape[0]+1, *self.y_shape)
+        self.x_dset[-1] = X
+        self.y_dset[-1] = y
+        
+    def close(self)->None:
+        self.file.close()
+        
+        
+        
 
 
 
@@ -501,7 +531,17 @@ class PIL_img_transform:
     
     
         
-        
+def normalize(ori_img:np.ndarray,scope:tuple=(0,1))->np.ndarray:
+    if ori_img is None:
+        return None
+    '''(y-a)/(b-a)=(x-xmin)/(xmax-xmin)'''
+    divide_value=ori_img.max()-ori_img.min()
+    
+    if divide_value == 0:
+        return np.zeros_like(ori_img)
+    else:
+        return (ori_img-ori_img.min())/divide_value*(scope[1]-scope[0])+scope[0]
+     
     
     
 

@@ -5,7 +5,7 @@ import cv2
 from typing import Union,Optional
 import math
 import matplotlib.pyplot as plt
-
+from ..utils_network.data import normalize
 class canvas:
     def __init__(self,size_tuple:tuple,color:str='white'):
         '''
@@ -361,16 +361,6 @@ def cvshow(img:np.ndarray,windows_name:str='show'):
             break
     cv2.destroyAllWindows()
     
-def normalize(ori_img:np.ndarray,scope:tuple=(0,1))->np.ndarray:
-    if ori_img is None:
-        return None
-    '''(y-a)/(b-a)=(x-xmin)/(xmax-xmin)'''
-    divide_value=ori_img.max()-ori_img.min()
-    
-    if divide_value == 0:
-        return np.zeros_like(ori_img)
-    else:
-        return (ori_img-ori_img.min())/divide_value*(scope[1]-scope[0])+scope[0]
 
 
 

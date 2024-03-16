@@ -15,12 +15,15 @@ continuous_detected_num_min_threshold: 1
 continuous_lost_num_max_threshold: 8
 
 
-if_relative: False       
 relative_yaw_move_step: 0.05
 relative_pitch_move_step: 0.03
 relative_pitch_move_step: 0.05
 yaw_idx_max: 100
 pitch_idx_max: 10
+
+
+tvec_history_length: 10     
+
 
 
 
