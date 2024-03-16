@@ -33,7 +33,8 @@ try:
             print(f'ori_bytes:{b}')
             p.show()
         
-except:
+except Exception as e:
+    print(f'Error:{e}')
     ser.close()
     
 
