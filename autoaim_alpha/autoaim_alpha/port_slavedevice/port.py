@@ -14,7 +14,7 @@ class Port_Params(Params):
         super().__init__()
         self.port_abs_path = '/dev/ttyUSB0'
         self.bitesize =8
-        self.baudrate = 115200
+        self.baudrate = 9600
         
         self.communication_delay = 0.05
         

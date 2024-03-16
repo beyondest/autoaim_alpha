@@ -1,4 +1,4 @@
-baudrate: 921600
+baudrate: 9600
 bitesize: 8
 communication_delay: 0.05
 port_abs_path: /dev/ttyTHS0

@@ -1,25 +1,40 @@
 from autoaim_alpha.port_slavedevice.com_tools import *
 from autoaim_alpha.port_slavedevice.port import *
-
+import serial
 from autoaim_alpha.os_op.basic import *
 mode = 'Dbg'
 port_yaml_path = '../autoaim_alpha/config/other_config/port_params.yaml'
-p = Port(mode,port_yaml_path)
 
-#p.port_open()
+ser = serial.Serial(
+                    port='/dev/ttyTHS0',
+                    baudrate=9600,
+                    bytesize=8,
+                    parity=serial.PARITY_NONE,
+                    stopbits=serial.STOPBITS_ONE,
+                    xonxoff=False,
+                    rtscts=False,
+                    write_timeout=1,
+                    dsrdtr=None,
+                    inter_byte_timeout=0.1,
+                    exclusive=None, # 1 is ok for one time long communication, but None is not, I dont know why!!!!
+                    timeout=1
+                    ) 
 
-p.action_data.abs_pitch_10000
+p = pos_data()
 try:
     while True:
-        p.action_data.fire_times = 0
-        p.action_data.abs_yaw_10000 = -1745
-        p.send_msg('A')
-        e,c_y,c_p,c_t1,c_t2,c_t3 = p.recv_feedback()
-        print(e,c_y,c_p,c_t1,c_t2,c_t3)
-        print('send A')
+        
+        b = ser.read(16)
+        if_error = p.convert_pos_bytes_to_data(b,if_part_crc=False)
+        if if_error:
+            print(f'Error in data conversion,ori_bytes:{b}')
+            
+        else:
+            print(f'ori_bytes:{b}')
+            p.show()
         
 except:
-    p.port_close()
+    ser.close()
     
 
 
