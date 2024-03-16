@@ -158,7 +158,7 @@ class Decision_Maker:
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
     
-    def make_decision(self)->tuple:
+    def make_decision(self,if_use_pid:bool = False)->tuple:
         """
 
         Args:
@@ -379,3 +379,19 @@ class Decision_Maker:
         
         return next_yaw,next_pitch
         
+    def force_enable_mouse_control(self,
+                                   data_path:Union[str,None]=None):
+        self.params.if_enable_mouse_control = True
+        
+        if data_path is not None:
+            self.data_recorder = Data_Recoreder(data_path,
+                                            (self.params.tvec_history_length,3),
+                                            (2,),
+                                            np.float32,
+                                            np.float32)
+            
+            self.tvec_history_list = [np.zeros(3) for i in range(self.params.tvec_history_length)]
+        
+        self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
+        self.mouse_pos_prior = (0,0)
+            
