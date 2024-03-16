@@ -15,10 +15,7 @@ class Node_Parameter(Node,Custom_Context_Obj):
         super().__init__(name)
         
 
-        self.kp = self.get_parameter('kp').value
-        self.ki = self.get_parameter('ki').value
-        self.kd = self.get_parameter('kd').value
-        
+
         self.window_name = 'config'
         cv2.createTrackbar('kp_1000',self.window_name,-2000,2000,for_trackbar)
         cv2.createTrackbar('ki_1000',self.window_name,-2000,2000,for_trackbar)

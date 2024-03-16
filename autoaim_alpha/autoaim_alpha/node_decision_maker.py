@@ -52,6 +52,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                         topic_armor_pos_list['qos_profile'])
         
         
+        self.sub_pid_config = self.create_subscription(topic_pid_config['type'],
+                                                    topic_pid_config['name'],
+                                                    self.sub_pid_config_callback,
+                                                    topic_pid_config['qos_profile'])
+        
         self.ballistic_predictor = Ballistic_Predictor(node_decision_maker_mode,
                                                        ballistic_predictor_config_yaml_path,
                                                        False)
@@ -81,9 +86,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.yaw_test_idx = 0
         self.pitch_test_idx = 0
         
-        self.declare_parameter("kp", 1.0)
-        self.declare_parameter("ki", 0.0)
-        self.declare_parameter("kd", 0.0)
         self.decision_maker.pid_controller.params.kp = self.get_parameter('kp').value
         self.decision_maker.pid_controller.params.ki = self.get_parameter('ki').value
         self.decision_maker.pid_controller.params.kd = self.get_parameter('kd').value
@@ -101,10 +103,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                  ele_unix_time=msg.unix_time,
                                                  remaining_health=None,
                                                  remaining_ammo=None)
-        self.update_kp()
-        self.update_ki()
-        self.update_kd()
-        
         
     def sub_armor_pos_list_callback(self, msg:ArmorPosList):
         for armor_pos in msg.armor_pos_list:
@@ -235,24 +233,15 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.pub_ele_sys_com.publish(com_msg)
     
-    
-    def update_kp(self):
-        self.decision_maker.pid_controller.params.kp = self.get_parameter('kp').value
-        if node_parameter_mode == 'Dbg':
-            self.get_logger().debug(f"Update kp to {self.decision_maker.pid_controller.params.kp}")
+    def sub_pid_config_callback(self,msg:PidConfig):
+        
+        self.decision_maker.pid_controller.params.kp = msg.kp
+        self.decision_maker.pid_controller.params.ki = msg.ki
+        self.decision_maker.pid_controller.params.kd = msg.kd
+        if node_decision_maker_mode == 'Dbg':
+            self.get_logger().debug(f"Update pid config kp {msg.kp}, ki {msg.ki}, kd {msg.kd}")
             
-    def update_ki(self):
-        self.decision_maker.pid_controller.params.ki = self.get_parameter('ki').value
-        if node_parameter_mode == 'Dbg':
-            self.get_logger().debug(f"Update ki to {self.decision_maker.pid_controller.params.ki}")
             
-    def update_kd(self):
-        self.decision_maker.pid_controller.params.kd = self.get_parameter('kd').value   
-        if node_parameter_mode == 'Dbg':
-            self.get_logger().debug(f"Update kd to {self.decision_maker.pid_controller.params.kd}")
-            
-
-    
     def _start(self):
         
         self.get_logger().info(f"Node {self.get_name()} start success")
