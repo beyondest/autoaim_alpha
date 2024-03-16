@@ -84,8 +84,8 @@ class Port:
         """
         
         if self.ser is not None:
-            msg = read_data(self.ser,
-                            16)
+            
+            msg = self.ser.read_all()
             if_error = self.pos_data.convert_pos_bytes_to_data(msg,if_part_crc=False)
             
             cur_yaw = self.pos_data.present_yaw

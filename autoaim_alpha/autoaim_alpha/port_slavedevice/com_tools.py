@@ -61,6 +61,7 @@ def read_data(ser:serial.Serial,byte_len:int = 16)->bytes:
         #10 byte works well
         com_input = ser.read(byte_len)
         return com_input
+    
     else:
         raise ValueError('serial port not open')
            
@@ -449,6 +450,7 @@ class pos_data(data_list):
         error = False
         if ser_read == b'' or ser_read is None:
             error = True
+            print(f"com error: recv is nullbyte")
             return error
         
         for i in range(self.frame_type_nums):
@@ -463,7 +465,7 @@ class pos_data(data_list):
             print(f'decode first byte failed: e:{e}, out[0]:{out[0]}')
             
             
-        out[7]= out[7].decode('utf-8')
+       
         if out[0] == self.SOF:
             if if_crc:
                 if if_crc_rev:

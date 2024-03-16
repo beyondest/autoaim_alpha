@@ -68,7 +68,6 @@ class Node_Com(Node,Custom_Context_Obj):
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"SOF A from Decision maker : abs_pitch {msg.target_abs_pitch:.3f}, abs_yaw {msg.target_abs_yaw:.3f}, reach at time {msg.reach_unix_time:.3f}")
             
-            
             self.port.send_msg(msg.sof)
             
             '''self.port.action_data.abs_pitch_10000 = 0
@@ -132,7 +131,7 @@ class Node_Com(Node,Custom_Context_Obj):
         if_error, current_yaw, current_pitch, cur_time_minute, cur_time_second, cur_time_second_frac = self.port.recv_feedback()
         if if_error:
             if self.port.ser is not None:
-                self.get_logger().error(f"Com receive crc error")
+                self.get_logger().error(f"Com receive occur error")
             else:
                 pass 
                 #self.get_logger().error(f"Com port {self.port.params.port_abs_path} cannot open")
