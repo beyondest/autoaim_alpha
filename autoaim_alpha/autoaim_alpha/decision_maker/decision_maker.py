@@ -204,11 +204,11 @@ class Decision_Maker:
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         
         if self.if_relative:
-            next_yaw = CIRCLE(next_yaw, -np.pi, np.pi)
-            next_pitch = CIRCLE(next_pitch, -np.pi, np.pi)
+            next_yaw = CIRCLE(next_yaw, [-np.pi, np.pi])
+            next_pitch = CIRCLE(next_pitch, [-np.pi, np.pi])
         else:
-            next_yaw = CLAMP(next_yaw, -np.pi, np.pi)
-            next_pitch = CLAMP(next_pitch, -np.pi, np.pi)
+            next_yaw = CLAMP(next_yaw, [-np.pi, np.pi])
+            next_pitch = CLAMP(next_pitch, [-np.pi, np.pi])
             
         
         
@@ -253,11 +253,11 @@ class Decision_Maker:
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         
         if self.if_relative:
-            next_yaw = CIRCLE(next_yaw, -np.pi, np.pi)
-            next_pitch = CIRCLE(next_pitch, -np.pi, np.pi)
+            next_yaw = CIRCLE(next_yaw, [-np.pi, np.pi])
+            next_pitch = CIRCLE(next_pitch, [-np.pi, np.pi])
         else:
-            next_yaw = CLAMP(next_yaw, -np.pi, np.pi)
-            next_pitch = CLAMP(next_pitch, -np.pi, np.pi)
+            next_yaw = CLAMP(next_yaw, [-np.pi, np.pi])
+            next_pitch = CLAMP(next_pitch, [-np.pi, np.pi])
             
         
         
