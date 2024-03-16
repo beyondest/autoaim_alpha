@@ -182,7 +182,8 @@ class Decision_Maker:
                         lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, fire_yaw = {fire_yaw}, fire_pitch = {fire_pitch}")
                     
                 else:
-                    next_yaw,next_pitch = 0.0,0.0 if self.if_relative else self.cur_yaw,self.cur_pitch
+                    next_yaw = 0.0 if self.if_relative else self.cur_yaw
+                    next_pitch = 0.0 if self.if_relative else self.cur_pitch
                     fire_times = 0
                     lr1.warn(f"Bad Target, Stay, d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             
@@ -198,7 +199,8 @@ class Decision_Maker:
         
         else:
             if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
-                next_yaw,next_pitch = 0.0,0.0 if self.if_relative else self.cur_yaw,self.cur_pitch
+                next_yaw = 0.0 if self.if_relative else self.cur_yaw
+                next_pitch = 0.0 if self.if_relative else self.cur_pitch
                 fire_times = 0
                 lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             

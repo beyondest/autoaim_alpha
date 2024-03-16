@@ -18,7 +18,7 @@ ser = serial.Serial(
                     dsrdtr=None,
                     inter_byte_timeout=0.1,
                     exclusive=1, # 1 is ok for one time long communication, but None is not, I dont know why!!!!
-                    timeout=1
+                    timeout=0.005 # 0.001,0.005,None,1 is ok
                     ) 
 
 p = pos_data()
