@@ -11,8 +11,8 @@ sleep_time_after_move_command: 0.0
 repeat_times_for_move_command: 1
 yaw_pitch_history_length: 20
 
-continuous_detected_num_min_threshold: 1
-continuous_lost_num_max_threshold: 8
+continuous_detected_num_min_threshold: 2
+continuous_lost_num_max_threshold: 15
 
 
 relative_yaw_move_step: 0.05

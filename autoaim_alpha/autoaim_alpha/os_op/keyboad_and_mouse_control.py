@@ -1,4 +1,8 @@
-import pynput
+
+try:
+    import pynput
+except ImportError:
+    lr1.warn('pynput import failed"')
 from .basic import *
 from .global_logger import lr1
 class KeyboardAndMouseControl:
