@@ -32,59 +32,24 @@ class Node_Visualizer(Node,Custom_Context_Obj):
         super().__init__(name)
         
         
-        if if_show_img_remote:
-            self.sub_img_for_vis = self.create_subscription(topic_img_for_visualize['type'],
-                                                        topic_img_for_visualize['name'],
+        self.sub_img_for_vis = self.create_subscription(topic_img_raw['type'],
+                                                        topic_img_raw['name'],
                                                         self.img_for_vis_callback,
-                                                        topic_img_for_visualize['qos_profile'])
+                                                        topic_img_raw['qos_profile'])
             
-        if if_pub_armor_state_without_correct:
-        
-            self.sub_armor_state_without_corrected = self.create_subscription(  topic_armor_pos_without_correct['type'],
-                                                                                topic_armor_pos_without_correct['name'],
-                                                                                self.sub_armor_pos_without_correct_callback,
-                                                                                topic_armor_pos_without_correct['qos_profile'])
-            
-            self.timer_refresh_armor_state_without_correct = self.create_timer(1/refresh_freq,
-                                                                    self.refresh_armor_state_without_correct)
-            
-            
-            
-        if if_pub_armor_state_corrected:
-            self.sub_armor_state_corrected = self.create_subscription(topic_armor_pos_corrected['type'],
-                                                            topic_armor_pos_corrected['name'],
-                                                            self.sub_armor_pos_corrected_callback,
-                                                            topic_armor_pos_corrected['qos_profile'])
-            
-            self.timer_refresh_armor_state_corrected = self.create_timer(1/refresh_freq,
-                                                                    self.refresh_armor_state_corrected)
-        
-        if if_pub_armor_state_predicted:
-            self.sub_armor_state_predicted = self.create_subscription(topic_armor_pos_predicted['type'],
-                                                            topic_armor_pos_predicted['name'],
-                                                            self.sub_armor_pos_predicted_callback,
-                                                            topic_armor_pos_predicted['qos_profile'])
-            
-            self.timer_refresh_armor_state_predicted = self.create_timer(1/refresh_freq,
-                                                                    self.refresh_armor_state_predicted)
+        self.sub_ele_sys_com = self.create_subscription(topic_electric_sys_com['type'],
+                                                        topic_electric_sys_com['name'],
+                                                        self.ele_sys_com_callback,
+                                                        topic_electric_sys_com['qos_profile'])
 
-        
+        self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
+                                                        topic_electric_sys_state['name'],
+                                                        self.ele_sys_state_callback,
+                                                        topic_electric_sys_state['qos_profile'])
 
-
-        self.armor_state_without_correct_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
-                                                for enemy_car in enemy_car_list \
-                                                    for armor_id in range(enemy_car['armor_nums'])]
-        
-        self.armor_state_corrected_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
-                                                for enemy_car in enemy_car_list \
-                                                    for armor_id in range(enemy_car['armor_nums'])]
-        self.armor_state_predicted = [Armor_Params(enemy_car['armor_name'],armor_id) \
-                                                for enemy_car in enemy_car_list \
-                                                    for armor_id in range(enemy_car['armor_nums'])]
         self.detect_window_name = 'detect_img'
-        self.window_armor_state_without_correct = 'armor_state_without_correct'
-        self.window_armor_state_corrected = "window_armor_state_corrected"
-        self.window_armor_state_predicted = "window_armor_state_predicted"
+
+        
         
         self.bridge = CvBridge()
         self.get_logger().warn(f"!!!You have started visualizer, armor_name_to_draw_pos need to be set if armor_name is new!!!")
@@ -97,84 +62,52 @@ class Node_Visualizer(Node,Custom_Context_Obj):
         
         self.get_logger().debug(f"Received image for visualization")
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding=camera_output_format)
+        
+        add_text(   img,
+                    f'cur_yaw',
+                    value=f'{self.cur_yaw:.3f}',
+                    pos=(20,50),
+                    color=(0,0,0),
+                    scale_size=0.7)
+        add_text(   img,
+                    f'cur_pitch',
+                    value=f'{self.cur_pitch:.3f}',
+                    pos=(20,80),
+                    color=(0,0,0),
+                    scale_size=0.7)
+        add_text(   img,
+                    f'target_yaw',
+                    value=f'{self.target_yaw:.3f}',
+                    pos=(20,110),
+                    color=(0,0,0),
+                    scale_size=0.7)
+        add_text(   img,
+                    f'target_pitch',
+                    value=f'{self.target_pitch:.3f}',
+                    pos=(20,140),
+                    color=(0,0,0),
+                    scale_size=0.7)
+        
         cv2.imshow(self.detect_window_name, img)
         cv2.waitKey(1)
     
-        
-        
+    
+    
+    def ele_sys_com_callback(self, msg:ElectricsysCom):
+        self.target_yaw = msg.target_abs_yaw
+        self.target_pitch = msg.target_abs_pitch
+
+    def ele_sys_state_callback(self, msg:ElectricsysState):
+        self.cur_yaw = msg.cur_yaw
+        self.cur_pitch = msg.cur_pitch
  
     
-    def sub_armor_pos_without_correct_callback(self, msg:ArmorPos):
-        self.get_logger().debug(f"Recv armorpos without corrected")
-        self._update_armor_state_list(self.armor_state_without_correct_list, msg)
-        
-    def sub_armor_pos_corrected_callback(self,msg:ArmorPos):
-        self.get_logger().debug(f"Recv armorpos corrected")
-        self._update_armor_state_list(self.armor_state_corrected_list,msg)            
-          
-    def sub_armor_pos_predicted_callback(self,msg:ArmorPos):
-        self.get_logger().debug(f"Recv armorpos predicted")
-        self._update_armor_state_list(self.armor_state_predicted,msg)            
-    
-    
-    
-    def refresh_armor_state_without_correct(self):
-        c = canvas(canvas_shape,'white')
-        for armor_state in self.armor_state_without_correct_list:
-            self.draw_armor_state_to_img(c.img,armor_state)
-        cv2.imshow(self.window_armor_state_without_correct,c.img)
-        cv2.waitKey(1)
-        
-    def refresh_armor_state_corrected(self):
-        c = canvas(canvas_shape,'white')
-        for armor_state in self.armor_state_corrected_list:
-            self.draw_armor_state_to_img(c.img,armor_state)
-        cv2.imshow(self.window_armor_state_corrected,c.img)
-        cv2.waitKey(1)
-        
-          
-    def refresh_armor_state_predicted(self):
-        c = canvas(canvas_shape,'white')
-        for armor_state in self.armor_state_predicted:
-            self.draw_armor_state_to_img(c.img,armor_state)
-        cv2.imshow(self.window_armor_state_predicted,c.img)
-        cv2.waitKey(1)
-        
-        
-    def _update_armor_state_list(self,armor_state_list:list,msg:ArmorPos):
-        
-        target_pos_in_camera_frame = np.array([msg.pose.pose.position.x,
-                                                msg.pose.pose.position.y,
-                                                msg.pose.pose.position.z])
-        
-        q = Quaternion(msg.pose.pose.orientation.w,
-                       msg.pose.pose.orientation.x,
-                       msg.pose.pose.orientation.y,
-                       msg.pose.pose.orientation.z)
-        rvec = q.get_axis() * q.angle
-        
-        for armor_params in armor_state_list:
-            if armor_params.name == msg.armor_name and armor_params.id == msg.armor_id:
-                armor_params.tvec = target_pos_in_camera_frame
-                armor_params.rvec = rvec
-                armor_params.confidence = msg.confidence
-                armor_params.time = msg.pose.header.stamp.sec + msg.pose.header.stamp.nanosec/1e9
-    
+
 
     
     def _start(self):
-        if if_show_img_remote:
-            cv2.namedWindow(self.detect_window_name, cv2.WINDOW_AUTOSIZE)
-        if if_pub_armor_state_without_correct:
-            cv2.namedWindow(self.window_armor_state_without_correct,  cv2.WINDOW_AUTOSIZE)
-            
-        if if_pub_armor_state_corrected:
-            cv2.namedWindow(self.window_armor_state_corrected,  cv2.WINDOW_AUTOSIZE)
         
-        if if_pub_armor_state_predicted:
-            cv2.namedWindow(self.window_armor_state_predicted,  cv2.WINDOW_AUTOSIZE)
-            
-            
+        cv2.namedWindow(self.detect_window_name, cv2.WINDOW_AUTOSIZE)
         self.get_logger().info(f"Node {self.get_name()} start success")
     
     def _end(self):
@@ -185,6 +118,8 @@ class Node_Visualizer(Node,Custom_Context_Obj):
 
     def _errorhandler(self,exc_value):
         self.get_logger().error(f"Node {self.get_name()} get error {exc_value}")
+    
+    
     
     
     def draw_armor_state_to_img(self,
@@ -201,6 +136,7 @@ class Node_Visualizer(Node,Custom_Context_Obj):
                     pos=pos,
                     color=(0,0,0),
                     scale_size=0.7)
+        
         
         add_text(   img,
                     f'if_latest',
