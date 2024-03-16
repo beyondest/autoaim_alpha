@@ -43,7 +43,7 @@ class Node_Com(Node,Custom_Context_Obj):
         self.cur_pitch = 0.0
         
     def listener_callback(self, msg: ElectricsysCom):
-        if self.zero_unix_time is None:
+        if self.zero_unix_time is None and gimbal_action_mode != 4:
             self.get_logger().debug(f"No zero_unix_time, waiting for connection")
             return
         
