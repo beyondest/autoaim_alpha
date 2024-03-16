@@ -80,7 +80,17 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.yaw_test_idx = 0
         self.pitch_test_idx = 0
-
+        
+        self.declare_parameter("kp", 1.0)
+        self.declare_parameter("ki", 0.0)
+        self.declare_parameter("kd", 0.0)
+        self.get_parameter('kp').add_callback(self.update_kp)
+        self.get_parameter('ki').add_callback(self.update_ki)
+        self.get_parameter('kd').add_callback(self.update_kd)
+        self.decision_maker.pid_controller.params.kp = self.get_parameter('kp').value
+        self.decision_maker.pid_controller.params.ki = self.get_parameter('ki').value
+        self.decision_maker.pid_controller.params.kd = self.get_parameter('kd').value
+        
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
         if self.if_connetect_to_ele_sys == False:
@@ -223,6 +233,24 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.fire_times = 0
         
         self.pub_ele_sys_com.publish(com_msg)
+    
+    
+    def update_kp(self,kp):
+        self.decision_maker.pid_controller.params.kp = kp
+        if node_parameter_mode == 'Dbg':
+            self.get_logger().debug(f"Update kp to {kp}")
+            
+    def update_ki(self,ki):
+        self.decision_maker.pid_controller.params.ki = ki
+        if node_parameter_mode == 'Dbg':
+            self.get_logger().debug(f"Update ki to {ki}")
+            
+    def update_kd(self,kd):
+        self.decision_maker.pid_controller.params.kd = kd
+        if node_parameter_mode == 'Dbg':
+            self.get_logger().debug(f"Update kd to {kd}")
+            
+
     
     def _start(self):
         

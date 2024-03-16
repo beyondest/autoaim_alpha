@@ -40,6 +40,8 @@ class Decision_Maker_Params(Params):
         self.if_enable_mouse_control = False
         self.record_data_path = None
         
+        
+        self.if_use_pid_control = True
         self.fire_mode = 1
         """fire mode:
             0: firepower priority
@@ -158,7 +160,7 @@ class Decision_Maker:
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
     
-    def make_decision(self,if_use_pid:bool = False)->tuple:
+    def make_decision(self)->tuple:
         """
         Args:
             target_armor_params (Armor_Params): _description_
@@ -169,7 +171,7 @@ class Decision_Maker:
         target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
         if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
             
-            if not if_use_pid:
+            if not self.params.if_use_pid_control:
                 fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(target.tvec,
                                                             self.cur_yaw,
                                                             self.cur_pitch)
@@ -206,7 +208,7 @@ class Decision_Maker:
             
             else: 
                 next_yaw,next_pitch = self._search_target()
-                if if_use_pid:
+                if self.params.if_use_pid_control:
                     self.pid_controller.reset()
                 fire_times = 0
                 lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')

@@ -2,7 +2,7 @@ yaw_left_degree: -60.0
 yaw_right_degree: 60.0
 pitch_down_degree: -15.0
 pitch_up_degree: 0.0
-yaw_search_step: 0.01
+yaw_search_step: 0.03
         
 pitch_search_left_waves: 5
 pitch_search_right_waves: 6
@@ -38,7 +38,7 @@ x_axis_sensitivity: 0.5
 y_axis_sensitivity: 0.5
 
 
-
+if_use_pid_control: True
 
 
 
