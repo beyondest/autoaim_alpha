@@ -456,7 +456,13 @@ class pos_data(data_list):
                                     ser_read[self.range_list[i][0]:self.range_list[i][1]]
                                     )[0]
                     )
-        out[0] = out[0].decode('utf-8')
+            
+        try:
+            out[0] = out[0].decode('utf-8')
+        except Exception as e:
+            print(f'decode first byte failed: e:{e}, out[0]:{out[0]}')
+            
+            
         out[7]= out[7].decode('utf-8')
         if out[0] == self.SOF:
             if if_crc:
@@ -472,7 +478,7 @@ class pos_data(data_list):
                         crc_v = cal_crc(for_crc_cal)
                         error = not (crc_v == out[8])
                 else:
-                    raise TypeError("This function is not support yet")
+                    raise NotImplementedError("This function is not support yet")
             else:
                 crc_v = 0  
                 error = False 

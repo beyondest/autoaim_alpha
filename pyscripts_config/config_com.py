@@ -28,7 +28,8 @@ try:
         if_error = p.convert_pos_bytes_to_data(b,if_part_crc=False)
         if if_error:
             print(f'Error in data conversion,ori_bytes:{b}')
-            
+            p.show()
+            print(f"crc_get: {p.crc_get},crc_calc: {p.crc_v}")
         else:
             print(f'ori_bytes:{b}')
             p.show()
