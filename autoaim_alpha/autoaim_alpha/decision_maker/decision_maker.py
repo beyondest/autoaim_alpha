@@ -160,48 +160,61 @@ class Decision_Maker:
     
     def make_decision(self,if_use_pid:bool = False)->tuple:
         """
-
         Args:
             target_armor_params (Armor_Params): _description_
         Returns:
             tuple: next_yaw,next_pitch, fire_times
         """
+        
         target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
         if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
-            fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(target.tvec,
-                                                        self.cur_yaw,
-                                                        self.cur_pitch)
-            if if_success:
-                next_yaw = fire_yaw
-                next_pitch = fire_pitch
+            
+            if not if_use_pid:
+                fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(target.tvec,
+                                                            self.cur_yaw,
+                                                            self.cur_pitch)
+                if if_success:
+                    next_yaw = fire_yaw if not self.if_relative else fire_yaw - self.cur_yaw
+                    next_pitch = fire_pitch if not self.if_relative else fire_pitch - self.cur_pitch
+                    fire_times = 1
+                    lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
+                    if self.mode == 'Dbg':
+                        lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, fire_yaw = {fire_yaw}, fire_pitch = {fire_pitch}")
+                    
+                else:
+                    next_yaw,next_pitch = 0.0,0.0 if self.if_relative else self.cur_yaw,self.cur_pitch
+                    fire_times = 0
+                    lr1.warn(f"Bad Target, Stay, d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
+            
+            else:
+                relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
+                next_yaw = -self.pid_controller.get_output(0.0,relative_yaw) if self.if_relative else self.cur_yaw + next_yaw
+                relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
+                next_pitch = -self.pid_controller.get_output(0.0,relative_pitch) if self.if_relative else self.cur_pitch + next_pitch
                 fire_times = 1
                 lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-                if self.mode == 'Dbg':
-                    lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, fire_yaw = {fire_yaw}, fire_pitch = {fire_pitch}")
-                
-            else:
-                next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
-                fire_times = 0
-                lr1.warn(f"Bad Target, Stay, d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
+                if self.mode == 'Dbg':  
+                    lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, relative_yaw = {relative_yaw}, relative_pitch = {relative_pitch}")
         
         else:
             if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
-                next_yaw,next_pitch = self.cur_yaw,self.cur_pitch
+                next_yaw,next_pitch = 0.0,0.0 if self.if_relative else self.cur_yaw,self.cur_pitch
                 fire_times = 0
                 lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             
             else: 
                 next_yaw,next_pitch = self._search_target()
+                if if_use_pid:
+                    self.pid_controller.reset()
                 fire_times = 0
                 lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
-            
-            
+        
         if self.params.if_enable_mouse_control:
             next_yaw,next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
             
-            
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
+        
         
         if self.if_relative:
             next_yaw = CIRCLE(next_yaw, [-np.pi, np.pi])
@@ -219,55 +232,6 @@ class Decision_Maker:
         
         return next_yaw,next_pitch, fire_times
 
-    def make_decision_by_pid(self):
-        
-        target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
-        
-        if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
-            # because error = target_yaw - relative_yaw = -relative_yaw, so we need to minus the result of arctan2
-            
-            
-            relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
-            next_yaw = -self.pid_controller.get_output(0.0,relative_yaw)
-            relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
-            next_pitch = -self.pid_controller.get_output(0.0,relative_pitch)
-            lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-            if self.mode == 'Dbg':  
-                lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, relative_yaw = {relative_yaw}, relative_pitch = {relative_pitch}")
-        
-        else:
-            if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
-                next_yaw,next_pitch = 0.0,0.0
-                lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-            else: 
-                next_yaw,next_pitch = self._search_target()
-                self.pid_controller.reset()
-                lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
-            
-        
-        if self.params.if_enable_mouse_control:
-            next_yaw,next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
-            
-            
-        SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
-        SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
-        
-        if self.if_relative:
-            next_yaw = CIRCLE(next_yaw, [-np.pi, np.pi])
-            next_pitch = CIRCLE(next_pitch, [-np.pi, np.pi])
-        else:
-            next_yaw = CLAMP(next_yaw, [-np.pi, np.pi])
-            next_pitch = CLAMP(next_pitch, [-np.pi, np.pi])
-            
-        
-        
-        if self.params.record_data_path is not None:
-            SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,target.tvec)
-            self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([next_yaw,next_pitch]))
-               
-            
-        
-        return next_yaw,next_pitch,0
     
     def _search_target(self):
         if self.if_relative:

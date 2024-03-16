@@ -447,16 +447,17 @@ class pos_data(data_list):
         self.frame_type_nums = 9
         out = []
         error = False
+        if ser_read == b'' or ser_read is None:
+            error = True
+            return error
+        
         for i in range(self.frame_type_nums):
             out.append(struct.unpack(self.fmt_list[i],
                                     ser_read[self.range_list[i][0]:self.range_list[i][1]]
                                     )[0]
                     )
-        
         out[0] = out[0].decode('utf-8')
         out[7]= out[7].decode('utf-8')
-        
-            
         if out[0] == self.SOF:
             if if_crc:
                 if if_crc_rev:
@@ -477,7 +478,6 @@ class pos_data(data_list):
                 error = False 
         else:
             error = True
-        
         
 
         self.error =error
