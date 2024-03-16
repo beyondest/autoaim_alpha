@@ -85,10 +85,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.yaw_test_idx = 0
         self.pitch_test_idx = 0
-        
-        self.decision_maker.pid_controller.params.kp = self.get_parameter('kp').value
-        self.decision_maker.pid_controller.params.ki = self.get_parameter('ki').value
-        self.decision_maker.pid_controller.params.kd = self.get_parameter('kd').value
+
         
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
