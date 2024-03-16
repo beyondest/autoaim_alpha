@@ -180,7 +180,7 @@ class Decision_Maker:
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         
-            
+
         
         
         return next_yaw,next_pitch, fire_times

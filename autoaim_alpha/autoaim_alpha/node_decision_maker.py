@@ -46,10 +46,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                       self.recv_from_ele_sys_callback,
                                                       topic_electric_sys_state['qos_profile'])
         
-        self.sub_armor_pos_list = self.create_subscription(topic_armor_pos_without_correct['type'],
-                                                        topic_armor_pos_without_correct['name'],
+        self.sub_armor_pos_list = self.create_subscription(topic_armor_pos_list['type'],
+                                                        topic_armor_pos_list['name'],
                                                         self.sub_armor_pos_list_callback,
-                                                        topic_armor_pos_without_correct['qos_profile'])
+                                                        topic_armor_pos_list['qos_profile'])
         
         
         self.ballistic_predictor = Ballistic_Predictor(node_decision_maker_mode,

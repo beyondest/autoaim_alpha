@@ -25,9 +25,9 @@ class Node_Observer(Node,Custom_Context_Obj):
                                             topic_detect_result['name'],
                                             self.detect_sub_callback,
                                             topic_detect_result['qos_profile'])
-        self.pub = self.create_publisher(topic_armor_pos_without_correct['type'],
-                                          topic_armor_pos_without_correct['name'],
-                                          topic_armor_pos_without_correct['qos_profile'])
+        self.pub = self.create_publisher(topic_armor_pos_list['type'],
+                                          topic_armor_pos_list['name'],
+                                          topic_armor_pos_list['qos_profile'])
 
 
 
