@@ -48,6 +48,19 @@ def RCLAMP(x,scope:list,if_should_be_in_scope:bool = False):
         else:
             return x
 
+def CIRCLE(x,scope:list):
+    
+    if scope[0] > scope[1]:
+        lr1.error(f"OS_OP : scope {scope} wrong , should be [0] < [1] ")
+    else:
+        if x <scope[0]:
+            while x <scope[0]:
+                x += scope[1]-scope[0]
+        elif x > scope[1]:
+            while x >scope[1]:
+                x -= scope[1]-scope[0]
+        return x
+
 class SV:
     def __init__(self, initial_value, scope,if_strict_in_scope:bool = True):
         self._value = initial_value

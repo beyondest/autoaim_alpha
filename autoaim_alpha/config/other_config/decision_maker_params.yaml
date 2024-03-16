@@ -22,7 +22,20 @@ yaw_idx_max: 100
 pitch_idx_max: 10
 
 
-tvec_history_length: 10     
+
+# for recording data
+tvec_history_length: 10  
+record_data_path: null
+
+
+# this is for mouse control
+screen_width: 1920
+screen_height: 1080
+if_enable_mouse_control: False
+
+# 0-1, x from left to right = 100degree, y from top to bottom = 100degree
+x_axis_sensitivity: 0.5
+y_axis_sensitivity: 0.5
 
 
 

@@ -4,7 +4,7 @@ from ..os_op.basic import *
 from ..os_op.global_logger import *
 from .ballistic_predictor import *
 from ..utils_network.data import Data_Recoreder
-
+from ..os_op.keyboad_and_mouse_control import *
 
 class Decision_Maker_Params(Params):
     def __init__(self) -> None:
@@ -31,6 +31,14 @@ class Decision_Maker_Params(Params):
         self.pitch_idx_max = 10
         
         self.tvec_history_length = 10
+        self.screen_width = 1920
+        self.screen_height = 1080
+        
+        # 0.0 - 1.0
+        self.x_axis_sensitivity = 0.5
+        self.y_axis_sensitivity = 0.5
+        self.if_enable_mouse_control = False
+        self.record_data_path = None
         
         self.fire_mode = 1
         """fire mode:
@@ -84,14 +92,25 @@ class Decision_Maker:
         self.pitch_add = True
         self.if_relative = if_relative
         
-        self.if_enable_record_target_tvec_to_yaw_pitch = False
+       
         # this is for predict
         self.next_yaw_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         self.next_pitch_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         
         
         # this is for record
-        self.tvec_history_list = [np.zeros(3) for i in range(self.params.tvec_history_length)]
+        if self.params.record_data_path is not None:
+            self.data_recorder = Data_Recoreder(self.params.record_data_path,
+                                            (self.params.tvec_history_length,3),
+                                            (2,),
+                                            np.float32,
+                                            np.float32)
+            
+            self.tvec_history_list = [np.zeros(3) for i in range(self.params.tvec_history_length)]
+        
+        if self.params.if_enable_mouse_control:
+            self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
+            self.mouse_pos_prior = (0,0)
         
     def update_enemy_side_info(self,
                       armor_name:str,
@@ -177,10 +196,25 @@ class Decision_Maker:
                 lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
             
             
+        if self.params.if_enable_mouse_control:
+            next_yaw,next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
+            
+            
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
         
-
+        if self.if_relative:
+            next_yaw = CIRCLE(next_yaw, -np.pi, np.pi)
+            next_pitch = CIRCLE(next_pitch, -np.pi, np.pi)
+        else:
+            next_yaw = CLAMP(next_yaw, -np.pi, np.pi)
+            next_pitch = CLAMP(next_pitch, -np.pi, np.pi)
+            
+        
+        
+        if self.params.record_data_path is not None:
+            SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,target.tvec)
+            self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([next_yaw,next_pitch]))
         
         
         return next_yaw,next_pitch, fire_times
@@ -211,16 +245,27 @@ class Decision_Maker:
                 lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
             
         
+        if self.params.if_enable_mouse_control:
+            next_yaw,next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
+            
+            
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
-        if next_yaw < -np.pi:
-            next_yaw += 2*np.pi
-        elif next_yaw > np.pi:
-            next_yaw -= 2*np.pi
-        if next_pitch < -np.pi:
-            next_pitch += 2*np.pi
-        elif next_pitch > np.pi:
-            next_pitch -= 2*np.pi    
+        
+        if self.if_relative:
+            next_yaw = CIRCLE(next_yaw, -np.pi, np.pi)
+            next_pitch = CIRCLE(next_pitch, -np.pi, np.pi)
+        else:
+            next_yaw = CLAMP(next_yaw, -np.pi, np.pi)
+            next_pitch = CLAMP(next_pitch, -np.pi, np.pi)
+            
+        
+        
+        if self.params.record_data_path is not None:
+            SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,target.tvec)
+            self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([next_yaw,next_pitch]))
+               
+            
         
         return next_yaw,next_pitch,0
     
@@ -314,13 +359,23 @@ class Decision_Maker:
         return next_yaw,next_pitch
 
 
-    def enable_record_target_tvec_to_yaw_pitch(self,data_path:str):
-        self.if_enable_record_target_tvec_to_yaw_pitch = True
         
-        self.data_recorder = Data_Recoreder(data_path,
-                                            (self.params.tvec_history_length,3),
-                                            (2,),
-                                            np.float32,
-                                            np.float32)
-           
+    def __trans_mouse_pos_to_next_yaw_pitch(self,cur_mouse_pos:tuple):
+        delta_x = cur_mouse_pos[0] - self.mouse_pos_prior[0]
+        delta_y = cur_mouse_pos[1] - self.mouse_pos_prior[1]
+        self.mouse_pos_prior = cur_mouse_pos
+        
+        move_yaw = -delta_x / self.params.screen_width * 100/180 * np.pi
+        move_pitch = -delta_y / self.params.screen_height * 100/180 * np.pi
+        
+        if self.if_relative:
+        
+            next_yaw = self.cur_yaw + move_yaw * self.params.x_axis_sensitivity
+            next_pitch = self.cur_pitch + move_pitch * self.params.y_axis_sensitivity
+            
+        else:
+            next_yaw = move_yaw * self.params.x_axis_sensitivity
+            next_pitch = move_pitch * self.params.y_axis_sensitivity
+        
+        return next_yaw,next_pitch
         

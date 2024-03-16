@@ -62,7 +62,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              self.ballistic_predictor,
                                              enemy_car_list,
                                              if_relative=if_relative)
-
+        
         
         
         self.get_logger().warn(f"Use gimbal_action_mode {self.action_mode_to_note[gimbal_action_mode]}")
@@ -121,6 +121,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.action_mode_to_callback[gimbal_action_mode]()
         
+
+    
+    
+    
     def make_decision_callback(self):
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
@@ -143,26 +147,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
        
-    def repeat_recv_from_ele_callback(self):
-        
-        if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
-            return
-        
-        com_msg = ElectricsysCom()
-        
-        self.get_logger().debug(f"Get : {self.decision_maker.electric_system_unix_time}, {type(self.decision_maker.electric_system_unix_time)}")
-        self.get_logger().debug(f"Get : {self.decision_maker.cur_pitch}, {type(self.decision_maker.cur_pitch)}")
-        self.get_logger().debug(f"Get : {self.decision_maker.cur_yaw}, {type(self.decision_maker.cur_yaw)}")
-
-        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
-        com_msg.target_abs_pitch = self.decision_maker.cur_pitch
-        com_msg.target_abs_yaw = self.decision_maker.cur_yaw
-        com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
-        com_msg.fire_times = 0
-        
-        self.pub_ele_sys_com.publish(com_msg)
         
     def test_yaw_callback(self):
         
