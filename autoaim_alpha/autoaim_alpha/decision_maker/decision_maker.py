@@ -181,7 +181,7 @@ class Decision_Maker:
                     fire_times = 1
                     lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
                     if self.mode == 'Dbg':
-                        lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, fire_yaw = {fire_yaw}, fire_pitch = {fire_pitch}")
+                        lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, fy = {fire_yaw:.3f}, fp = {fire_pitch:.3f}, ny = {next_yaw:.3f}, np = {next_pitch:.3f}, x = {target.tvec[0]:.3f}, y = {target.tvec[1]:.3f}, z = {target.tvec[2]:.3f}")
                     
                 else:
                     next_yaw = 0.0 if self.if_relative else self.cur_yaw
@@ -197,7 +197,8 @@ class Decision_Maker:
                 fire_times = 1
                 lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
                 if self.mode == 'Dbg':  
-                    lr1.debug(f"cur_yaw = {self.cur_yaw}, cur_pitch = {self.cur_pitch}, relative_yaw = {relative_yaw}, relative_pitch = {relative_pitch}")
+                    lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, ry = {relative_yaw:.3f}, rp = {relative_pitch:.3f}, ny = {next_yaw:.3f}, np = {next_pitch:.3f}, x = {target.tvec[0]:.3f}, y = {target.tvec[1]:.3f}, z = {target.tvec[2]:.3f}")
+                    
         
         else:
             if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
