@@ -193,7 +193,7 @@ class Decision_Maker:
                 relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
                 next_yaw = -self.pid_controller.get_output(0.0,relative_yaw) if self.if_relative else self.cur_yaw + relative_yaw
                 relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
-                next_pitch = -self.pid_controller.get_output(0.0,relative_pitch) if self.if_relative else self.cur_pitch + relative_pitch
+                next_pitch = self.pid_controller.get_output(0.0,relative_pitch) if self.if_relative else self.cur_pitch + relative_pitch
                 fire_times = 1
                 lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
                 if self.mode == 'Dbg':  
@@ -289,7 +289,7 @@ class Decision_Maker:
         self.pitch_search_data =np.round(np.sin(np.arange(self.pitch_search_left, self.pitch_search_right, self.pitch_search_step)),3) 
         for i, pitch in enumerate(self.pitch_search_data):
             if pitch < 0:
-                self.pitch_search_data[i] = pitch * self.pitch_down
+                self.pitch_search_data[i] = -pitch * self.pitch_down
             else:
                 self.pitch_search_data[i] = pitch * self.pitch_up
                 

@@ -430,6 +430,15 @@ class PID_Controller:
         self.integral = 0
         
     def get_output(self,target_value,current_value)->float:
+        """error = target_value - current_value
+
+        Args:
+            target_value (_type_): _description_
+            current_value (_type_): _description_
+
+        Returns:
+            float: _description_
+        """
         error = target_value - current_value
         derivative = error - self.last_error
         self.integral += error
