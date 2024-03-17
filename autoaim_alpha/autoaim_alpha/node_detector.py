@@ -114,6 +114,9 @@ class Node_Detector(Node,Custom_Context_Obj):
             if if_show_img_local:
                 cv2.imshow(self.window_name,img_for_visualize)
                 cv2.waitKey(1)
+                
+        if mode == 'Dbg':
+            self.get_logger().debug(f"FPS:{self.fps}")
         
         if result is not None:
             msg = DetectResult()
@@ -143,7 +146,6 @@ class Node_Detector(Node,Custom_Context_Obj):
             self.get_logger().warn(f"Find target : {log_info} spend time:{find_time}s")
             
             self.pub_detect_result.publish(msg)
-            self.get_logger().debug(f"publish detect result success")
             
         else:
             self.pub_detect_result.publish(DetectResult())
