@@ -162,7 +162,9 @@ class Armor_Detector:
                   img,
                   fps,
                   cur_yaw:Union[float,None] = None,
-                  tar_yaw:Union[float,None] = None
+                  tar_yaw:Union[float,None] = None,
+                  cur_pitch:Union[float,None] = None,
+                  tar_pitch:Union[float,None] = None
                  )->None:
         
         """visualize the result of armor detection,
@@ -199,7 +201,9 @@ class Armor_Detector:
                     add_text(img,f"tar_yaw:",f'{(tar_yaw):.3f}',pos=(20,250),color=color,scale_size=0.8)
                     add_text(img,f"cur_yaw:",f'{(cur_yaw):.3f}',pos=(20,300),color=color,scale_size=0.8)
                     add_text(img,f"rel_yaw:",f'{(tar_yaw - cur_yaw):.3f}',pos=(20,350),color=color,scale_size=0.8)
-                    
+                    add_text(img,f"cur_pitch:",f'{cur_pitch:.3f}',pos=(20,400),color=color,scale_size=0.8)
+                    add_text(img,f"tar_pitch:",f'{tar_pitch:.3f}',pos=(20,450),color=color,scale_size=0.8)
+                    add_text(img,f"rel_pitch:",f'{(tar_pitch - cur_pitch):.3f}',pos=(20,500),color=color,scale_size=0.8)
                 
                     
                 

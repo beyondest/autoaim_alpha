@@ -105,7 +105,9 @@ class Node_Detector(Node,Custom_Context_Obj):
             img_for_visualize = self.armor_detector.visualize(img,
                                           fps=self.fps,
                                           cur_yaw=self.cur_yaw,
-                                          tar_yaw=self.target_abs_yaw)
+                                          tar_yaw=self.target_abs_yaw,
+                                          cur_pitch=self.cur_pitch,
+                                          tar_pitch=self.target_abs_pitch)
             
             if if_show_img_remote:
                 self.pub_img_for_visualize.publish(self.cv_bridge.cv2_to_imgmsg(img_for_visualize,camera_output_format))
@@ -153,13 +155,13 @@ class Node_Detector(Node,Custom_Context_Obj):
         
         self.target_abs_pitch = msg.target_abs_pitch
         self.fire_times = msg.fire_times
+        self.target_abs_pitch = msg.target_abs_pitch
         
     def sub_ele_sys_state_callback(self,msg:ElectricsysState):
         
         self.cur_pitch = msg.cur_pitch
         self.cur_yaw = msg.cur_yaw
         self.ele_time = msg.unix_time
-            
     def _start(self):
         if if_show_img_local:
             try:
