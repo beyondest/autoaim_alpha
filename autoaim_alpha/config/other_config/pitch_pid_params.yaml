@@ -8,8 +8,8 @@
 #relative_pitch = -np.arctan(img_z / 700)
 #pid_rel_pit = self.pitch_pid_controller.get_output(0.0,relative_pitch) 
                 
-kp: 0.2
+kp: 0.3
 ki: 0.0
-kd: 0.01
+kd: 0.03
 max_output: 3.14159
 min_output: -3.14159
