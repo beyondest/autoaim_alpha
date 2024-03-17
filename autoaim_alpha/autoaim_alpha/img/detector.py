@@ -348,7 +348,8 @@ class Tradition_Detector:
             self.load_params_from_folder(tradition_config_folder_path)
         
         
-        if self.mode == 'Dbg':
+        if self.mode == 'Dbg' and self.if_show_img_local:
+            
             cv2.namedWindow('single',cv2.WINDOW_FREERATIO)
             cv2.namedWindow('roi_transform',cv2.WINDOW_FREERATIO)
             cv2.namedWindow('roi_binary',cv2.WINDOW_FREERATIO)
