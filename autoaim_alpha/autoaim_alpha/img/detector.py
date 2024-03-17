@@ -181,33 +181,19 @@ class Armor_Detector:
                             color=color,
                             scale_size=0.7)
                 add_text(   img,
-                            f'x:',
+                            f'img_x:',
                             value=f'{i["pos"][0]:.3f}',
                             pos=(20,50),
                             color=color,
                             scale_size=0.8
                 )
                 add_text(   img,
-                            f'z:',
+                            f'img_y:',
                             value=f'{i["pos"][2]:.3f}',
                             pos=(20,100),
                             color=color,
                             scale_size=0.8
                 )
-                add_text(img,
-                         f'x_:',
-                         value=f'{i["rvec"][0]:.3f}',
-                         pos=(20,150),
-                         color=color,
-                         scale_size=0.8)
-                add_text(img,
-                         f'y_:',
-                         value=f'{i["rvec"][1]:.3f}',
-                         pos=(20,200),
-                         color=color,
-                         scale_size=0.8)
-                
-                
                 
                 if cur_yaw is not None and tar_yaw is not None:
                     add_text(img,f"tar_yaw:",f'{(tar_yaw):.3f}',pos=(20,250),color=color,scale_size=0.8)
