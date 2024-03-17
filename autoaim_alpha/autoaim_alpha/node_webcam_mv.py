@@ -20,8 +20,8 @@ class Node_Webcam_MV(Node,Custom_Context_Obj):
                  ):
         
         super().__init__(name)
-        
-
+        self.fps = 0
+        self.pre_time = time.time()
         self.publisher = self.create_publisher(
                                                topic['type'],
                                                topic=topic['name'],
@@ -60,8 +60,14 @@ class Node_Webcam_MV(Node,Custom_Context_Obj):
             
         else:
             self.get_logger().error("No img get from camera")
+        
+        if mode == 'Dbg':
             
-    
+            cur_time = time.time()
+            self.fps = 1/(cur_time-self.pre_time)
+            self.pre_time = cur_time
+            self.get_logger().info(f"CAM_FPS: {int(self.fps)}")
+            
     def _start(self):
         
         self.mv._start()

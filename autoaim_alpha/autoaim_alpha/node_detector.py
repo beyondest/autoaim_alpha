@@ -116,7 +116,7 @@ class Node_Detector(Node,Custom_Context_Obj):
                 cv2.waitKey(1)
                 
         if mode == 'Dbg':
-            self.get_logger().debug(f"FPS:{self.fps}")
+            self.get_logger().info(f"DETECT_FPS:{self.fps}")
         
         if result is not None:
             msg = DetectResult()
