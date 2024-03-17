@@ -63,7 +63,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.decision_maker = Decision_Maker(node_decision_maker_mode,
                                              decision_maker_params_yaml_path,
-                                             pid_controller_config_yaml_path,
+                                             yaw_pid_path,
+                                             pitch_pid_path,
                                              self.ballistic_predictor,
                                              enemy_car_list,
                                              if_relative=if_relative)

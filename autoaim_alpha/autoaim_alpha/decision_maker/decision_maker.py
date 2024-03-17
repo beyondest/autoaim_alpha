@@ -54,7 +54,8 @@ class Decision_Maker:
     def __init__(self,
                  mode:str,
                  decision_maker_params_yaml_path:Union[str,None] = None,
-                 pid_controller_params_yaml_path:Union[str,None] = None,
+                 yaw_pid_controller_params_yaml_path:Union[str,None] = None,
+                 pitch_pid_controller_params_yaml_path:Union[str,None] = None,
                  ballistic_predictor:Union[Ballistic_Predictor,None] = None,
                  enemy_car_list:list = None,
                  if_relative: bool = False
@@ -66,16 +67,17 @@ class Decision_Maker:
         self.mode = mode
         self.params = Decision_Maker_Params()
         self.ballistic_predictor = ballistic_predictor
-        self.pid_controller = PID_Controller()
-        self.pid_controller.load_params_from_yaml(pid_controller_params_yaml_path)
+        
+        self.yaw_pid_controller = PID_Controller()
+        self.pitch_pid_controller = PID_Controller()
+        
+        
+        self.yaw_pid_controller.load_params_from_yaml(yaw_pid_controller_params_yaml_path)
+        self.pitch_pid_controller.load_params_from_yaml(pitch_pid_controller_params_yaml_path)
         self.enemy_car_list = enemy_car_list
         if decision_maker_params_yaml_path is not None:
             self.params.load_params_from_yaml(decision_maker_params_yaml_path)
-        if pid_controller_params_yaml_path is None:
-            lr1.warning("pid_controller_params_yaml_path is None, use default params")
-        else:
-            self.pid_controller.load_params_from_yaml(pid_controller_params_yaml_path)
-
+        
         self.armor_state_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
                                                         for enemy_car in self.enemy_car_list \
                                                             for armor_id in range(enemy_car['armor_nums'])]
@@ -191,9 +193,9 @@ class Decision_Maker:
             
             else:
                 relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
-                pid_rel_yaw = -self.pid_controller.get_output(0.0,relative_yaw)
+                pid_rel_yaw = -self.yaw_pid_controller.get_output(0.0,relative_yaw)
                 relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
-                pid_rel_pit = self.pid_controller.get_output(0.0,relative_pitch) 
+                pid_rel_pit = self.pitch_pid_controller.get_output(0.0,relative_pitch) 
                 
                 if not self.if_relative:
                     next_yaw = self.cur_yaw + pid_rel_yaw
@@ -218,7 +220,8 @@ class Decision_Maker:
             else: 
                 next_yaw,next_pitch = self._search_target()
                 if self.params.if_use_pid_control:
-                    self.pid_controller.reset()
+                    self.yaw_pid_controller.reset()
+                    self.pitch_pid_controller.reset()
                 fire_times = 0
                 lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
         
