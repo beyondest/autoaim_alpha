@@ -233,13 +233,15 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
     
     def sub_pid_config_callback(self,msg:PidConfig):
         
-        self.decision_maker.pid_controller.params.kp = msg.kp
-        self.decision_maker.pid_controller.params.ki = msg.ki
-        self.decision_maker.pid_controller.params.kd = msg.kd
-        if node_decision_maker_mode == 'Dbg':
-            self.get_logger().debug(f"Update pid config kp {msg.kp}, ki {msg.ki}, kd {msg.kd}")
-            
-            
+        self.decision_maker.yaw_pid_controller.params.kp = msg.yaw_kp
+        self.decision_maker.yaw_pid_controller.params.ki = msg.yaw_ki
+        self.decision_maker.yaw_pid_controller.params.kd = msg.yaw_kd
+        
+        self.decision_maker.pitch_pid_controller.params.kp = msg.pitch_kp
+        self.decision_maker.pitch_pid_controller.params.ki = msg.pitch_ki
+        self.decision_maker.pitch_pid_controller.params.kd = msg.pitch_kd
+        
+
     def _start(self):
         
         self.get_logger().info(f"Node {self.get_name()} start success")
