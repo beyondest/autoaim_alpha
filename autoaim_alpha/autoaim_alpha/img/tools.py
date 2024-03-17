@@ -445,8 +445,8 @@ def get_threshold(img_for_show_in_hist:np.ndarray,
             
         add_text(canvas,'thresh',thresh,scale_size=0.8)
         
-        cv2.imshow('hist',canvas)
-        cv2.waitKey(1)
+        #cv2.imshow('hist',canvas)
+        #cv2.waitKey(1)
 
         lr1.debug(f'thresh:{thresh}')
     
