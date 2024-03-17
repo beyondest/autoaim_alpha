@@ -1,4 +1,14 @@
-kp: 1.0
+# img_x is from -320 to 320,
+# Horizontal Feild of View : max: -29.8 ~ 29.8, or 26.1 ~ 26.1 degree considering focal length change(-0.457 to 0.457 radian)
+# x = img_x /f * deep, x / deep = img_x /f
+# f = 687~775, f = 700, or f = 320 /tan(0.457) = 651.7
+# img_x = 0 ~ 320
+#relative_yaw = -np.arctan(img_x / 700) 
+#pid_rel_yaw = -self.yaw_pid_controller.get_output(0.0,relative_yaw)
+#relative_pitch = -np.arctan(img_z / 700)
+#pid_rel_pit = self.pitch_pid_controller.get_output(0.0,relative_pitch) 
+                
+kp: 0.1
 ki: 0.0
 kd: 0.0
 max_output: 3.14159

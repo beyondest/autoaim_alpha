@@ -11,8 +11,8 @@ mode : Dbg
 gimbal_action_mode: 4
 if_relative: False
 
-if_ignore_elesys: False
-if_show_img_local: False
+if_ignore_elesys: True
+if_show_img_local: True
 if_show_img_remote: False
 # enemy armor color
 armor_color : blue
@@ -21,14 +21,14 @@ if_reverse_img: True
 
 
 
-if_yolov5: False
+if_yolov5: True
 # WARNING : armor_name depends on if_yolov5 !!!
 
 enemy_car_list : 
 - armor_distance:
   - 0.5
   - 0.5
-  armor_name: 3x
+  armor_name: B3
   armor_nums: 1  
 #- armor_distance:
 #  - 0.5
@@ -42,7 +42,7 @@ enemy_car_list :
 
 # in camera frame
 armor_name_to_init_state:
-  3x:
+  B3:
     rvec:
     - 0.0
     - 0.0

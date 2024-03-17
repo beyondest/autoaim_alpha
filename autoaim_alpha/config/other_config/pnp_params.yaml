@@ -36,8 +36,12 @@ small_obj_points:
 obj_wid_in_world: 135.0
 obj_hei_in_world: 125.0
 
-# pnp or pnp_fix
-method_name: pnp
+# pnp or pnp_fix or 2d_and_pnp
+method_name: 2d_and_pnp
+
+camera_center:
+- 320.0
+- 320.0
 
 
 small_armor_name_list:
@@ -60,6 +64,7 @@ small_armor_name_list:
 expand_rate: 1.5
 
 
+
 # good mv
 dist:
 - - -0.13540592406247062
@@ -77,3 +82,5 @@ mtx:
 - - 0.0
   - 0.0
   - 1.0
+
+

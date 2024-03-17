@@ -168,7 +168,7 @@ class Armor_Detector:
         """visualize the result of armor detection,
             if windows_name is None, return img drawn result on it but not show """
         add_text(img,'FPS',fps,color=(255,255,255),scale_size=0.8)  
-            
+        color = (0,0,255)
         if self.final_result_list:
             lr1.debug(f'Detector : Final result nums: {len(self.final_result_list)}')
             
@@ -178,21 +178,41 @@ class Armor_Detector:
                             f'pro:{i["probability"]:.2f}',
                             value=i['result'],
                             pos=i['big_rec'][0],
-                            color=(0,0,255),
+                            color=color,
                             scale_size=0.7)
                 add_text(   img,
                             f'x:',
                             value=f'{i["pos"][0]:.3f}',
                             pos=(20,50),
-                            color=(0,255,0),
+                            color=color,
                             scale_size=0.8
                 )
+                add_text(   img,
+                            f'z:',
+                            value=f'{i["pos"][2]:.3f}',
+                            pos=(20,100),
+                            color=color,
+                            scale_size=0.8
+                )
+                add_text(img,
+                         f'x_:',
+                         value=f'{i["rvec"][0]:.3f}',
+                         pos=(20,150),
+                         color=color,
+                         scale_size=0.8)
+                add_text(img,
+                         f'y_:',
+                         value=f'{i["rvec"][1]:.3f}',
+                         pos=(20,200),
+                         color=color,
+                         scale_size=0.8)
+                
                 
                 
                 if cur_yaw is not None and tar_yaw is not None:
-                    add_text(img,f"tar_yaw:",f'{(tar_yaw):.3f}',pos=(20,100),color=(255,0,0),scale_size=0.8)
-                    add_text(img,f"cur_yaw:",f'{(cur_yaw):.3f}',pos=(20,150),color=(255,0,0),scale_size=0.8)
-                    add_text(img,f"rel_yaw:",f'{(tar_yaw - cur_yaw):.3f}',pos=(20,200),color=(255,0,0),scale_size=0.8)
+                    add_text(img,f"tar_yaw:",f'{(tar_yaw):.3f}',pos=(20,250),color=color,scale_size=0.8)
+                    add_text(img,f"cur_yaw:",f'{(cur_yaw):.3f}',pos=(20,300),color=color,scale_size=0.8)
+                    add_text(img,f"rel_yaw:",f'{(tar_yaw - cur_yaw):.3f}',pos=(20,350),color=color,scale_size=0.8)
                     
                 
                     

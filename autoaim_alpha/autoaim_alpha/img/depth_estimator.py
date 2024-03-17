@@ -23,6 +23,7 @@ class PNP_Params(Params):
                                       'R2','R3','R4','R5'
                                       ]
         
+        self.camera_center = [320.0,320.0]
         self.expand_rate = 1.5 # expand light bar to get the whole armor
 
 
@@ -100,6 +101,37 @@ class Depth_Estimator:
             
             return self._PNP(big_rec,obj_pts)
         
+        elif self.pnp_params.method_name == '2d_and_pnp':
+            big_rec = input[0]
+            center_pos = np.mean(big_rec,axis=0)
+            
+            # when target is right, x add , when target is left, x minus.
+            x = center_pos[0] - self.pnp_params.camera_center[0]
+            
+            # when target is up, z add, when target is down, z minus.
+            z = -(center_pos[1] - self.pnp_params.camera_center[1])
+            
+            
+            obj_wid_in_world = self.pnp_params.obj_wid_in_world
+            obj_hei_in_world = self.pnp_params.obj_hei_in_world
+            
+            # up left / up right / down right / down left
+            obj_pts = np.array([[-obj_wid_in_world/2, -obj_hei_in_world/2, 0],
+                                [obj_wid_in_world/2, -obj_hei_in_world/2, 0],
+                                [obj_wid_in_world/2, obj_hei_in_world/2, 0],
+                                [-obj_wid_in_world/2, obj_hei_in_world/2, 0]], dtype=np.double)
+            pnp_tvec,pnp_rvec = self._PNP(big_rec,obj_pts)
+            
+            # y is deep in rviz2, always positive.
+            y = pnp_tvec[1]
+            
+            # Notice that x is -320 to 320, z is -320 to 320, y is 0 - 10
+            return [x,y,z],pnp_rvec
+        
+        else:
+            raise NotImplementedError(f'Invalid method_name: {self.pnp_params.method_name}')
+            
+            
     def save_params_to_yaml(self,yaml_path:str):
         if not os.path.exists(yaml_path):
             os.makedirs(yaml_path)

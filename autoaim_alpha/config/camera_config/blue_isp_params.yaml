@@ -6,7 +6,7 @@ exposure_time_us: 1000
 fps: 2
 g_gain: 126
 gamma: 100
-grab_resolution_hei: 512
+grab_resolution_hei: 640
 grab_resolution_wid: 640
 r_gain: 223
 saturation: 100

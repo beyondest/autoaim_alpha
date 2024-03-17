@@ -171,6 +171,10 @@ class Decision_Maker:
         """
         
         target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
+        
+        img_x = target.tvec[0]
+        img_y = target.tvec[2]
+        
         if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
             
             if not self.params.if_use_pid_control:
@@ -192,10 +196,12 @@ class Decision_Maker:
                     lr1.warn(f"Bad Target, Stay, d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
             
             else:
-                relative_yaw = -np.arctan2(target.tvec[0],target.tvec[1]) 
+
+                relative_yaw = -np.arctan(img_x / 651.7) 
                 pid_rel_yaw = -self.yaw_pid_controller.get_output(0.0,relative_yaw)
-                relative_pitch = -np.arctan2(target.tvec[2],target.tvec[1])
+                relative_pitch = -np.arctan(img_y / 969.7)
                 pid_rel_pit = self.pitch_pid_controller.get_output(0.0,relative_pitch) 
+                
                 
                 if not self.if_relative:
                     next_yaw = self.cur_yaw + pid_rel_yaw
