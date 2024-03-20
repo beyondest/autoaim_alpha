@@ -165,7 +165,7 @@ class Armor_Detector:
                   tar_yaw:Union[float,None] = None,
                   cur_pitch:Union[float,None] = None,
                   tar_pitch:Union[float,None] = None
-                 )->None:
+                 )->np.ndarray:
         
         """visualize the result of armor detection,
             if windows_name is None, return img drawn result on it but not show """

@@ -113,8 +113,8 @@ class Filter_of_lightbar(Filter_Base):
                 pre_dict = tmp_list[i]
                 cur_dict = tmp_list[j]
                 
-                two_area_ratio = pre_dict['rec_area']/cur_dict['rec_area']
-                two_aspect_ratio = pre_dict['aspect_ratio']/cur_dict['aspect_ratio']  
+                two_area_ratio = pre_dict['rec_area']/cur_dict['rec_area'] if cur_dict['rec_area']!= 0 else 0
+                two_aspect_ratio = pre_dict['aspect_ratio']/cur_dict['aspect_ratio'] if cur_dict['aspect_ratio']!= 0 else 0
                 #center_dis = CAL_EUCLIDEAN_DISTANCE(pre_dict['center'],cur_dict['center'])
                 
                 if self.mode == "Dbg":

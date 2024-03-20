@@ -75,7 +75,6 @@ class Node_Detector(Node,Custom_Context_Obj):
         #self.armor_detector.tradition_detector.filter1.enable_trackbar_config()
         #self.armor_detector.tradition_detector.filter2.enable_trackbar_config()
         
-        
         if node_detector_mode == 'Dbg':
 
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)

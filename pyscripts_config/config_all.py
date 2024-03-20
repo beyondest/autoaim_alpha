@@ -9,11 +9,11 @@ import time
 armor_color = 'blue'
 mode = 'Dbg'
 if_yolvo5 = False
-camera_config_folder = '../config/camera_config' 
-tradition_config_folder = '../config/tradition_config'
-net_config_folder = '../config/net_config'
-depth_estimator_config_yaml_path = '../config/other_config/pnp_params.yaml'
-
+camera_config_folder = '../autoaim_alpha/config/camera_config' 
+tradition_config_folder = '../autoaim_alpha/config/tradition_config'
+net_config_folder = '../autoaim_alpha/config/net_config'
+depth_estimator_config_yaml_path = '../autoaim_alpha/config/other_config/pnp_params.yaml'
+enemy_car_list = [{'armor_name':'3x','armor_distance':[0.5,0.5],'armor_nums':1}]
 
 fps = 0
 
@@ -36,7 +36,8 @@ if __name__ == '__main__':
                         net_config_folder=net_config_folder,
                         save_roi_key='c',
                         depth_estimator_config_yaml=depth_estimator_config_yaml_path,
-                        if_yolov5=if_yolvo5
+                        if_yolov5=if_yolvo5,
+                        enemy_car_list=enemy_car_list
                         )
     
     #ca.enable_trackbar_config(press_key_to_save='a')
@@ -60,15 +61,14 @@ if __name__ == '__main__':
             
             t2 = time.perf_counter()
             print(f'get_img time:{t2-t1}')
-            
             #img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-            result_list,t = de.get_result(img)
+            #result_list,t = de.get_result(img)
 
             t3 = time.perf_counter()
             print(f'get_result_time:{t3-t2}')
             
             
-            de.visualize(img,fps,windows_name='result')
+            #img = de.visualize(img,fps)
                     
             
             #ca._detect_trackbar_config()
@@ -78,7 +78,7 @@ if __name__ == '__main__':
             
             t4 = time.perf_counter()
             fps = round(1/(t4-t1))
-            
+            print(f'fps:{fps}')
             key = cv2.waitKey(1)
             
             if key == ord('q'):

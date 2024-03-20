@@ -30,7 +30,7 @@ class Isp_Params(Params):
         self.grab_resolution_hei = CAMERA_GRAB_RESOLUTION_XY_DEFAUT[1]
         self.fps = CAMERA_FPS_DEFAULT
         
-
+        
 
         if len(self) != len(ISP_PARAMS_SCOPE_LIST):
             lr1.critical(f"CAMERA : camera params length not match CAMERA_PARAMS_SCOPE_LIST , {len(self)} = {len(ISP_PARAMS_SCOPE_LIST)}")
