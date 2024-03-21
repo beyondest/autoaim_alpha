@@ -25,7 +25,10 @@ from PIL import Image
 import PIL as pil
 from typing import Union,Optional
 import onnxruntime
-import h5py
+try:
+    import h5py
+except ImportError:
+    lr1.warning("h5py not installed, cannot save to h5 format")
 
 def tp(*args):
     for i in args:

@@ -139,8 +139,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        
-        
         next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
         
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time

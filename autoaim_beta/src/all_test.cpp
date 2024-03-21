@@ -59,7 +59,6 @@ int main()
                             if_yolov5
                             );
 
-
         mv.open();
         while (!g_sig_int_flag)
         {
