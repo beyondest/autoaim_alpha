@@ -12,6 +12,7 @@ int main()
  
     for (auto &b : results)
     {
+        
         cv::line(img, b.pts[0], b.pts[1], colors[2], 2);
         cv::line(img, b.pts[1], b.pts[2], colors[2], 2);
         cv::line(img, b.pts[2], b.pts[3], colors[2], 2);
