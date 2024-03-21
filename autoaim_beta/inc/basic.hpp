@@ -65,6 +65,7 @@ void INIT_GLOBAL_LOGGER(const std::string& save_folder,
 
 bool CHECK_IF_FILE_EXIST(const std::string& file_path);
 
+std::string replace_extension(const std::string& file_name, const std::string& new_extension);
 
 void signal_handler(int sig);
 

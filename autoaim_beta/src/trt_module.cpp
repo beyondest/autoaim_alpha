@@ -1,23 +1,23 @@
 //
-// Created by xinyang on 2021/4/8.
+// Copied from Shanghai Jiao Tong University - CVRM2021 : TRT_Module.cpp
 //
 
-#include "TRTModule.hpp"
+#include "trt_module.hpp"
 #include <fstream>
-#include <filesystem>
 #include <logger.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <NvInfer.h>
 #include <NvOnnxParser.h>
-#include <fmt/format.h>
-#include <fmt/color.h>
 #include <opencv2/imgproc.hpp>
+#include "basic.hpp"
+#include <iostream>
+
 
 #define TRT_ASSERT(expr)                                                      \
     do{                                                                       \
         if(!(expr)) {                                                         \
-            fmt::print(fmt::fg(fmt::color::red), "assert fail: '" #expr "'"); \
+            std::cerr<< "assert fail: "<<#expr<< std::endl;                    \
             exit(-1);                                                         \
         }                                                                     \
     } while(0)
@@ -31,14 +31,19 @@ static inline size_t get_dims_size(const Dims &dims) {
     return sz;
 }
 
+
+
 template<class F, class T, class ...Ts>
 T reduce(F &&func, T x, Ts... xs) {
-    if constexpr (sizeof...(Ts) > 0){
-        return func(x, reduce(std::forward<F>(func), xs...));
-    } else {
-        return x;
-    }
+    return func(x, reduce(std::forward<F>(func), xs...));
 }
+
+template<class F, class T>
+T reduce(F &&func, T x)
+{
+    return x;
+}
+
 
 template<class T, class ...Ts>
 T reduce_max(T x, Ts... xs) {
@@ -80,13 +85,15 @@ constexpr float sigmoid(float x) {
 }
 
 TRTModule::TRTModule(const std::string &onnx_file) {
-    std::filesystem::path onnx_file_path(onnx_file);
-    auto cache_file_path = onnx_file_path;
-    cache_file_path.replace_extension("cache");
-    if (std::filesystem::exists(cache_file_path)) {
+    auto cache_file_path = replace_extension(onnx_file, "cache");
+
+    if (CHECK_IF_FILE_EXIST(cache_file_path))
+    {
         build_engine_from_cache(cache_file_path.c_str());
-    } else {
-        build_engine_from_onnx(onnx_file_path.c_str());
+    }
+    else
+    {
+        build_engine_from_onnx(onnx_file.c_str());
         cache_engine(cache_file_path.c_str());
     }
     TRT_ASSERT((context = engine->createExecutionContext()) != nullptr);
@@ -219,3 +226,18 @@ std::vector<bbox_t> TRTModule::operator()(const cv::Mat &src) const {
 
     return rst;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

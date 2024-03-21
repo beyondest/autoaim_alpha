@@ -1,5 +1,5 @@
 //
-// Created by xinyang on 2021/4/8.
+// Copied from Shanghai Jiao Tong University - CVRM2021 : TRT_Module.cpp
 //
 
 #ifndef _ONNXTRTMODULE_HPP_
@@ -14,13 +14,21 @@ struct alignas(4) bbox_t {
     int color_id; // 0: blue, 1: red, 2: gray
     int tag_id;   // 0: guard, 1-5: number, 6: base
 
-    bool operator==(const bbox_t&) const = default;
-    bool operator!=(const bbox_t&) const = default;
+    bool operator==(const bbox_t& other) const
+    {
+        return std::equal(std::begin(pts),std::end(pts),std::begin(other.pts)) && 
+               confidence == other.confidence &&
+               color_id == other.color_id &&
+               tag_id == other.tag_id;
+    }
+
+    bool operator!=(const bbox_t& other) const
+    {
+        return !(*this == other);
+    }
 };
 
-/*
- * 四点模型
- */
+
 class TRTModule {
     static constexpr int TOPK_NUM = 128;
     static constexpr float KEEP_THRES = 0.1f;
@@ -51,6 +59,8 @@ private:
     int input_idx, output_idx;
     size_t input_sz, output_sz;
 };
+
+
 
 
 #endif /* _ONNXTRTMODULE_HPP_ */

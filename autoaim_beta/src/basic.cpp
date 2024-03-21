@@ -77,6 +77,20 @@ bool CHECK_IF_FILE_EXIST(const std::string& file_path)
 }
 
 
+std::string replace_extension(const std::string& file_name, 
+                              const std::string& new_extension)
+{
+    size_t last_dot = file_name.find_last_of(".");
+    if (last_dot != std::string::npos)
+    {
+        return file_name.substr(0, last_dot) +"."+ new_extension;
+    }
+    return file_name +"." + new_extension;
+}
+
+
+
+
 void signal_handler(int sig)
 {
     if (sig == SIGINT)
