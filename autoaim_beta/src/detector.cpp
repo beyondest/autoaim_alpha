@@ -400,7 +400,7 @@ Net_Detector::Net_Detector(Mode mode,
     else
     {
         this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
-        this->engine = TRT_Engine(net_config_folder+"/classifier.trt");
+        this->engine = TRT_Engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml");
     }
     this->class_num = this->class_info.size();
 }

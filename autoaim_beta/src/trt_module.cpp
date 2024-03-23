@@ -232,9 +232,10 @@ std::vector<bbox_t> TRTModule::operator()(const cv::Mat &src) const {
 
 
 
-TRT_Engine::TRT_Engine(const std::string &trt_file)
+TRT_Engine::TRT_Engine(const std::string& trt_file,
+                       const std::string& net_config_params_file)
 {
-
+    this->params.load_params_from_yaml(net_config_params_file);
     TRT_ASSERT((context = engine->createExecutionContext()) != nullptr);
     TRT_ASSERT((input_idx = engine->getBindingIndex(this->params.input_name.c_str())) == 0);
     TRT_ASSERT((output_idx = engine->getBindingIndex(this->params.output_name.c_str())) == 1);
@@ -293,14 +294,12 @@ float* TRT_Engine::operator()(std::vector<cv::Mat> &src_imgs)
 
 bool TRT_Engine_Params::load_params_from_yaml(const std::string& file_path)
 {
+    
     YAML::Node config = YAML::LoadFile(file_path);
-    YAML::Node list_node = config["input_shape"];
     this->safe_load_key(config, "input_name", input_name);
     this->safe_load_key(config, "output_name", output_name);
-    for (const auto& item : list_node)
-    {
-        this->input_shape.push_back(item.as<int>());
-    }
+    this->input_size[0] = config["input_size"][0].as<int>();
+    this->input_size[1] = config["input_size"][1].as<int>();
     this->safe_load_key(config, "input_dtype", input_dtype);
     this->safe_load_key(config, "max_batchsize", max_batchsize);
     return true;
@@ -311,7 +310,7 @@ void TRT_Engine_Params::print_show_params()
 {
     spdlog::info("input_name: {}", input_name);
     spdlog::info("output_name: {}", output_name);
-    spdlog::info("input_shape: {}", input_shape);
+    spdlog::info("input_size: {},{}", input_size[0], input_size[1]);
     spdlog::info("input_dtype: {}", input_dtype);
     spdlog::info("max_batchsize: {}", max_batchsize);
 }

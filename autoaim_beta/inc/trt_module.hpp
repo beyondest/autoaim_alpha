@@ -5,24 +5,6 @@
 #include <NvInfer.h>
 #include "basic.hpp"
 
-class TRT_Engine_Params:public Params
-{
-
-public:
-    std::string input_name;
-    std::string output_name;
-    int max_batchsize;
-    std::vector<int> input_shape;
-    std::string input_dtype;
-
-
-    TRT_Engine_Params(){};
-    ~TRT_Engine_Params(){};
-
-    bool load_params_from_yaml(const std::string& file_path);
-    void print_show_params();
-
-};
 
 
 struct alignas(4) bbox_t {
@@ -84,6 +66,24 @@ private:
     size_t input_sz, output_sz;
 };
 
+class TRT_Engine_Params:public Params
+{
+
+public:
+    std::string input_name;
+    std::string output_name;
+    int max_batchsize;
+    std::vector<int> input_size = {32,32};
+    std::string input_dtype;
+
+
+    TRT_Engine_Params(){};
+    ~TRT_Engine_Params(){};
+
+    bool load_params_from_yaml(const std::string& file_path);
+    void print_show_params();
+
+};
 
 class TRT_Engine
 {
@@ -101,7 +101,8 @@ private:
     TRT_Engine_Params params;
 
 public:
-    TRT_Engine(const std::string &trt_file);
+    TRT_Engine(const std::string& trt_file,
+               const std::string& net_config_params_file);
 
     ~TRT_Engine();
     TRT_Engine(const TRT_Engine &) = delete;
