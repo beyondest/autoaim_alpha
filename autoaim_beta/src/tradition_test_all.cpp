@@ -93,7 +93,7 @@ int main()
                     std::copy(big_rec_list.begin(), big_rec_list.begin() + 10, std::back_inserter(big_rec_list_first_ten));
                     std::copy(roi_list.begin(), roi_list.begin() + 10, std::back_inserter(roi_list_first_ten));
                     auto results = net_detector(roi_list_first_ten,big_rec_list_first_ten);
-                    for (auto result& : results)
+                    for (auto& result : results)
                     {
                         auto rect_int = trans_float_contour_to_int(result.big_rec);
                         cv::drawContours(img_show,rect_int,-1,colors[0],2);
@@ -106,7 +106,7 @@ int main()
                 else
                 {
                     auto results = net_detector(roi_list,big_rec_list);
-                    for (auto result& : results)
+                    for (auto& result : results)
                     {
                         auto rect_int = trans_float_contour_to_int(result.big_rec);
                         cv::drawContours(img_show,rect_int,-1,colors[0],2);
