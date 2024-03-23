@@ -27,9 +27,9 @@ extern volatile __sig_atomic_t g_sig_int_flag;
 
 cv::Mat img(iHeight, iWidth, CV_8UC3);
 cv::Mat img_show(640,640,CV_8UC3);
-std::string log_save_folder = "/home/liyuxuan/.ros/log/custom_log";
-std::string tradition_config_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_alpha/config/tradition_config";
-std::string net_config_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_alpha/config/net_config"
+std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
+std::string tradition_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/tradition_config";
+std::string net_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config"
 
 std::vector<int> roi_shape = {32,32};
 
@@ -52,7 +52,7 @@ int main()
                             spdlog::level::debug,
                             true);
         Tradition_Detector detector(mode, tradition_config_folder, armor_color, roi_shape);
-        Net_Detector net_detector(mode,);
+        Net_Detector net_detector(mode,net_config_folder,false);
         Mindvision_Camera mv(mode,
                             camera_config_folder,
                             camera_output_format,
