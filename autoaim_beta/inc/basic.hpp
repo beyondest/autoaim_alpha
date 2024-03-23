@@ -77,9 +77,6 @@ void signal_handler(int sig);
 
 
 
-constexpr float inv_sigmoid(float x);
-constexpr float sigmoid(float x);
-
 
 #endif // BASIC_HPP 
 

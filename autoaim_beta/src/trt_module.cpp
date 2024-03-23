@@ -26,6 +26,14 @@ static inline size_t get_dims_size(const Dims &dims) {
     for (int i = 0; i < dims.nbDims; i++) sz *= dims.d[i];
     return sz;
 }
+constexpr float inv_sigmoid(float x) {
+    return -std::log(1 / x - 1);
+}
+
+constexpr float sigmoid(float x) {
+    return 1 / (1 + std::exp(-x));
+}
+
 
 
 

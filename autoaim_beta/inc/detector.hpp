@@ -77,9 +77,9 @@ class Net_Detector_Params : public Params
 public:
     std::vector<Enemy_Car_Info> enemy_car_list;
     float conf_thresh = 0.5;
-    [[maybe_unused]] float ious_thresh = 0.5;
-    [[maybe_unused]] int max_det = 20;
-    [[maybe_unused]] bool agnostic = false;
+    float ious_thresh = 0.5;
+    int max_det = 20;
+    bool agnostic = false;
     bool load_params_from_yaml(const std::string& file_path);
     void print_show_params();
 

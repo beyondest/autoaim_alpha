@@ -173,6 +173,11 @@ void static filter_overlap(std::vector<std::vector<cv::Point2f>>& big_rec_list)
 }
 
 
+constexpr float sigmoid(float x) {
+    return 1 / (1 + std::exp(-x));
+}
+
+
 //****************************************************Tradition Detector*************************************************
 
 Tradition_Detector::Tradition_Detector(const Mode mode, 
