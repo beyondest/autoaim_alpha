@@ -30,11 +30,10 @@ void test_yolov5()
 void test_classifier()
 {
     std::vector<Enemy_Car_Info> enemy_car_info_list;
-    enemy_car_info_list.push_back(Enemy_Car_Info{"3x",1});
+    enemy_car_info_list.push_back(Enemy_Car_Info{"4x",1});
 
     Net_Detector detector(Mode::Dbg, "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config",false,enemy_car_info_list);
-    TRT_Engine engine("/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/classifier.trt",
-                     "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/net_params.yaml");
+
     cv::Mat img = cv::imread("/home/rcclub/ggbond/autoaim_ws/src/res/roi_tmp.jpg");
     cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
     cv::threshold(img, img, 127, 255, cv::THRESH_BINARY);

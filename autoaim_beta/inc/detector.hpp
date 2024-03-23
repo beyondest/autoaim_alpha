@@ -76,8 +76,8 @@ class Net_Detector_Params : public Params
 
 public:
     std::vector<Enemy_Car_Info> enemy_car_list;
-    float conf_thresh = 0.5;
-    float ious_thresh = 0.5;
+    float conf_thres = 0.5;
+    float iou_thres = 0.5;
     int max_det = 20;
     bool agnostic = false;
     bool load_params_from_yaml(const std::string& file_path);
@@ -94,14 +94,16 @@ private:
     Mode mode;
     bool if_yolov5 = false; 
     Net_Detector_Params params;
-    TRT_Engine engine;
+    TRT_Engine* engine;
     int class_num = 0;
 public:
     Net_Detector(Mode mode,
                  const std::string& net_config_folder,
                  bool if_yolov5,
                  std::vector<Enemy_Car_Info> enemy_car_list_);
-    ~Net_Detector(){};
+    ~Net_Detector(){
+        delete engine;
+    };
     std::vector<detect_result_t> operator()(const std::vector<cv::Mat>& bin_rois,const std::vector<std::vector<cv::Point2f>>& big_recs) const;
 };
 

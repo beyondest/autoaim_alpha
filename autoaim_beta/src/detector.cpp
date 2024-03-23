@@ -367,17 +367,17 @@ void Tradition_Detector_Params::print_show_params()
 bool Net_Detector_Params::load_params_from_yaml(const std::string& file_path)
 {
     YAML::Node config = YAML::LoadFile(file_path);
-    this->conf_thresh = config["conf_thresh"].as<float>();
+    this->conf_thres = config["conf_thres"].as<float>();
     this->agnostic = config["agnostic"].as<bool>();
-    this->ious_thresh = config["iou_thresh"].as<float>();
+    this->iou_thres = config["iou_thres"].as<float>();
     this->max_det = config["max_det"].as<int>();
     return true;
 }
 
 void Net_Detector_Params::print_show_params()
 {
-    spdlog::info(" conf_thresh: {}, agnostic: {}, ious_thresh: {}, max_det: {}",
-                  this->conf_thresh, this->agnostic, this->ious_thresh, this->max_det);
+    spdlog::info(" conf_thres: {}, agnostic: {}, iou_thres: {}, max_det: {}",
+                  this->conf_thres, this->agnostic, this->iou_thres, this->max_det);
     for (auto& enemy_car : this->enemy_car_list)
     {
         spdlog::info(" enemy_car_info: armor_name: {}, armor_nums: {}", enemy_car.armor_name, enemy_car.armor_nums);
@@ -393,12 +393,13 @@ Net_Detector::Net_Detector(Mode mode,
                  mode(mode),
                  if_yolov5(if_yolov5),
                  params(enemy_car_list_),
-                 engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml")
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
     if (if_yolov5) throw std::invalid_argument("Net_Detector : yolov5 is not supported yet, if_yolov5 should be false");
     this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
     this->class_num = this->class_info.size();
+    this->engine = new TRT_Engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml");
+    
 }
 
 
@@ -417,7 +418,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
         class_name = this->class_info[std::to_string(max_idx)].as<std::string>();
         bool if_in_target_list = false;
         for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == class_name) if_in_target_list = true;                
-        if (conf > this->params.conf_thresh && if_in_target_list)
+        if (conf > this->params.conf_thres && if_in_target_list)
         {
             detect_result_t detect_result = {big_recs[i], conf, class_name};
             results.push_back(detect_result);
