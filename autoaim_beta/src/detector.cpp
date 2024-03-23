@@ -23,7 +23,7 @@ std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std:
             p.x = std::round(contours[i][j].x);
             p.x = p.x<0?0:p.x>640?640:p.x;
             p.y = std::round(contours[i][j].y);
-            p.y = p.y<0?0:p.y>640?640:p.y;
+            p.y = p.y<0?0:p.y>384?384:p.y;
             int_contour.push_back(p);
         }
         int_contours.push_back(int_contour);    
@@ -41,7 +41,7 @@ std::vector<cv::Point> trans_float_contour_to_int(std::vector<cv::Point2f>& cont
         p.x = std::round(contour[i].x);
         p.x = p.x<0?0:p.x>640?640:p.x;
         p.y = std::round(contour[i].y);
-        p.y = p.y<0?0:p.y>640?640:p.y;
+        p.y = p.y<0?0:p.y>384?384:p.y;
         int_contour.push_back(p);
     }
     return int_contour;
