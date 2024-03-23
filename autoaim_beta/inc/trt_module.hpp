@@ -22,7 +22,7 @@ public:
     bool load_params_from_yaml(const std::string& file_path);
     void print_show_params();
 
-}
+};
 
 
 struct alignas(4) bbox_t {
@@ -49,7 +49,7 @@ struct alignas(4) classified_result_t
 {
     float confidence;
     std::string cls_name;
-}
+};
 
 class TRTModule {
     static constexpr int TOPK_NUM = 128;
@@ -110,7 +110,7 @@ public:
 
     float* operator()(std::vector<cv::Mat> &src_imgs);    
 
-}
+};
 
 
 
