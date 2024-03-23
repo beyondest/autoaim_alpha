@@ -415,7 +415,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
     {  
         for (int j = i; j < this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}
         conf = sigmoid(output_buffer[max_idx]);
-        class_name = this->class_info[std::to_string(max_idx)];
+        class_name = this->class_info[std::to_string(max_idx)].as<std::string>();
         bool if_in_target_list = false;
         for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == class_name) if_in_target_list = true;                
         if (conf > this->params.conf_thresh && if_in_target_list)
