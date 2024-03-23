@@ -258,8 +258,10 @@ TRT_Engine::TRT_Engine(const std::string& trt_file,
     auto output_dims = engine->getBindingDimensions(output_idx);
     input_dims.d[0] = input_dims.d[0] == -1? this->params.max_batchsize : input_dims.d[0];
     output_dims.d[0] = output_dims.d[0] == -1? this->params.max_batchsize : output_dims.d[0];
+
     input_sz = get_dims_size(input_dims);
     output_sz = get_dims_size(output_dims);
+    spdlog::info("input_sz: {}, output_sz: {}", input_sz, output_sz);
     TRT_ASSERT(cudaMalloc(&device_buffer[input_idx], input_sz * sizeof(float)) == 0);
     TRT_ASSERT(cudaMalloc(&device_buffer[output_idx], output_sz * sizeof(float)) == 0);
     TRT_ASSERT(cudaStreamCreate(&stream) == 0);
@@ -289,7 +291,8 @@ float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs) const
     cv::Mat target(total_rows, src_imgs[0].cols, src_imgs[0].type());    
     cv::vconcat(src_imgs, target);
     target.convertTo(target, CV_32F, 1.0 / 255.0);
-    cudaMemcpyAsync(device_buffer[input_idx], target.data, input_sz * sizeof(float), cudaMemcpyHostToDevice, stream);
+
+    cudaMemcpyAsync(device_buffer[input_idx], src_imgs.data, input_sz * sizeof(float), cudaMemcpyHostToDevice, stream);
 
     context->enqueue(1, device_buffer, stream, nullptr);
     cudaMemcpyAsync(output_buffer, device_buffer[output_idx], output_sz * sizeof(float), cudaMemcpyDeviceToHost,

@@ -28,6 +28,20 @@ cv::Mat concatenateMats(const std::vector<cv::Mat>& mats) {
     return concatenatedMat;
 }
 
+
+
+cv::Mat matsToBatch(const std::vector<cv::Mat>& mats) {
+    // Concatenate the Mats
+    cv::Mat concatenatedMat = concatenateMats(mats);
+
+    // Reshape the concatenated Mat to batch format
+    cv::Mat batch = concatenatedMat.reshape(1, mats.size()).reshape(0, 1);
+
+    return batch;
+}
+
+
+
 int main() {
     // Create some sample Mats
     cv::Mat mat1 = cv::Mat::ones(3, 3, CV_8UC1) * 1;
@@ -36,12 +50,14 @@ int main() {
 
     // Create a vector of Mats
     std::vector<cv::Mat> mats = {mat1, mat2, mat3};
-
+    std::cout << "fuck   "<<mats.data()<<std::endl;
+    
     // Concatenate the Mats
-    cv::Mat concatenatedMat = concatenateMats(mats);
-
+    cv::Mat concatenatedMat = matsToBatch(mats);
+    std::cout << "fuck2  "<<concatenatedMat.data<<std::endl;
     // Print the concatenated Mat
     std::cout << "Concatenated Mat:\n" << concatenatedMat << std::endl;
+    std::cout<<"Shape of concatenated Mat:"<<concatenatedMat.size()<<std::endl;
 
     return 0;
 }
