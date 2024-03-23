@@ -29,12 +29,7 @@ class Node_Detector(Node,Custom_Context_Obj):
                                             topic_detect_result['name'],
                                             topic_detect_result['qos_profile']
                                             )
-        
-
-        
-        
         if mode == 'Dbg':
-            
             self.sub_ele_sys_com = self.create_subscription(topic_electric_sys_com['type'],
                                             topic_electric_sys_com['name'],
                                             self.sub_ele_sys_com_callback,
@@ -56,9 +51,6 @@ class Node_Detector(Node,Custom_Context_Obj):
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
         self.ele_time = 0.0
-            
-            
-        
         self.cv_bridge = CvBridge()
         self.armor_detector = Armor_Detector(
                                             armor_color=armor_color,

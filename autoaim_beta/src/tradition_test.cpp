@@ -26,7 +26,7 @@ extern volatile __sig_atomic_t g_sig_int_flag;
 
 
 cv::Mat img(iHeight, iWidth, CV_8UC3);
-cv::Mat img_show(640,640,CV_8UC3);
+cv::Mat img_show(640,384,CV_8UC3);
 std::string log_save_folder = "/home/liyuxuan/.ros/log/custom_log";
 std::string tradition_config_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_alpha/config/tradition_config";
 std::vector<int> roi_shape = {32,32};

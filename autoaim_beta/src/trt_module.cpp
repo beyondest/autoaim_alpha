@@ -9,6 +9,7 @@
 #include "basic.hpp"
 #include <iostream>
 
+#define DEBUG_NET_DETECTOR
 
 #define TRT_ASSERT(expr)                                                      \
     do{                                                                       \
@@ -289,8 +290,12 @@ TRT_Engine::~TRT_Engine()
 float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs) const
 {
     int total_rows = src_imgs.size() * src_imgs[0].rows;
-    cv::Mat target(total_rows, src_imgs[0].cols, src_imgs[0].type());    
+    cv::Mat target;    
     cv::vconcat(src_imgs, target);
+#if DEBUG_NET_DETECTOR
+    cv::imshow("before_net", target);
+    cv::waitKey(0);
+#endif
     target.convertTo(target, CV_32F, 1.0 / 255.0);
 
     auto dims = this->engine->getBindingDimensions(0);

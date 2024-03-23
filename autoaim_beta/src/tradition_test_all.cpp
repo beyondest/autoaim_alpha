@@ -97,7 +97,6 @@ int main()
                         cv::drawContours(img_show,rect_int_list,-1,colors[0],2);
                         cv::putText(img_show,result.result+":"+std::to_string(round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
                     }
-                    
                 }
                 else if(big_rec_list.size() > 0)
                 {
