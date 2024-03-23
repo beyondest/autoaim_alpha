@@ -383,8 +383,12 @@ bool Net_Detector_Params::load_params_from_yaml(const std::string& file_path)
 
 void Net_Detector_Params::print_show_params()
 {
-    spdlog::info("enemy_car_list: {}, conf_thresh: {}, agnostic: {}, ious_thresh: {}, max_det: {}",
-                 this->enemy_car_list, this->conf_thresh, this->agnostic, this->ious_thresh, this->max_det);
+    spdlog::info(" conf_thresh: {}, agnostic: {}, ious_thresh: {}, max_det: {}",
+                  this->conf_thresh, this->agnostic, this->ious_thresh, this->max_det);
+    for (auto& enemy_car : this->enemy_car_list)
+    {
+        spdlog::info(" enemy_car_info: armor_name: {}, armor_nums: {}", enemy_car.armor_name, enemy_car.armor_nums);
+    }
 }
 
 //***************************************************Net Detector****************************************************
