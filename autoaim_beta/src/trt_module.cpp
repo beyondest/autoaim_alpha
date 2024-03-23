@@ -285,19 +285,20 @@ TRT_Engine::~TRT_Engine()
 
 }
 
+
 float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs) const
 {
     int total_rows = src_imgs.size() * src_imgs[0].rows;
     cv::Mat target(total_rows, src_imgs[0].cols, src_imgs[0].type());    
     cv::vconcat(src_imgs, target);
     target.convertTo(target, CV_32F, 1.0 / 255.0);
-
-    cudaMemcpyAsync(device_buffer[input_idx], src_imgs.data, input_sz * sizeof(float), cudaMemcpyHostToDevice, stream);
-
+    int dims[]{src_imgs.size(),1, src_imgs[0].rows, src_imgs[0].cols};  
+    context->setBindingDimensions(0, dims);
+    cudaMemcpyAsync(device_buffer[input_idx], target.data, input_sz * sizeof(float), cudaMemcpyHostToDevice, stream);
     context->enqueue(1, device_buffer, stream, nullptr);
-    cudaMemcpyAsync(output_buffer, device_buffer[output_idx], output_sz * sizeof(float), cudaMemcpyDeviceToHost,
-                    stream);
+    cudaMemcpyAsync(output_buffer, device_buffer[output_idx], output_sz * sizeof(float), cudaMemcpyDeviceToHost, stream);
     cudaStreamSynchronize(stream);
+
     return output_buffer;
 }
 
