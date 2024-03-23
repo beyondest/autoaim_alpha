@@ -85,8 +85,9 @@ int main()
                 auto results = net_detector(roi_list,big_rec_list);
                 for (auto result : results)
                 {
-                    cv::drawContours(img_show,trans_float_contour_to_int(result.big_rec),-1,colors[0],2);
-                    cv::putText(img_show,result.name+":"+std::to_string(round(result.conf * 100)),cv::Point(result.big_rec[0][0][0],result.big_rec[0][0][1]),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
+                    auto rect_int = trans_float_contour_to_int(result.big_rec);
+                    cv::drawContours(img_show,rect_int,-1,colors[0],2);
+                    cv::putText(img_show,result.result+":"+std::to_string(round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
                     cv::imshow("camera", img_show);
                     
                     cv::waitKey(1);
