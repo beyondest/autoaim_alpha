@@ -35,6 +35,7 @@ public:
     {
         pub_= this->create_publisher<std_msgs::msg::String>("topic", 10);
         timer_ = this->create_wall_timer(500ms, std::bind(&Node_Webcam_MV::timer_callback, this));
+        
     }
     
 };

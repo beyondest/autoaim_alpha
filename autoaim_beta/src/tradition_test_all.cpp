@@ -81,11 +81,7 @@ int main()
                     std::cout << "no target" << std::endl;
                     continue;   
                 }
-                if (big_rec_list.empty())
-                {
-                    std::cout << "no target" << std::endl;
-                    continue;   
-                }
+
                 if (big_rec_list.size() >= 10) 
                 {
                     std::vector<std::vector<cv::Point2f>> big_rec_list_first_ten;
@@ -95,32 +91,33 @@ int main()
                     auto results = net_detector(roi_list_first_ten,big_rec_list_first_ten);
                     for (auto& result : results)
                     {
+                        std::cout << "result: " << result.result << " conf: " << result.conf << std::endl;
                         auto rect_int = trans_float_contour_to_int(result.big_rec);
                         std::vector<std::vector<cv::Point>> rect_int_list = {rect_int};
                         cv::drawContours(img_show,rect_int_list,-1,colors[0],2);
                         cv::putText(img_show,result.result+":"+std::to_string(round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
-                        cv::imshow("camera", img_show);
-                        
-                        cv::waitKey(1);
                     }
+                    
                 }
-                else
+                else if(big_rec_list.size() > 0)
                 {
                     auto results = net_detector(roi_list,big_rec_list);
                     for (auto& result : results)
                     {
+                        std::cout << "result: " << result.result << " conf: " << result.conf << std::endl;
                         auto rect_int = trans_float_contour_to_int(result.big_rec);
                         std::vector<std::vector<cv::Point>> rect_int_list = {rect_int};
                         cv::drawContours(img_show,rect_int_list,-1,colors[0],2);
                         cv::putText(img_show,result.result+":"+std::to_string(round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
-                        cv::imshow("camera", img_show);
-                        
-                        cv::waitKey(1);
                     }
                 }
-                
-
+                else
+                {
+                    std::cout << "no target" << std::endl;
+                }
             }
+
+            cv::imshow("camera", img_show);
             t2 = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> time_used = t2 - t1;
             fps = 1000 / time_used.count();
