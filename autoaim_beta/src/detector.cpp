@@ -367,13 +367,6 @@ void Tradition_Detector_Params::print_show_params()
 bool Net_Detector_Params::load_params_from_yaml(const std::string& file_path)
 {
     YAML::Node config = YAML::LoadFile(file_path);
-    for (auto i : config["enemy_car_list"])
-    {
-        Enemy_Car_Info info;
-        info.armor_name = i["armor_name"].as<std::string>();
-        info.armor_nums = i["armor_nums"].as<int>();
-        this->enemy_car_list.push_back(info);
-    }
     this->conf_thresh = config["conf_thresh"].as<float>();
     this->agnostic = config["agnostic"].as<bool>();
     this->ious_thresh = config["ious_thresh"].as<float>();
@@ -395,9 +388,11 @@ void Net_Detector_Params::print_show_params()
 
 Net_Detector::Net_Detector(Mode mode,
                  const std::string& net_config_folder,
-                 bool if_yolov5):
+                 bool if_yolov5,
+                 std::vector<Enemy_Car_Info> enemy_car_list_):
                  mode(mode),
                  if_yolov5(if_yolov5),
+                 params(enemy_car_list_),
                  engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml")
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");

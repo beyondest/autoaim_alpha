@@ -39,11 +39,12 @@ int fps = 0;
 
 const cv::Scalar colors[3] = {{255, 0, 0}, {0, 0, 255}, {0, 255, 0}};
 
+std::vector<Enemy_Car_Info> enemy_car_info_list;
 
 int main()
 {
     signal(SIGINT, signal_handler);
-
+    enemy_car_info_list.push_back(Enemy_Car_Info{"3x",1});
     try
     {
 
@@ -52,7 +53,7 @@ int main()
                             spdlog::level::debug,
                             true);
         Tradition_Detector detector(mode, tradition_config_folder, armor_color, roi_shape);
-        Net_Detector net_detector(mode,net_config_folder,false);
+        Net_Detector net_detector(mode,net_config_folder,false,enemy_car_info_list);
         Mindvision_Camera mv(mode,
                             camera_config_folder,
                             camera_output_format,

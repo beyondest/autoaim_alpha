@@ -29,8 +29,10 @@ void test_yolov5()
 
 void test_classifier()
 {
+    std::vector<Enemy_Car_Info> enemy_car_info_list;
+    enemy_car_info_list.push_back(Enemy_Car_Info{"3x",1});
 
-    Net_Detector detector(Mode::Dbg, "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config",false);
+    Net_Detector detector(Mode::Dbg, "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config",false,enemy_car_info_list);
     TRT_Engine engine("/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/classifier.trt",
                      "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/net_params.yaml");
     cv::Mat img = cv::imread("/home/rcclub/ggbond/autoaim_ws/src/res/roi_tmp.jpg");
@@ -40,7 +42,7 @@ void test_classifier()
 
     std::vector<cv::Mat> input_imgs = {img};
     std::vector<std::vector<cv::Point2f>> big_recs;
-    results.push_back(std::vector<cv::Point2f>());
+    big_recs.push_back(std::vector<cv::Point2f>());
 
     auto final_result = detector(input_imgs,big_recs);
     for (auto &result : final_result)
