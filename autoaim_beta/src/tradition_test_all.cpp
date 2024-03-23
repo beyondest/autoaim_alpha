@@ -29,7 +29,7 @@ cv::Mat img(iHeight, iWidth, CV_8UC3);
 cv::Mat img_show(640,640,CV_8UC3);
 std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
 std::string tradition_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/tradition_config";
-std::string net_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config"
+std::string net_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config";
 
 std::vector<int> roi_shape = {32,32};
 
@@ -87,7 +87,7 @@ int main()
                     
                     cv::drawContours(img_show,trans_float_contour_to_int(result.big_rec),-1,colors[0],2);
                     cv::imshow("camera", img_show);
-                    cv::addText(img_show, result.result +":"+ std::to_string(std::round(result.conf*100)), cv::Point(result.big_rec[0][0].x, result.big_rec[0][0].y - 20), cv::FONT_HERSHEY_PLAIN, 1.5, colors[0]);
+                    cv::addText(img_show, result.result +":"+ std::to_string(std::round(result.conf*100)), cv::Point(result.big_rec[0].x, result.big_rec[0].y - 20), cv::FONT_HERSHEY_PLAIN, 1.5, colors[0]);
                     cv::waitKey(1);
                 }
             }
