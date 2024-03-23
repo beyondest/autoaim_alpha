@@ -1,7 +1,7 @@
 #include "trt_module.hpp"
 #include <opencv2/opencv.hpp>
 #include <iostream>
-
+#include "detector.hpp"
 void test_yolov5()
 {
     TRTModule trt_module("/home/rcclub/ggbond/autoaim_ws/src/autoaim_beta/weights/opt4.onnx");
@@ -29,14 +29,27 @@ void test_yolov5()
 
 void test_classifier()
 {
+
+    Net_Detector detector(Mode::Dbg, "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config",false);
     TRT_Engine engine("/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/classifier.trt",
                      "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/net_params.yaml");
     cv::Mat img = cv::imread("/home/rcclub/ggbond/autoaim_ws/src/res/roi_tmp.jpg");
     cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
     cv::threshold(img, img, 127, 255, cv::THRESH_BINARY);
     cv::resize(img, img, cv::Size(32,32));
+
     std::vector<cv::Mat> input_imgs = {img};
-    float* output_buffer = engine(input_imgs);
+    std::vector<std::vector<cv::Point2f>> big_recs;
+    results.push_back(std::vector<cv::Point2f>());
+
+    auto final_result = detector(input_imgs,big_recs);
+    for (auto &result : final_result)
+    {
+        std::cout << "result: " << result.result << std::endl;
+        std::cout << "confidence: " << result.conf << std::endl;
+    }
+    
+    //float* output_buffer = engine(input_imgs);
 
 }
 int main()
