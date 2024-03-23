@@ -96,7 +96,8 @@ int main()
                     for (auto& result : results)
                     {
                         auto rect_int = trans_float_contour_to_int(result.big_rec);
-                        cv::drawContours(img_show,rect_int,-1,colors[0],2);
+                        std::vector<std::vector<cv::Point>> rect_int_list = {rect_int};
+                        cv::drawContours(img_show,rect_int_list,-1,colors[0],2);
                         cv::putText(img_show,result.result+":"+std::to_string(round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
                         cv::imshow("camera", img_show);
                         
@@ -109,7 +110,8 @@ int main()
                     for (auto& result : results)
                     {
                         auto rect_int = trans_float_contour_to_int(result.big_rec);
-                        cv::drawContours(img_show,rect_int,-1,colors[0],2);
+                        std::vector<std::vector<cv::Point>> rect_int_list = {rect_int};
+                        cv::drawContours(img_show,rect_int_list,-1,colors[0],2);
                         cv::putText(img_show,result.result+":"+std::to_string(round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
                         cv::imshow("camera", img_show);
                         
