@@ -90,9 +90,9 @@ class Net_Detector
 private:
     Net_Detector_Params params;
     YAML::Node class_info;
-    TRT_Engine engine;
     Mode mode;
     bool if_yolov5 = false; 
+    TRT_Engine engine;
     int class_num = 0;
 public:
     Net_Detector(Mode mode,

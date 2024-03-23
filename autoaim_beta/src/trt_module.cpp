@@ -277,7 +277,7 @@ TRT_Engine::~TRT_Engine()
 
 }
 
-float* TRT_Engine::operator()(std::vector<cv::Mat> &src_imgs)
+float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs)
 {
     cv::Mat target(src_imgs.size(), src_imgs[0].channels(), src_imgs[0].rows, src_imgs[0].cols);
     cv::vconcat(src_imgs, target);

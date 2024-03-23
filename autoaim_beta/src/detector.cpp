@@ -33,11 +33,11 @@ std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std:
 std::vector<cv::Point> trans_float_contour_to_int(std::vector<cv::Point2f>& contour)
 {
     std::vector<cv::Point> int_contour;
-    for (size_t i = 0; i < contours.size(); i++)
+    for (size_t i = 0; i < contour.size(); i++)
     {
         cv::Point p;
-        p.x = std::round(contours[i].x);
-        p.y = std::round(contours[i].y);
+        p.x = std::round(contour[i].x);
+        p.y = std::round(contour[i].y);
         int_contour.push_back(p);
     }
     return int_contour;
@@ -393,15 +393,12 @@ Net_Detector::Net_Detector(Mode mode,
                  const std::string& net_config_folder,
                  bool if_yolov5):
                  mode(mode),
-                 if_yolov5(if_yolov5)
+                 if_yolov5(if_yolov5),
+                 engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml")
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
     if (if_yolov5) throw std::invalid_argument("Net_Detector : yolov5 is not supported yet, if_yolov5 should be false");
-    else
-    {
-        this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
-        this->engine = TRT_Engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml");
-    }
+    this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
     this->class_num = this->class_info.size();
 }
 
