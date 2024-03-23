@@ -29,16 +29,13 @@ private:
         count_++;
     }
 public:
+
     Node_Webcam_MV()
     : Node("node_webcam_mv"),count_(0)
     {
-        
         pub_= this->create_publisher<std_msgs::msg::String>("topic", 10);
         timer_ = this->create_wall_timer(500ms, std::bind(&Node_Webcam_MV::timer_callback, this));
-
     }
-
-
     
 };
 

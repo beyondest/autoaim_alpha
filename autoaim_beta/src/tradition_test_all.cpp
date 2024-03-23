@@ -81,8 +81,25 @@ int main()
                     std::cout << "no target" << std::endl;
                     continue;   
                 }
-
-                auto results = net_detector(roi_list,big_rec_list);
+                if (big_rec_list.empty())
+                {
+                    std::cout << "no target" << std::endl;
+                    continue;   
+                }
+                if (big_rec_list.size() >= 10) 
+                {
+                    std::vector<std::vector<cv::Point2f>> big_rec_list_first_ten;
+                    std::vector<cv::Mat> roi_list_first_ten;
+                    std::copy(big_rec_list.begin(), big_rec_list.begin() + 10, std::back_inserter(big_rec_list_first_ten));
+                    std::copy(roi_list.begin(), roi_list.begin() + 10, std::back_inserter(roi_list_first_ten));
+                }
+                else
+                {
+                    auto roi_list_first_ten = roi_list;
+                    auto big_rec_list_first_ten = big_rec_list;
+                }
+                auto results = net_detector(roi_list_first_ten,big_rec_list_first_ten);
+                
                 for (auto result : results)
                 {
                     auto rect_int = trans_float_contour_to_int(result.big_rec);
