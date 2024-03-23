@@ -109,7 +109,7 @@ public:
 
     TRT_Engine operator=(const TRT_Engine &) = delete;
 
-    float* operator()(const std::vector<cv::Mat> &src_imgs);    
+    float* operator()(const std::vector<cv::Mat> &src_imgs) const;    
 
 };
 
