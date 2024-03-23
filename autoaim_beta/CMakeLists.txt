@@ -66,11 +66,11 @@ endif()
 
 
 
-
 add_executable(node_webcam_mv ${ROOT_DIR}/src/node_webcam_mv.cpp)
 ament_target_dependencies(node_webcam_mv rclcpp autoaim_interface std_msgs)
 target_link_libraries(node_webcam_mv ${OpenCV_LIBS} ${lib_list} ${spdlog_LIBRARIES})
 
+if(FALSE)
 
 add_executable(test_yaml ${ROOT_DIR}/src/test2.cpp)
 ament_target_dependencies(test_yaml rclcpp autoaim_interface std_msgs)
@@ -97,6 +97,11 @@ add_executable(test_tradition ${ROOT_DIR}/src/tradition_test.cpp
 target_link_libraries(test_tradition ${OpenCV_LIBS} ${lib_list} ${spdlog_LIBRARIES})
 
 
+endif()
+
+
+add_executable(t ${ROOT_DIR}/src/t.cpp)
+target_link_libraries(t ${OpenCV_LIBS} ${lib_list} ${spdlog_LIBRARIES})
 
 install(
     TARGETS 

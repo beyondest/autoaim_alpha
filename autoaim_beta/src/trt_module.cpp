@@ -237,7 +237,7 @@ TRT_Engine::TRT_Engine(const std::string& trt_file,
 {
     this->params.load_params_from_yaml(net_config_params_file);
     this->params.print_show_params();
-    
+
     std::cout << "[INFO]: build engine from trt engine" << std::endl;
     std::ifstream ifs(trt_file, std::ios::binary);
     ifs.seekg(0, std::ios::end);
@@ -285,7 +285,8 @@ TRT_Engine::~TRT_Engine()
 
 float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs) const
 {
-    cv::Mat target(src_imgs.size(), src_imgs[0].channels(), src_imgs[0].rows, src_imgs[0].cols);
+    int total_rows = src_imgs.size() * src_imgs[0].rows;
+    cv::Mat target(total_rows, src_imgs[0].cols, src_imgs[0].type());    
     cv::vconcat(src_imgs, target);
     target.convertTo(target, CV_32F, 1.0 / 255.0);
     cudaMemcpyAsync(device_buffer[input_idx], target.data, input_sz * sizeof(float), cudaMemcpyHostToDevice, stream);
