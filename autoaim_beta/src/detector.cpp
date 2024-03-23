@@ -369,7 +369,7 @@ bool Net_Detector_Params::load_params_from_yaml(const std::string& file_path)
     YAML::Node config = YAML::LoadFile(file_path);
     this->conf_thresh = config["conf_thresh"].as<float>();
     this->agnostic = config["agnostic"].as<bool>();
-    this->ious_thresh = config["ious_thresh"].as<float>();
+    this->ious_thresh = config["iou_thresh"].as<float>();
     this->max_det = config["max_det"].as<int>();
     return true;
 }

@@ -261,7 +261,6 @@ TRT_Engine::TRT_Engine(const std::string& trt_file,
 
     input_sz = get_dims_size(input_dims);
     output_sz = get_dims_size(output_dims);
-    spdlog::info("input_sz: {}, output_sz: {}", input_sz, output_sz);
     TRT_ASSERT(cudaMalloc(&device_buffer[input_idx], input_sz * sizeof(float)) == 0);
     TRT_ASSERT(cudaMalloc(&device_buffer[output_idx], output_sz * sizeof(float)) == 0);
     TRT_ASSERT(cudaStreamCreate(&stream) == 0);
