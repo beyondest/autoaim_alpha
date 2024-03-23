@@ -236,6 +236,7 @@ TRT_Engine::TRT_Engine(const std::string& trt_file,
                        const std::string& net_config_params_file)
 {
     this->params.load_params_from_yaml(net_config_params_file);
+    
     this->params.print_show_params();
 
     std::cout << "[INFO]: build engine from trt engine" << std::endl;

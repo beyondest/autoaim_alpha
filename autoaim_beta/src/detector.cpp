@@ -392,14 +392,14 @@ Net_Detector::Net_Detector(Mode mode,
                  std::vector<Enemy_Car_Info> enemy_car_list_):
                  mode(mode),
                  if_yolov5(if_yolov5),
-                 params(enemy_car_list_),
+                 params(enemy_car_list_)
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
     if (if_yolov5) throw std::invalid_argument("Net_Detector : yolov5 is not supported yet, if_yolov5 should be false");
     this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
     this->class_num = this->class_info.size();
     this->engine = new TRT_Engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml");
-    
+
 }
 
 
@@ -410,7 +410,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
     float conf = 0.0;
     std::string class_name = "";
     int max_idx = 0;
-    float* output_buffer = this->engine(bin_rois);
+    float* output_buffer = (*engine)(bin_rois);
     for (int i = 0; i < batch_size; i+=this->class_num)
     {  
         for (int j = i; j < this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}

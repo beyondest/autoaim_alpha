@@ -72,7 +72,7 @@ int main()
             if (mv.get_img(img) == IF_SUCCESS::SUCCESS)
             {
 
-                cv::resize(img, img_show, cv::Size(640, 384));
+                cv::resize(img, img_show, cv::Size(640, 640));
                 cv::flip(img_show,img_show, -1);
                 std::vector<std::vector<cv::Point2f>> big_rec_list;
                 std::vector<cv::Mat> roi_list;
@@ -86,9 +86,11 @@ int main()
                 for (auto result : results)
                 {
                     cv::drawContours(img_show,trans_float_contour_to_int(result.big_rec),-1,colors[0],2);
+                    cv::putText(img_show,result.name+":"+std::to_string(round(result.conf * 100)),cv::Point(result.big_rec[0][0][0],result.big_rec[0][0][1]),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
                     cv::imshow("camera", img_show);
-                    //cv::addText(img_show, result.result +":"+ std::to_string(std::round(result.conf*100)), cv::Point(result.big_rec[0].x, result.big_rec[0].y - 20), cv::FONT_HERSHEY_PLAIN, 1.5, colors[0]);
+                    
                     cv::waitKey(1);
+
                 }
             }
             t2 = std::chrono::high_resolution_clock::now();

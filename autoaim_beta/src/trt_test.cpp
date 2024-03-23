@@ -35,7 +35,7 @@ void test_classifier()
     Net_Detector detector(Mode::Dbg, "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config",false,enemy_car_info_list);
 
     cv::Mat img = cv::imread("/home/rcclub/ggbond/autoaim_ws/src/res/roi_tmp.jpg");
-    cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+    cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
     cv::threshold(img, img, 127, 255, cv::THRESH_BINARY);
     cv::resize(img, img, cv::Size(32,32));
 
