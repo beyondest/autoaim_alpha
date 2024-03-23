@@ -80,8 +80,22 @@ add_executable(test_mv ${ROOT_DIR}/src/webcam_test.cpp
                        ${ROOT_DIR}/src/mv_class.cpp
                        ${ROOT_DIR}/src/basic.cpp)
 target_link_libraries(test_mv ${OpenCV_LIBS} ${lib_list} ${spdlog_LIBRARIES})
+
 add_executable(test4 ${ROOT_DIR}/src/test4.cpp)
 target_link_libraries(test4 ${OpenCV_LIBS} ${lib_list} ${spdlog_LIBRARIES})
+
+add_executable(test5 ${ROOT_DIR}/src/test5.cpp
+                     ${ROOT_DIR}/src/basic.cpp
+                     ${ROOT_DIR}/src/detector.cpp)
+target_link_libraries(test5 ${OpenCV_LIBS} ${lib_list} ${spdlog_LIBRARIES})
+
+
+add_executable(test_tradition ${ROOT_DIR}/src/tradition_test.cpp
+                              ${ROOT_DIR}/src/basic.cpp
+                              ${ROOT_DIR}/src/detector.cpp
+                              ${ROOT_DIR}/src/mv_class.cpp)
+target_link_libraries(test_tradition ${OpenCV_LIBS} ${lib_list} ${spdlog_LIBRARIES})
+
 
 
 install(

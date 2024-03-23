@@ -17,6 +17,11 @@ enum class IF_SUCCESS
     FAIL = false
 };
 
+struct alignas(4) Enemy_Car_Info
+{
+    std::string armor_name;
+    int armor_nums;
+};
 
 
 class Params
@@ -68,6 +73,13 @@ bool CHECK_IF_FILE_EXIST(const std::string& file_path);
 std::string replace_extension(const std::string& file_name, const std::string& new_extension);
 
 void signal_handler(int sig);
+
+
+
+
+constexpr float inv_sigmoid(float x);
+constexpr float sigmoid(float x);
+
 
 #endif // BASIC_HPP 
 

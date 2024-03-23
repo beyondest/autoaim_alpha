@@ -1,7 +1,3 @@
-//
-// Copied from Shanghai Jiao Tong University - CVRM2021 : TRT_Module.cpp
-//
-
 #include "trt_module.hpp"
 #include <fstream>
 #include <logger.h>
@@ -76,13 +72,7 @@ static inline int argmax(const float *ptr, int len) {
     return max_arg;
 }
 
-constexpr float inv_sigmoid(float x) {
-    return -std::log(1 / x - 1);
-}
 
-constexpr float sigmoid(float x) {
-    return 1 / (1 + std::exp(-x));
-}
 
 TRTModule::TRTModule(const std::string &onnx_file) {
     auto cache_file_path = replace_extension(onnx_file, "cache");
@@ -229,15 +219,92 @@ std::vector<bbox_t> TRTModule::operator()(const cv::Mat &src) const {
 
 
 
+//***********************************Universal TRT Engine************************************************************************
 
 
 
 
+TRT_Engine::TRT_Engine(const std::string &trt_file)
+{
+
+    TRT_ASSERT((context = engine->createExecutionContext()) != nullptr);
+    TRT_ASSERT((input_idx = engine->getBindingIndex(this->params.input_name.c_str())) == 0);
+    TRT_ASSERT((output_idx = engine->getBindingIndex(this->params.output_name.c_str())) == 1);
+    auto input_dims = engine->getBindingDimensions(input_idx);
+    auto output_dims = engine->getBindingDimensions(output_idx);
+    input_dims.d[0] = input_dims.d[0] == -1? this->params.max_batchsize : input_dims.d[0];
+    output_dims.d[0] = output_dims.d[0] == -1? this->params.max_batchsize : output_dims.d[0];
+    input_sz = get_dims_size(input_dims);
+    output_sz = get_dims_size(output_dims);
+    TRT_ASSERT(cudaMalloc(&device_buffer[input_idx], input_sz * sizeof(float)) == 0);
+    TRT_ASSERT(cudaMalloc(&device_buffer[output_idx], output_sz * sizeof(float)) == 0);
+    TRT_ASSERT(cudaStreamCreate(&stream) == 0);
+    output_buffer = new float[output_sz];
+    TRT_ASSERT(output_buffer != nullptr);
+    std::cout << "[INFO]: build engine from trt engine" << std::endl;
+    std::ifstream ifs(trt_file, std::ios::binary);
+    ifs.seekg(0, std::ios::end);
+    size_t sz = ifs.tellg();
+    ifs.seekg(0, std::ios::beg);
+    auto buffer = std::make_unique<char[]>(sz);
+    ifs.read(buffer.get(), sz);
+    auto runtime = createInferRuntime(gLogger);
+    TRT_ASSERT(runtime != nullptr);
+    TRT_ASSERT((engine = runtime->deserializeCudaEngine(buffer.get(), sz)) != nullptr);
+    runtime->destroy();
+
+}
 
 
 
+TRT_Engine::~TRT_Engine()
+{
+
+    delete[] output_buffer;
+    cudaStreamDestroy(stream);
+    cudaFree(device_buffer[output_idx]);
+    cudaFree(device_buffer[input_idx]);
+    engine->destroy();
+
+}
+
+float* TRT_Engine::operator()(std::vector<cv::Mat> &src_imgs)
+{
+    cv::Mat target(src_imgs.size(), src_imgs[0].channels(), src_imgs[0].rows, src_imgs[0].cols);
+    cv::vconcat(src_imgs, target);
+    target.convertTo(target, CV_32F, 1.0 / 255.0);
+    cudaMemcpyAsync(device_buffer[input_idx], target.data, input_sz * sizeof(float), cudaMemcpyHostToDevice, stream);
+
+    context->enqueue(1, device_buffer, stream, nullptr);
+    cudaMemcpyAsync(output_buffer, device_buffer[output_idx], output_sz * sizeof(float), cudaMemcpyDeviceToHost,
+                    stream);
+    cudaStreamSynchronize(stream);
+    return output_buffer;
+}
 
 
+bool TRT_Engine_Params::load_params_from_yaml(const std::string& file_path)
+{
+    YAML::Node config = YAML::LoadFile(file_path);
+    YAML::Node list_node = config["input_shape"];
+    this->safe_load_key(config, "input_name", input_name);
+    this->safe_load_key(config, "output_name", output_name);
+    for (const auto& item : list_node)
+    {
+        this->input_shape.push_back(item.as<int>());
+    }
+    this->safe_load_key(config, "input_dtype", input_dtype);
+    this->safe_load_key(config, "max_batchsize", max_batchsize);
+    return true;
 
+}
 
+void TRT_Engine_Params::print_show_params()
+{
+    spdlog::info("input_name: {}", input_name);
+    spdlog::info("output_name: {}", output_name);
+    spdlog::info("input_shape: {}", input_shape);
+    spdlog::info("input_dtype: {}", input_dtype);
+    spdlog::info("max_batchsize: {}", max_batchsize);
+}
 

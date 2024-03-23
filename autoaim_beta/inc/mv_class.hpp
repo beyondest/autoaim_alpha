@@ -17,12 +17,12 @@ class Mindvision_Camera_Params : public Params
 {
 public:
 
-    int camera_roi_resolution_wid;
-    int camera_roi_resolution_hei;
-    int camera_fps_rank;
-    std::string yolov5_isp_params_name;
-    std::string blue_isp_params_name;
-    std::string red_isp_params_name;
+    int camera_roi_resolution_wid = 1280;
+    int camera_roi_resolution_hei = 1024;
+    int camera_fps_rank = 2;
+    std::string yolov5_isp_params_name = "yolov5_isp_params.yaml";
+    std::string blue_isp_params_name = "blue_isp_params.yaml";
+    std::string red_isp_params_name = "red_isp_params.yaml";
 
 #ifdef _WIN32
     std::string platform = "windows";
@@ -30,41 +30,21 @@ public:
     std::string platform = "linux";
 #endif
 
-    double exposure_time_us;
-    int gamma;
-    int r_gain;
-    int g_gain;
-    int b_gain;
-    int analog_gain;
-    float analog_gain_x;
-    int sharpness;
-    int saturation;
-    int contrast;
-    int grab_resolution_wid;
-    int grab_resolution_hei;
+    double exposure_time_us = 30000;
+    int gamma = 100;
+    int r_gain = 100;
+    int g_gain = 100;
+    int b_gain = 100;
+    int analog_gain = 100;
+    float analog_gain_x = 0;
+    int sharpness = 100;
+    int saturation = 100;
+    int contrast = 100;
+    int grab_resolution_wid = 640;
+    int grab_resolution_hei = 640;
 
     
-    Mindvision_Camera_Params(): 
-                                camera_roi_resolution_wid(1280),
-                                camera_roi_resolution_hei(1024),
-                                camera_fps_rank(2),
-                                yolov5_isp_params_name("yolov5_isp_params.yaml"),
-                                blue_isp_params_name("blue_isp_params.yaml"),
-                                red_isp_params_name("red_isp_params.yaml"),
-                                exposure_time_us(30000),
-                                gamma(100),
-                                r_gain(100),
-                                g_gain(100),
-                                b_gain(100),
-                                analog_gain(100),
-                                analog_gain_x(100),
-                                sharpness(100),
-                                saturation(100),
-                                contrast(100),
-                                grab_resolution_wid(640),
-                                grab_resolution_hei(640)
-                                
-    {};
+    Mindvision_Camera_Params(){}; 
     ~Mindvision_Camera_Params(){};
     bool load_params_from_yaml(const std::string& file_path);
     void print_show_params();

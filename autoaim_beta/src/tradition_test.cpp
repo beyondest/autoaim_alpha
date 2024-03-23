@@ -1,9 +1,8 @@
-#include "trt_module.hpp" 
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
 
- 
+#include "detector.hpp"
 #include "mv_class.hpp"
 #include "CameraDefine.h"
 #include <opencv2/opencv.hpp>
@@ -12,10 +11,10 @@
 #include <csignal>
 #include <vector>
 
-std::string camera_config_folder = "/home/rcc.ub/ggbond/autoaim_ws/src/autoaim_alpha/config/camera_config";
-std::string armor_color = "red";
+std::string camera_config_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_alpha/config/camera_config";
+std::string armor_color = "blue";
 Mode mode = Mode::Dbg;
-bool if_yolov5 = true;
+bool if_yolov5 = false;
 unsigned int camera_output_format = CAMERA_MEDIA_TYPE_BGR8;
 int trigger_mode = 0;
 unsigned int wTimes_ms = 1000;
@@ -28,13 +27,16 @@ extern volatile __sig_atomic_t g_sig_int_flag;
 
 cv::Mat img(iHeight, iWidth, CV_8UC3);
 cv::Mat img_show(640,640,CV_8UC3);
-std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
+std::string log_save_folder = "/home/liyuxuan/.ros/log/custom_log";
+std::string tradition_config_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_alpha/config/tradition_config";
+std::vector<int> roi_shape = {32,32};
+
 
 std::chrono::high_resolution_clock::time_point t1, t2;
 int fps = 0;
 
-std::vector<bbox_t> results;
 const cv::Scalar colors[3] = {{255, 0, 0}, {0, 0, 255}, {0, 255, 0}};
+
 
 int main()
 {
@@ -47,8 +49,7 @@ int main()
                             spdlog::level::debug,
                             spdlog::level::debug,
                             true);
-        TRTModule trt_module("/home/rcclub/ggbond/autoaim_ws/src/autoaim_beta/weights/opt4.onnx");
-        
+        Tradition_Detector detector(mode, tradition_config_folder, armor_color, roi_shape);
         Mindvision_Camera mv(mode,
                             camera_config_folder,
                             camera_output_format,
@@ -69,20 +70,20 @@ int main()
 
                 cv::resize(img, img_show, cv::Size(640, 384));
                 cv::flip(img_show,img_show, -1);
-
-                results = trt_module(img_show);
-            
-                for (auto &b : results)
+                std::vector<std::vector<cv::Point2f>> big_rec_list;
+                std::vector<cv::Mat> roi_list;
+                if (detector(img_show, big_rec_list, roi_list) != IF_SUCCESS::SUCCESS)
                 {
-                    
-                    cv::line(img_show, b.pts[0], b.pts[1], colors[2], 2);
-                    cv::line(img_show, b.pts[1], b.pts[2], colors[2], 2);
-                    cv::line(img_show, b.pts[2], b.pts[3], colors[2], 2);
-                    cv::line(img_show, b.pts[3], b.pts[0], colors[2], 2);
-                    cv::putText(img_show, std::to_string(b.tag_id), b.pts[0], cv::FONT_HERSHEY_SIMPLEX, 1, colors[b.color_id]);
-                } 
-
+                    std::cout << "no target" << std::endl;
+                    continue;   
+                }
+                std::cout << "len" << big_rec_list.size() << std::endl;
+                auto brl = trans_float_contours_to_int(big_rec_list);
+                cv::drawContours(img_show,brl,-1,colors[0],2);
+                cv::Mat roi_all ; 
+                cv::vconcat(roi_list,roi_all);
                 cv::imshow("camera", img_show);
+                cv::imshow("roi", roi_all);
                 cv::waitKey(1);
             }
             t2 = std::chrono::high_resolution_clock::now();

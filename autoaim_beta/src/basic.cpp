@@ -102,3 +102,13 @@ void signal_handler(int sig)
     
 }
 
+
+
+constexpr float inv_sigmoid(float x) {
+    return -std::log(1 / x - 1);
+}
+
+constexpr float sigmoid(float x) {
+    return 1 / (1 + std::exp(-x));
+}
+

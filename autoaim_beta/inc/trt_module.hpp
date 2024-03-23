@@ -1,12 +1,29 @@
-//
-// Copied from Shanghai Jiao Tong University - CVRM2021 : TRT_Module.cpp
-//
-
-#ifndef _ONNXTRTMODULE_HPP_
-#define _ONNXTRTMODULE_HPP_
+#ifndef TRT_MODULE_HPP_
+#define TRT_MODULE_HPP_
 
 #include <opencv2/core.hpp>
 #include <NvInfer.h>
+#include "basic.hpp"
+
+class TRT_Engine_Params:public Params
+{
+
+public:
+    std::string input_name;
+    std::string output_name;
+    int max_batchsize;
+    std::vector<int> input_shape;
+    std::string input_dtype;
+
+
+    TRT_Engine_Params(){};
+    ~TRT_Engine_Params(){};
+
+    bool load_params_from_yaml(const std::string& file_path);
+    void print_show_params();
+
+}
+
 
 struct alignas(4) bbox_t {
     cv::Point2f pts[4]; // [pt0, pt1, pt2, pt3]
@@ -28,6 +45,11 @@ struct alignas(4) bbox_t {
     }
 };
 
+struct alignas(4) classified_result_t
+{
+    float confidence;
+    std::string cls_name;
+}
 
 class TRTModule {
     static constexpr int TOPK_NUM = 128;
@@ -43,6 +65,8 @@ public:
     TRTModule operator=(const TRTModule &) = delete;
 
     std::vector<bbox_t> operator()(const cv::Mat &src) const;
+
+
 
 private:
     void build_engine_from_onnx(const std::string &onnx_file);
@@ -61,6 +85,34 @@ private:
 };
 
 
+class TRT_Engine
+{
+private:
+
+    
+    nvinfer1::ICudaEngine *engine;
+    nvinfer1::IExecutionContext *context;
+    mutable void *device_buffer[2];
+    float *output_buffer;
+    cudaStream_t stream;
+    int input_idx, output_idx;
+    size_t input_sz, output_sz;
+
+    TRT_Engine_Params params;
+
+public:
+    TRT_Engine(const std::string &trt_file);
+
+    ~TRT_Engine();
+    TRT_Engine(const TRT_Engine &) = delete;
+
+    TRT_Engine operator=(const TRT_Engine &) = delete;
+
+    float* operator()(std::vector<cv::Mat> &src_imgs);    
+
+}
 
 
-#endif /* _ONNXTRTMODULE_HPP_ */
+
+
+#endif 

@@ -779,14 +779,13 @@ class TRT_Engine_2:
             if shape[0] == -1:
                 shape = (batchsize, *shape[1:])
             
-            
             dtype = trt.nptype(self.engine.get_binding_dtype(self.engine[index]))
             size = trt.volume(shape) 
-            
             host_mem = cuda.pagelocked_empty(size, dtype)
             device_mem = cuda.mem_alloc(host_mem.nbytes)
             bindings.append(int(device_mem))
             
+
             if self.engine.binding_is_input(self.engine[index]):
                 inputs.append(self.HostDeviceMem(host_mem, device_mem))
                 self.input_idx_to_binding_idx.update({len(inputs)-1 : index})
