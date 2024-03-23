@@ -29,7 +29,8 @@ void test_yolov5()
 
 void test_classifier()
 {
-    TRT_Engine engine("/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/classifier.trt");
+    TRT_Engine engine("/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/classifier.trt",
+                     "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/net_params.yaml");
     cv::Mat img = cv::imread("/home/rcclub/ggbond/autoaim_ws/src/res/roi_tmp.jpg");
     cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
     cv::threshold(img, img, 127, 255, cv::THRESH_BINARY);
@@ -40,7 +41,7 @@ void test_classifier()
 }
 int main()
 {
-
+    test_classifier();
 }   
 
 
