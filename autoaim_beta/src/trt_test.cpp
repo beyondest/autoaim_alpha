@@ -42,6 +42,7 @@ void test_classifier()
 int main()
 {
     test_classifier();
+    return 0;
 }   
 
 

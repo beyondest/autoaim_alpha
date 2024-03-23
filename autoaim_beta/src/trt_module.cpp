@@ -236,6 +236,21 @@ TRT_Engine::TRT_Engine(const std::string& trt_file,
                        const std::string& net_config_params_file)
 {
     this->params.load_params_from_yaml(net_config_params_file);
+    this->params.print_show_params();
+    
+    std::cout << "[INFO]: build engine from trt engine" << std::endl;
+    std::ifstream ifs(trt_file, std::ios::binary);
+    ifs.seekg(0, std::ios::end);
+    size_t sz = ifs.tellg();
+    ifs.seekg(0, std::ios::beg);
+    auto buffer = std::make_unique<char[]>(sz);
+    ifs.read(buffer.get(), sz);
+    auto runtime = createInferRuntime(gLogger);
+    TRT_ASSERT(runtime != nullptr);
+    TRT_ASSERT((engine = runtime->deserializeCudaEngine(buffer.get(), sz)) != nullptr);
+    runtime->destroy();
+
+
     TRT_ASSERT((context = engine->createExecutionContext()) != nullptr);
     TRT_ASSERT((input_idx = engine->getBindingIndex(this->params.input_name.c_str())) == 0);
     TRT_ASSERT((output_idx = engine->getBindingIndex(this->params.output_name.c_str())) == 1);
@@ -250,17 +265,8 @@ TRT_Engine::TRT_Engine(const std::string& trt_file,
     TRT_ASSERT(cudaStreamCreate(&stream) == 0);
     output_buffer = new float[output_sz];
     TRT_ASSERT(output_buffer != nullptr);
-    std::cout << "[INFO]: build engine from trt engine" << std::endl;
-    std::ifstream ifs(trt_file, std::ios::binary);
-    ifs.seekg(0, std::ios::end);
-    size_t sz = ifs.tellg();
-    ifs.seekg(0, std::ios::beg);
-    auto buffer = std::make_unique<char[]>(sz);
-    ifs.read(buffer.get(), sz);
-    auto runtime = createInferRuntime(gLogger);
-    TRT_ASSERT(runtime != nullptr);
-    TRT_ASSERT((engine = runtime->deserializeCudaEngine(buffer.get(), sz)) != nullptr);
-    runtime->destroy();
+
+
 
 }
 
