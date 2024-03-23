@@ -398,7 +398,6 @@ Net_Detector::Net_Detector(Mode mode,
         this->engine = TRT_Engine(net_config_folder+"/classifier.trt");
     }
     this->class_num = this->class_info.size();
-    this->inverse_sigmoid_thres = inv_sigmoid(this->params.conf_thresh);
 }
 
 

@@ -12,7 +12,7 @@
 #include <csignal>
 #include <vector>
 
-std::string camera_config_folder = "/home/rccub/ggbond/autoaim_ws/src/autoaim_alpha/config/camera_config";
+std::string camera_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/camera_config";
 std::string armor_color = "red";
 Mode mode = Mode::Dbg;
 bool if_yolov5 = true;

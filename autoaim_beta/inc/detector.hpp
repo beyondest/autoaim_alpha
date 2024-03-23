@@ -94,7 +94,6 @@ private:
     Mode mode;
     bool if_yolov5 = false; 
     int class_num = 0;
-    float inverse_sigmoid_thres = 0;
 public:
     Net_Detector(Mode mode,
                  const std::string& net_config_folder,
