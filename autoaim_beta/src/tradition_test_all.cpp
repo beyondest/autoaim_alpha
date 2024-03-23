@@ -84,10 +84,9 @@ int main()
                 auto results = net_detector(roi_list,big_rec_list);
                 for (auto result : results)
                 {
-                    
                     cv::drawContours(img_show,trans_float_contour_to_int(result.big_rec),-1,colors[0],2);
                     cv::imshow("camera", img_show);
-                    cv::addText(img_show, result.result +":"+ std::to_string(std::round(result.conf*100)), cv::Point(result.big_rec[0].x, result.big_rec[0].y - 20), cv::FONT_HERSHEY_PLAIN, 1.5, colors[0]);
+                    //cv::addText(img_show, result.result +":"+ std::to_string(std::round(result.conf*100)), cv::Point(result.big_rec[0].x, result.big_rec[0].y - 20), cv::FONT_HERSHEY_PLAIN, 1.5, colors[0]);
                     cv::waitKey(1);
                 }
             }
@@ -101,7 +100,6 @@ int main()
     {
         std::cerr<<"Exception: " << e.what() << std::endl;
     }
-
     cv::destroyAllWindows();
     return 0;
 

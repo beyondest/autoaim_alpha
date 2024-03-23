@@ -2,7 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
-int main()
+void test_yolov5()
 {
     TRTModule trt_module("/home/rcclub/ggbond/autoaim_ws/src/autoaim_beta/weights/opt4.onnx");
     cv::Mat img = cv::imread("/home/rcclub/ggbond/autoaim_ws/src/res/armorred.png");
@@ -25,7 +25,22 @@ int main()
     cv::destroyAllWindows();
 
     
-    return 0;
+}
+
+void test_classifier()
+{
+    TRT_Engine engine("/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config/classifier.trt");
+    cv::Mat img = cv::imread("/home/rcclub/ggbond/autoaim_ws/src/res/roi_tmp.jpg");
+    cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
+    cv::threshold(img, img, 127, 255, cv::THRESH_BINARY);
+    cv::resize(img, img, cv::Size(32,32));
+    std::vector<cv::Mat> input_imgs = {img};
+    float* output_buffer = engine(input_imgs);
+
+}
+int main()
+{
+
 }   
 
 
