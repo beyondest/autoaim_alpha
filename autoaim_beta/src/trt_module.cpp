@@ -8,10 +8,7 @@
 #include <opencv2/imgproc.hpp>
 #include "basic.hpp"
 #include <iostream>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 
-#define DEBUG_NET_DETECTOR
 
 #define TRT_ASSERT(expr)                                                      \
     do{                                                                       \
@@ -294,10 +291,6 @@ float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs) const
     int total_rows = src_imgs.size() * src_imgs[0].rows;
     cv::Mat target;    
     cv::vconcat(src_imgs, target);
-#ifdef DEBUG_NET_DETECTOR
-    cv::imshow("before_net", target);
-    cv::waitKey(0);
-#endif
     target.convertTo(target, CV_32F, 1.0 / 255.0);
 
     auto dims = this->engine->getBindingDimensions(0);

@@ -1,7 +1,5 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-
-
 #include "detector.hpp"
 #include "mv_class.hpp"
 #include "CameraDefine.h"
@@ -26,7 +24,7 @@ extern volatile __sig_atomic_t g_sig_int_flag;
 
 
 cv::Mat img(iHeight, iWidth, CV_8UC3);
-cv::Mat img_show(640,640,CV_8UC3);
+cv::Mat img_show(640,384,CV_8UC3);
 std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
 std::string tradition_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/tradition_config";
 std::string net_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config";
@@ -71,8 +69,7 @@ int main()
 
             if (mv.get_img(img) == IF_SUCCESS::SUCCESS)
             {
-
-                cv::resize(img, img_show, cv::Size(640, 640));
+                cv::resize(img, img_show, cv::Size(640, 384));
                 cv::flip(img_show,img_show, -1);
                 std::vector<std::vector<cv::Point2f>> big_rec_list;
                 std::vector<cv::Mat> roi_list;
@@ -81,7 +78,6 @@ int main()
                     std::cout << "no target" << std::endl;
                     continue;   
                 }
-
                 if (big_rec_list.size() >= 10) 
                 {
                     std::vector<std::vector<cv::Point2f>> big_rec_list_first_ten;
@@ -115,7 +111,6 @@ int main()
                     std::cout << "no target" << std::endl;
                 }
             }
-
             cv::imshow("camera", img_show);
             t2 = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> time_used = t2 - t1;

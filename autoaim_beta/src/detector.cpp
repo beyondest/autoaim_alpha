@@ -5,7 +5,7 @@
 #include <opencv2/highgui.hpp>
 #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
-#define DEBUG_TRADITION_DETECTOR
+//#define DEBUG_TRADITION_DETECTOR
 #define USE_TWO_LIGHTBAR
 
 

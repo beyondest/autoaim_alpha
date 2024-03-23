@@ -21,11 +21,7 @@ private:
     int count_;
     void timer_callback()
     {
-        auto msg = std_msgs::msg::String();
-        msg.data = "Hello, world! " + std::to_string(count_);
-        RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", msg.data.c_str());
-        pub_->publish(msg);
-        count_++;
+        auto
     }
 public:
 
@@ -34,7 +30,6 @@ public:
     {
         pub_= this->create_publisher<std_msgs::msg::String>("topic", 10);
         timer_ = this->create_wall_timer(500ms, std::bind(&Node_Webcam_MV::timer_callback, this));
-
     }
     
 };
