@@ -25,7 +25,7 @@ extern volatile __sig_atomic_t g_sig_int_flag;
 
 cv::Mat img(iHeight, iWidth, CV_8UC3);
 cv::Mat img_show(img_show_wid,img_show_hei,CV_8UC3);
-std::string camera_config_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_alpha/config/camera_config";
+std::string camera_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/camera_config";
 std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
 std::string tradition_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/tradition_config";
 std::string net_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config";
@@ -105,6 +105,7 @@ int main()
                 }
             }
             cv::imshow("camera", img_show);
+            cv::waitKey(1);
             t2 = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> time_used = t2 - t1;
             fps = 1000 / time_used.count();

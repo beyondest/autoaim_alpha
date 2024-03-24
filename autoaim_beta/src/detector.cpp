@@ -577,6 +577,17 @@ void PNP_Solver::operator()(std::vector<detect_result_t>& detect_results) const
         }
         if (if_small_armor)cv::solvePnP(params.small_obj_points,real_img_points,params.mtx,params.dist,detect_result.rvec,detect_result.tvec);
         else cv::solvePnP(params.big_obj_points,real_img_points,params.mtx,params.dist,detect_result.rvec,detect_result.tvec);
+
+        cv::Point2f center = cv::Point2f(0,0);
+        for (auto& point : detect_result.big_rec)
+        {
+            center.x += point.x/4.f;
+            center.y += point.y/4.f;
+        }
+        float delta_x = center.x - params.camera_center.x;
+        float delta_z = params.camera_center.y - center.y;
+
+        // doing nothing
         detect_result.tvec[0] = detect_result.tvec[0]/1000.f;
         float tvec1 = detect_result.tvec[1];
         detect_result.tvec[1] = detect_result.tvec[2]/1000.f;
@@ -585,6 +596,9 @@ void PNP_Solver::operator()(std::vector<detect_result_t>& detect_results) const
         float rvec1 = detect_result.rvec[1];
         detect_result.rvec[1] = detect_result.rvec[2];
         detect_result.rvec[2] = -rvec1;
+        // only use deep from pnp solver
+        detect_result.tvec[0] = delta_x;
+        detect_result.tvec[2] = delta_z;
     }
    
 }
