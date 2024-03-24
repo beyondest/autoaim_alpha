@@ -473,12 +473,12 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
         for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == armor_name_string) {if_in_target_list = true;break;}
         if (!if_in_target_list) continue;
         if (result.confidence < this->params.conf_thres) continue;
-        order_points(result.pts);
-        result.pts = extendRectangle(result.pts,0,0.3);
-        std::vector<float> tvec = {0, 0, 0};
-        std::vector<float> rvec = {0, 0, 0};
         std::vector<cv::Point2f> big_rec;
         for (auto& point : result.pts) big_rec.push_back(cv::Point2f(point.x,point.y));
+        order_points(big_rec);
+        big_rec = extendRectangle(big_rec,0,0.3);
+        std::vector<float> tvec = {0, 0, 0};
+        std::vector<float> rvec = {0, 0, 0};
         results.push_back(detect_result_t{big_rec,result.confidence,armor_name_string,tvec,rvec});
     }
     return results;
