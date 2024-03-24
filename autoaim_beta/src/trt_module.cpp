@@ -85,6 +85,7 @@ static inline cv::Mat concatMats(const std::vector<cv::Mat>& imgs,const int& max
     std::vector<cv::Mat> selectedMats(imgs.begin(), imgs.begin() + this_batchsize);
     cv::Mat result;
     cv::vconcat(selectedMats, result);
+    result.convertTo(result, CV_32F, 1.0 / 255.0);
     return result;
 }
 

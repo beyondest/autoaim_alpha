@@ -78,15 +78,7 @@ int main()
                 if (detector(img_show, big_rec_list, roi_list) != IF_SUCCESS::SUCCESS)
                 {
                     std::cout << "no target" << std::endl;
-                    continue;   
                 }
-#ifdef DEBUG_ROI
-                    cv::Mat all_roi;
-                    cv::vconcat(roi_list_first_ten,all_roi);
-                    cv::imshow("roi_all",all_roi);
-                    cv::waitKey(1);
-#endif
-
                 if(big_rec_list.size() > 0)
                 {
 #ifdef DEBUG_ROI

@@ -40,7 +40,13 @@ cv::Mat matsToBatch(const std::vector<cv::Mat>& mats) {
     return batch;
 }
 
-
+static inline cv::Mat concatMats(const std::vector<cv::Mat>& imgs,const int& max_batchsize, int& this_batchsize) {
+    this_batchsize = std::min(static_cast<int>(imgs.size()), max_batchsize); 
+    std::vector<cv::Mat> selectedMats(imgs.begin(), imgs.begin() + this_batchsize);
+    cv::Mat result;
+    cv::vconcat(selectedMats, result);
+    return result;
+}
 
 int main() {
     // Create some sample Mats
@@ -51,9 +57,10 @@ int main() {
     // Create a vector of Mats
     std::vector<cv::Mat> mats = {mat1, mat2, mat3};
     std::cout << "fuck   "<<mats.data()<<std::endl;
-    
+    int b;
     // Concatenate the Mats
-    cv::Mat concatenatedMat = matsToBatch(mats);
+    cv::Mat concatenatedMat = concatMats(mats, 2,b);
+    std::cout<<b <<std::endl;
     std::cout << "fuck2  "<<concatenatedMat.data<<std::endl;
     // Print the concatenated Mat
     std::cout << "Concatenated Mat:\n" << concatenatedMat << std::endl;
