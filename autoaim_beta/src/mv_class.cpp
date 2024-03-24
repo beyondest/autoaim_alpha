@@ -47,18 +47,12 @@ void CHECK_MV_STATUS(CameraSdkStatus status)
 */
 Mindvision_Camera::Mindvision_Camera(  const Mode camera_mode,
                                         const std::string& camera_config_folder,
-                                        const unsigned int& output_format,
-                                        const int& trigger_mode,
-                                        unsigned int wTimes_ms,
                                         const bool if_use_last_params,
                                         const std::string& armor_color,
                                         const bool if_yolov5)
 {
     this->camera_mode = camera_mode;
-    this->trigger_mode = trigger_mode;
     this->if_yolov5 = if_yolov5;
-    this->output_format = output_format;
-    this->wTimes_ms = wTimes_ms;
     this->load_params_from_folder(camera_config_folder, armor_color);
     if(this->camera_mode == Mode::Dbg)
     {
@@ -100,7 +94,7 @@ IF_SUCCESS Mindvision_Camera::init(bool if_use_last_params)
     {   
         CHECK_MV_STATUS(CameraSetIspOutFormat(this->hcamera, this->output_format));
         CHECK_MV_STATUS(CameraSetAeState(this->hcamera , false));
-        CHECK_MV_STATUS(CameraSetTriggerMode(this->hcamera, this->trigger_mode));
+        CHECK_MV_STATUS(CameraSetTriggerMode(this->hcamera, this->trigger_mode)); 
         CHECK_MV_STATUS(CameraSetFrameSpeed(this->hcamera, this->params.camera_fps_rank));
 
         CHECK_MV_STATUS(CameraSetExposureTime(this->hcamera, this->params.exposure_time_us));

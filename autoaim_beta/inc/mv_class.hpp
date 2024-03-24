@@ -62,15 +62,12 @@ private:
 public:
     Mode camera_mode;
     bool if_yolov5;
-    int trigger_mode;
-    unsigned int output_format;
-    unsigned int wTimes_ms;
+    const int trigger_mode = 0; // 0: continuous, 1: software trigger, 2: hardware trigger
+    const unsigned int output_format = CAMERA_MEDIA_TYPE_BGR8;
+    const unsigned int wTimes_ms = 1000;
     CameraHandle hcamera = -1;
     Mindvision_Camera(const Mode camera_mode,
                        const std::string& camera_config_folder,
-                       const unsigned int& output_format,
-                       const int& trigger_mode,
-                       unsigned int wTimes_ms,
                        const bool if_use_last_params,
                        const std::string& armor_color,
                        const bool if_yolov5);

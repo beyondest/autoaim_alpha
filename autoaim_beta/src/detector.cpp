@@ -10,7 +10,7 @@
 
 
 //**********************************************TOOLS********************************************
-std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std::vector<cv::Point2f>>& contours)
+std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std::vector<cv::Point2f>>& contours, int& img_wid,int& img_hei)
 {
     std::vector<std::vector<cv::Point>> int_contours;
 
@@ -21,9 +21,9 @@ std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std:
         {
             cv::Point p;
             p.x = std::round(contours[i][j].x);
-            p.x = p.x<0?0:p.x>640?640:p.x;
+            p.x = p.x<0?0:p.x>img_wid?img_hei:p.x;
             p.y = std::round(contours[i][j].y);
-            p.y = p.y<0?0:p.y>640?384:p.y;
+            p.y = p.y<0?0:p.y>img_hei?img_hei:p.y;
             int_contour.push_back(p);
         }
         int_contours.push_back(int_contour);    
@@ -32,19 +32,39 @@ std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std:
 
 }
 
-std::vector<cv::Point> trans_float_contour_to_int(std::vector<cv::Point2f>& contour)
+std::vector<cv::Point> trans_float_contour_to_int(std::vector<cv::Point2f>& contour,int& img_wid,int& img_hei)
 {
     std::vector<cv::Point> int_contour;
     for (size_t i = 0; i < contour.size(); i++)
     {
         cv::Point p;
         p.x = std::round(contour[i].x);
-        p.x = p.x<0?0:p.x>640?640:p.x;
+        p.x = p.x<0?0:p.x>img_wid?img_wid:p.x;
         p.y = std::round(contour[i].y);
-        p.y = p.y<0?0:p.y>640?384:p.y;
+        p.y = p.y<0?0:p.y>img_hei?img_hei:p.y;
         int_contour.push_back(p);
     }
     return int_contour;
+}
+void visualize_results(cv::Mat& img_show, const std::vector<detect_result_t> results)
+{
+    for (auto& result : results)
+    {
+        auto rect_int = trans_float_contour_to_int(result.big_rec);
+        std::vector<std::vector<cv::Point>> rect_int_list = {rect_int};
+        cv::drawContours(img_show,rect_int_list,-1,cv::Scalar(255,0,0),2);
+        cv::putText(img_show,result.result+":"+std::to_string((int)round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,cv::Scalar(255,0,0),2);
+        std::string xyz = "xyz";
+        for (size_t i = 0; i < 3; i++)
+        {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(2) << result.tvec[i];
+            xyz+=stream.str() + "  ";
+        }
+        cv::putText(img_show,xyz,cv::Point(rect_int[2].x,rect_int[2].y),cv::FONT_HERSHEY_SIMPLEX,1,cv::Scalar(255,0,0),2);
+
+        
+    }
 }
 
 
@@ -186,12 +206,10 @@ constexpr float sigmoid(float x) {
 
 Tradition_Detector::Tradition_Detector(const Mode mode, 
                     const std::string& tradition_config_folder,
-                    const std::string& armor_color_,
-                    const std::vector<int>& roi_shape_) :
+                    const std::string& armor_color_) :
 params(armor_color_),
 mode(mode),
 armor_color(armor_color_),
-roi_shape(roi_shape_)
 {   
     if (armor_color != "red" && armor_color != "blue") throw std::invalid_argument("Tradition_Detector : armor_color should be red or blue");
     std::string preprocess_params_path;
@@ -399,11 +417,18 @@ Net_Detector::Net_Detector(Mode mode,
                  params(enemy_car_list_)
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
-    if (if_yolov5) throw std::invalid_argument("Net_Detector : yolov5 is not supported yet, if_yolov5 should be false");
-    this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
-    this->class_num = this->class_info.size();
-    this->engine = new TRT_Engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml");
-
+    if (if_yolov5) 
+    {
+        this->yolo_engine = new TRTModule(net_config_folder+"/opt4.cache");
+        this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
+        
+    }
+    else
+    {
+        this->engine = new TRT_Engine(net_config_folder+"/classifier.trt",net_config_folder+"/net_params.yaml");
+        this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
+        this->class_num = this->class_info.size();
+    } 
 }
 
 
@@ -424,9 +449,140 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
         for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == class_name) if_in_target_list = true;                
         if (conf > this->params.conf_thres && if_in_target_list)
         {
-            detect_result_t detect_result = {big_recs[i], conf, class_name};
+            std::vector<float> tvec = {0, 0, 0};
+            std::vector<float> rvec = {0, 0, 0};
+            detect_result_t detect_result = {big_recs[i], conf, class_name,tvec,rvec};
             results.push_back(detect_result);
         }
     }
     return results;
+}
+
+/**
+ * @brief: yolov5 detector
+ * @note: armor_name_string = color_id + tag_id, color_id 0 for blue, 1 for red,2 for gray, tag 0 for sentry, 1 for 1;
+*/
+std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) const
+{
+    std::vector<detect_result_t> results;
+    auto yolo_results = (*yolo_engine)(img_bgr);
+    for (auto& result : yolo_results)
+    {
+        bool if_in_target_list = false;
+        std::string armor_name_string = std::to_string(result.class_id) + std::to_string(result.tag_id);
+        for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == armor_name_string) {if_in_target_list = true;break;}
+        if (!if_in_target_list) continue;
+        if (result.confidence < this->params.conf_thres) continue;
+        order_points(result.pts);
+        result.pts = extendRectangle(result.pts,0,0.3);
+        std::vector<float> tvec = {0, 0, 0};
+        std::vector<float> rvec = {0, 0, 0};
+        results.push_back(detect_result_t{result.pts,result.confidence,armor_name_string,tvec,rvec});
+    }
+    return results;
+}
+
+
+
+/*******************************PNP Solver********************************************************/
+
+bool PNP_Params::load_params_from_yaml(const std::string& file_path)
+{
+
+    YAML::Node config = YAML::LoadFile(file_path);
+    auto read_small_obj_points = config["small_obj_points"];
+    small_obj_points.push_back(cv::Point3f(read_small_obj_points[0][0].as<float>(), read_small_obj_points[0][1].as<float>(), read_small_obj_points[0][2].as<float>()));
+    small_obj_points.push_back(cv::Point3f(read_small_obj_points[1][0].as<float>(), read_small_obj_points[1][1].as<float>(), read_small_obj_points[1][2].as<float>()));
+    small_obj_points.push_back(cv::Point3f(read_small_obj_points[2][0].as<float>(), read_small_obj_points[2][1].as<float>(), read_small_obj_points[2][2].as<float>()));
+    small_obj_points.push_back(cv::Point3f(read_small_obj_points[3][0].as<float>(), read_small_obj_points[3][1].as<float>(), read_small_obj_points[3][2].as<float>()));
+    auto read_big_obj_points = config["big_obj_points"];
+    big_obj_points.push_back(cv::Point3f(read_big_obj_points[0][0].as<float>(), read_big_obj_points[0][1].as<float>(), read_big_obj_points[0][2].as<float>()));
+    big_obj_points.push_back(cv::Point3f(read_big_obj_points[1][0].as<float>(), read_big_obj_points[1][1].as<float>(), read_big_obj_points[1][2].as<float>()));
+    big_obj_points.push_back(cv::Point3f(read_big_obj_points[2][0].as<float>(), read_big_obj_points[2][1].as<float>(), read_big_obj_points[2][2].as<float>()));
+    big_obj_points.push_back(cv::Point3f(read_big_obj_points[3][0].as<float>(), read_big_obj_points[3][1].as<float>(), read_big_obj_points[3][2].as<float>()));
+
+    mtx.at<float>(0,0) = config["mtx"][0][0].as<float>();
+    mtx.at<float>(0,1) = config["mtx"][0][1].as<float>();
+    mtx.at<float>(0,2) = config["mtx"][0][2].as<float>();
+    mtx.at<float>(1,0) = config["mtx"][1][0].as<float>();
+    mtx.at<float>(1,1) = config["mtx"][1][1].as<float>();
+    mtx.at<float>(1,2) = config["mtx"][1][2].as<float>();
+    mtx.at<float>(2,0) = config["mtx"][2][0].as<float>();
+    mtx.at<float>(2,1) = config["mtx"][2][1].as<float>();
+    mtx.at<float>(2,2) = config["mtx"][2][2].as<float>();
+
+    dist.at<float>(0,0) = config["dist"][0][0].as<float>();
+    dist.at<float>(0,1) = config["dist"][0][1].as<float>();
+    dist.at<float>(0,2) = config["dist"][0][2].as<float>();
+    dist.at<float>(0,3) = config["dist"][0][3].as<float>();
+    dist.at<float>(0,4) = config["dist"][0][4].as<float>();
+    auto read_small_armor_name_list = config["small_armor_name_list"];
+    for (size_t i = 0; i < read_small_armor_name_list.size(); i++)
+    {
+        small_armor_name_list.push_back(read_small_armor_name_list[i].as<std::string>());
+    }
+    
+    return true;
+
+
+
+}
+void PNP_Params::print_show_params()
+{
+    /*
+
+    spdlog::info("mtx: {}, {}, {}, dist: {}, {}, {}, {}, {}",
+                 mtx.at<float>(0,0), mtx.at<float>(0,1), mtx.at<float>(0,2),
+                 mtx.at<float>(1,0), mtx.at<float>(1,1), mtx.at<float>(1,2),
+                 mtx.at<float>(2,0), mtx.at<float>(2,1), mtx.at<float>(2,2));
+    spdlog::info("dist: {}, {}",
+                 dist.at<float>(0,0), dist.at<float>(0,1), dist.at<float>(0,2),
+                 dist.at<float>(0,3), dist.at<float>(0,4));
+    spdlog::info("small_armor_name_list: {}", small_armor_name_list);
+    */
+
+    for (auto& point : small_obj_points)
+    {
+        spdlog::info("small_obj_points: x={}, y={}, z={}", point.x, point.y, point.z);
+    }
+    for (auto& small_armor_name : small_armor_name_list)
+    {
+        spdlog::info("small_armor_name: {}", small_armor_name);
+    }
+    for (auto& point : big_obj_points)
+    {
+        spdlog::info("big_obj_points: x={}, y={}, z={}", point.x, point.y, point.z);
+    }
+    
+    spdlog::info("camera_center: x={}, y={}", camera_center.x, camera_center.y);
+    std::cout << "[INFO] : mtx: "<<mtx<<std::endl;
+    std::cout << "[INFO] : dist: "<<dist<<std::endl;
+    return;
+}
+
+
+void PNP_Solver::operator()(std::vector<detect_result_t>& detect_results) const
+{
+
+    for (auto& detect_result : detect_results)
+    {
+        bool if_small_armor = false;
+        std::vector<cv::Point2f> real_img_points;
+        for (auto& armor_name : params.small_armor_name_list)if (armor_name == detect_result.result) {if_small_armor = true;break;}
+        for (auto& point: detect_result.big_rec)
+        {
+            real_img_points.push_back(cv::Point2f(point.x/shrink_scale_x,point.y/shrink_scale_y));
+        }
+        if (if_small_armor)cv::solvePnP(params.small_obj_points,real_img_points,params.mtx,params.dist,detect_result.rvec,detect_result.tvec);
+        else cv::solvePnP(params.big_obj_points,real_img_points,params.mtx,params.dist,detect_result.rvec,detect_result.tvec);
+        detect_result.tvec[0] = detect_result.tvec[0]/1000.f;
+        float tvec1 = detect_result.tvec[1];
+        detect_result.tvec[1] = detect_result.tvec[2]/1000.f;
+        detect_result.tvec[2] = -tvec1/1000.f;
+
+        float rvec1 = detect_result.rvec[1];
+        detect_result.rvec[1] = detect_result.rvec[2];
+        detect_result.rvec[2] = -rvec1;
+    }
+   
 }

@@ -21,6 +21,8 @@ private:
     int count_;
     void timer_callback()
     {
+       auto msg = autoaim_interface::msg::DetectResult();
+       auto msg_each = autoaim_interface::msg::EachDetectResult();
        
     }
 public:

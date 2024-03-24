@@ -43,7 +43,8 @@ camera_center:
 - 320.0
 - 320.0
 
-
+# if_yolov5, armor_name=color_id+num, color: 0=blue,1=red,2=gray;num:0 is sentry, others are itself
+# e.g.: red 3x --> (in yolov5) 13
 small_armor_name_list:
 - 2x
 - 3x
