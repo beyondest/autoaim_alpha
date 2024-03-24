@@ -286,9 +286,6 @@ TRT_Engine::~TRT_Engine()
 }
 
 
-float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs) const
-{
-    int total_rows = src_imgs.size() * src_imgs[0].rows;
     cv::Mat target;    
     cv::vconcat(src_imgs, target);
     target.convertTo(target, CV_32F, 1.0 / 255.0);

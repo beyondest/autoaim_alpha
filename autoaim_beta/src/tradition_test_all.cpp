@@ -9,6 +9,8 @@
 #include <csignal>
 #include <vector>
 
+//#define DEBUG_ROI
+
 std::string camera_config_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_alpha/config/camera_config";
 std::string armor_color = "blue";
 Mode mode = Mode::Dbg;
@@ -84,10 +86,12 @@ int main()
                     std::vector<cv::Mat> roi_list_first_ten;
                     std::copy(big_rec_list.begin(), big_rec_list.begin() + 10, std::back_inserter(big_rec_list_first_ten));
                     std::copy(roi_list.begin(), roi_list.begin() + 10, std::back_inserter(roi_list_first_ten));
-                    std::vector<cv::Mat> all_roi;
+#ifdef DEBUG_ROI
+                    cv::Mat all_roi;
                     cv::vconcat(roi_list_first_ten,all_roi);
-                    cv::imshow("roi_all",all_roi[0]);
+                    cv::imshow("roi_all",all_roi);
                     cv::waitKey(1);
+#endif
                     auto results = net_detector(roi_list_first_ten,big_rec_list_first_ten);
                     for (auto& result : results)
                     {
@@ -100,10 +104,12 @@ int main()
                 }
                 else if(big_rec_list.size() > 0)
                 {
-                    std::vector<cv::Mat> all_roi;
+#ifdef DEBUG_ROI
+                    cv::Mat all_roi;
                     cv::vconcat(roi_list,all_roi);
-                    cv::imshow("roi_all",all_roi[0]);
+                    cv::imshow("roi_all",all_roi);
                     cv::waitKey(1);
+#endif  
                     auto results = net_detector(roi_list,big_rec_list);
                     for (auto& result : results)
                     {

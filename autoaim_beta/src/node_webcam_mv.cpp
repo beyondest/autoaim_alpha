@@ -21,7 +21,7 @@ private:
     int count_;
     void timer_callback()
     {
-        auto
+       
     }
 public:
 
