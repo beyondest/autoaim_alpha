@@ -13,7 +13,7 @@
 
 std::string armor_color = "blue";
 Mode mode = Mode::Dbg;
-bool if_yolov5 = false;
+bool if_yolov5 = true;
 
 int iHeight = 1024;
 int iWidth = 1280;
@@ -42,7 +42,7 @@ std::vector<Enemy_Car_Info> enemy_car_info_list;
 int main()
 {
     signal(SIGINT, signal_handler);
-    enemy_car_info_list.push_back(Enemy_Car_Info{"3x",1});
+    enemy_car_info_list.push_back(Enemy_Car_Info{"03",1});
     try
     {
 
