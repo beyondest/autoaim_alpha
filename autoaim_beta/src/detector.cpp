@@ -419,7 +419,7 @@ Net_Detector::Net_Detector(Mode mode,
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
     if (if_yolov5) 
     {
-        this->yolo_engine = new TRTModule(net_config_folder+"/opt4.cache");
+        this->yolo_engine = new TRTModule(net_config_folder+"/opt4.onnx");
         this->class_info = YAML::LoadFile(net_config_folder+"/classifier_class.yaml");
         
     }
