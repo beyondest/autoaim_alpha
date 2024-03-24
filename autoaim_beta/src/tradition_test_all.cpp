@@ -80,29 +80,14 @@ int main()
                     std::cout << "no target" << std::endl;
                     continue;   
                 }
-                if (big_rec_list.size() >= 10) 
-                {
-                    std::vector<std::vector<cv::Point2f>> big_rec_list_first_ten;
-                    std::vector<cv::Mat> roi_list_first_ten;
-                    std::copy(big_rec_list.begin(), big_rec_list.begin() + 10, std::back_inserter(big_rec_list_first_ten));
-                    std::copy(roi_list.begin(), roi_list.begin() + 10, std::back_inserter(roi_list_first_ten));
 #ifdef DEBUG_ROI
                     cv::Mat all_roi;
                     cv::vconcat(roi_list_first_ten,all_roi);
                     cv::imshow("roi_all",all_roi);
                     cv::waitKey(1);
 #endif
-                    auto results = net_detector(roi_list_first_ten,big_rec_list_first_ten);
-                    for (auto& result : results)
-                    {
-                        std::cout << "result: " << result.result << " conf: " << result.conf << std::endl;
-                        auto rect_int = trans_float_contour_to_int(result.big_rec);
-                        std::vector<std::vector<cv::Point>> rect_int_list = {rect_int};
-                        cv::drawContours(img_show,rect_int_list,-1,colors[0],2);
-                        cv::putText(img_show,result.result+":"+std::to_string(round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,colors[0],2);
-                    }
-                }
-                else if(big_rec_list.size() > 0)
+
+                if(big_rec_list.size() > 0)
                 {
 #ifdef DEBUG_ROI
                     cv::Mat all_roi;
