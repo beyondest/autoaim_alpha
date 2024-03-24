@@ -162,8 +162,8 @@ public:
     void operator()(std::vector<detect_result_t>& detect_results) const;
 };
 
-std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std::vector<cv::Point2f>>& contours,int& img_wid=640,int& img_hei=384);
-std::vector<cv::Point> trans_float_contour_to_int(std::vector<cv::Point2f>& contour, int& img_wid=640,int& img_hei=384);
+std::vector<std::vector<cv::Point>> trans_float_contours_to_int(const std::vector<std::vector<cv::Point2f>>& contours,const int& img_wid=640,const int& img_hei=384);
+std::vector<cv::Point> trans_float_contour_to_int(const std::vector<cv::Point2f>& contour, const int& img_wid=640,const int& img_hei=384);
 void visualize_results(cv::Mat& img_show, const std::vector<detect_result_t> results);
 
 

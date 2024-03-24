@@ -10,7 +10,7 @@
 
 
 //**********************************************TOOLS********************************************
-std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std::vector<cv::Point2f>>& contours, int& img_wid,int& img_hei)
+std::vector<std::vector<cv::Point>> trans_float_contours_to_int(const std::vector<std::vector<cv::Point2f>>& contours,const int& img_wid,const int& img_hei)
 {
     std::vector<std::vector<cv::Point>> int_contours;
 
@@ -32,7 +32,7 @@ std::vector<std::vector<cv::Point>> trans_float_contours_to_int(std::vector<std:
 
 }
 
-std::vector<cv::Point> trans_float_contour_to_int(std::vector<cv::Point2f>& contour,int& img_wid,int& img_hei)
+std::vector<cv::Point> trans_float_contour_to_int(const std::vector<cv::Point2f>& contour,const int& img_wid,const int& img_hei)
 {
     std::vector<cv::Point> int_contour;
     for (size_t i = 0; i < contour.size(); i++)

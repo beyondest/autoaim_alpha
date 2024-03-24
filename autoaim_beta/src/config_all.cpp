@@ -68,7 +68,7 @@ int main()
 
             if (mv.get_img(img) == IF_SUCCESS::SUCCESS)
             {
-                cv::resize(img, img_show, cv::Size(640, 384));
+                cv::resize(img, img_show, cv::Size(img_show_wid,img_show_hei));
                 cv::flip(img_show,img_show, -1);
 
                 if (!if_yolov5)
