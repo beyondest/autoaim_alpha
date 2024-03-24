@@ -209,7 +209,7 @@ Tradition_Detector::Tradition_Detector(const Mode mode,
                     const std::string& armor_color_) :
 params(armor_color_),
 mode(mode),
-armor_color(armor_color_),
+armor_color(armor_color_)
 {   
     if (armor_color != "red" && armor_color != "blue") throw std::invalid_argument("Tradition_Detector : armor_color should be red or blue");
     std::string preprocess_params_path;
