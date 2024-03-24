@@ -41,7 +41,7 @@ private:
     Mindvision_Camera* mv = nullptr;
     Net_Detector* net_detector = nullptr;
     PNP_Solver* pnp_solver = nullptr;
-    cv::Mat img(1280,1024,CV_8UC3);
+    cv::Mat* img;
     cv::Mat* img_show = nullptr;
     auto pre_t = std::chrono::high_resolution_clock::now();
 
@@ -70,6 +70,7 @@ public:
             enemy_car_info_list.push_back(enemy_car_info);
             RCLCPP_WARN(this->get_logger(), "ENEMY_CAR_INFO: %s %d", enemy_car_info.armor_name.c_str(), enemy_car_info.armor_nums);
         }
+        this->img = new cv::Mat(1280,1024,CV_8UC3);
         this->img_show = new cv::Mat(img_show_hei,img_show_wid,CV_8UC3);
         this->mv = new Mindvision_Camera(mode,camera_config_folder,false,armor_color,if_yolov5);
         if (!if_yolov5)
@@ -96,6 +97,7 @@ public:
         delete net_detector;
         delete pnp_solver;
         delete img_show;
+        delete img;
     }
 private:
     void timer_callback()
@@ -103,8 +105,8 @@ private:
         auto msg = autoaim_interface::msg::DetectResult();
         auto msg_each = autoaim_interface::msg::EachDetectResult();
         
-        mv->get_img(this->img);
-        cv::resize(this->img,*img_show,cv::Size(img_show_wid,img_show_hei));
+        mv->get_img(*img);
+        cv::resize(*img,*img_show,cv::Size(img_show_wid,img_show_hei));
         if(if_reverse) cv::flip(*img_show,-1);
         if(!if_yolov5)
         {
@@ -123,9 +125,8 @@ private:
                     msg_each.pose.pose.position.x = rst.tvec[0];
                     msg_each.pose.pose.position.y = rst.tvec[1];
                     msg_each.pose.pose.position.z = rst.tvec[2];
-                    msg_each.pose.header.stamp = this->get_clock()->now().to_msg();
                     msg.detect_result.push_back(msg_each);
-                    RCLCPP_INFO(this->get_logger(), "Find Target : %s, conf: %.2f, x: %.3f, y: %.3f, z: %.3f", rst.armor_name.c_str(), rst.conf, rst.tvec[0], rst.tvec[1], rst.tvec[2]);
+                    RCLCPP_INFO(this->get_logger(), "Find Target : %s, conf: %.2f, x: %.3f, y: %.3f, z: %.3f", rst.result.c_str(), rst.conf, rst.tvec[0], rst.tvec[1], rst.tvec[2]);
                 }
                 if (mode == Mode::Dbg) visualize_results(*img_show,d_rsts);
             }
@@ -143,9 +144,8 @@ private:
                 msg_each.pose.pose.position.x = rst.tvec[0];
                 msg_each.pose.pose.position.y = rst.tvec[1];
                 msg_each.pose.pose.position.z = rst.tvec[2];
-                msg_each.pose.header.stamp = this->get_clock()->now().to_msg();
                 msg.detect_result.push_back(msg_each);
-                RCLCPP_INFO(this->get_logger(), "Find Target : %s, conf: %.2f, x: %.3f, y: %.3f, z: %.3f", rst.armor_name.c_str(), rst.conf, rst.tvec[0], rst.tvec[1], rst.tvec[2]);
+                RCLCPP_INFO(this->get_logger(), "Find Target : %s, conf: %.2f, x: %.3f, y: %.3f, z: %.3f", rst.result.c_str(), rst.conf, rst.tvec[0], rst.tvec[1], rst.tvec[2]);
             }
             if (mode == Mode::Dbg) visualize_results(*img_show,d_rsts);
 
