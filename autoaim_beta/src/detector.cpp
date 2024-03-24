@@ -409,12 +409,12 @@ Net_Detector::Net_Detector(Mode mode,
 
 std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>& bin_rois,const std::vector<std::vector<cv::Point2f>>& big_recs) const
 {
-    int batch_size = bin_rois.size();
+    int batch_size ;
     std::vector<detect_result_t> results;
     float conf = 0.0;
     std::string class_name = "";
     int max_idx = 0;
-    float* output_buffer = (*engine)(bin_rois);
+    float* output_buffer = (*engine)(bin_rois,batch_size);
     for (int i = 0; i < batch_size; i+=this->class_num)
     {  
         for (int j = i; j < this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}

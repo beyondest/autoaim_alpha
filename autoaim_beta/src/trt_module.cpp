@@ -80,6 +80,13 @@ static inline int argmax(const float *ptr, int len) {
     return max_arg;
 }
 
+static inline cv::Mat concatMats(const std::vector<cv::Mat>& imgs,const int& max_batchsize, int& this_batchsize) {
+    this_batchsize = std::min(static_cast<int>(mats.size()), max_batchsize); 
+    std::vector<cv::Mat> selectedMats(mats.begin(), mats.begin() + this_batchsize);
+    cv::Mat result;
+    cv::vconcat(selectedMats, result);
+    return result;
+}
 
 
 TRTModule::TRTModule(const std::string &onnx_file) {
@@ -251,12 +258,12 @@ TRT_Engine::TRT_Engine(const std::string& trt_file,
     TRT_ASSERT((engine = runtime->deserializeCudaEngine(buffer.get(), sz)) != nullptr);
     runtime->destroy();
 
-
     TRT_ASSERT((context = engine->createExecutionContext()) != nullptr);
     TRT_ASSERT((input_idx = engine->getBindingIndex(this->params.input_name.c_str())) == 0);
     TRT_ASSERT((output_idx = engine->getBindingIndex(this->params.output_name.c_str())) == 1);
     auto input_dims = engine->getBindingDimensions(input_idx);
     auto output_dims = engine->getBindingDimensions(output_idx);
+    if (input_dims.d[0] == -1) this->if_dynamic_shape = true;
     input_dims.d[0] = input_dims.d[0] == -1? this->params.max_batchsize : input_dims.d[0];
     output_dims.d[0] = output_dims.d[0] == -1? this->params.max_batchsize : output_dims.d[0];
 
@@ -285,15 +292,15 @@ TRT_Engine::~TRT_Engine()
 
 }
 
-float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs) const
+float* TRT_Engine::operator()(const std::vector<cv::Mat> &src_imgs, int& this_batchsize) const
 {
-    cv::Mat target;    
-    cv::vconcat(src_imgs, target);
-    target.convertTo(target, CV_32F, 1.0 / 255.0);
-
-    auto dims = this->engine->getBindingDimensions(0);
-    dims.d[0] = src_imgs.size();
-    context->setBindingDimensions(0, dims);
+    auto target = concatMats(src_imgs, this->params.max_batchsize, this_batchsize);
+    if (this->if_dynamic_shape)
+    {
+        auto dims = this->engine->getBindingDimensions(0);
+        dims.d[0] = src_imgs.size();
+        context->setBindingDimensions(0, dims);
+    }
     cudaMemcpyAsync(device_buffer[input_idx], target.data, input_sz * sizeof(float), cudaMemcpyHostToDevice, stream);
     context->enqueue(1, device_buffer, stream, nullptr);
     cudaMemcpyAsync(output_buffer, device_buffer[output_idx], output_sz * sizeof(float), cudaMemcpyDeviceToHost, stream);
@@ -315,6 +322,7 @@ bool TRT_Engine_Params::load_params_from_yaml(const std::string& file_path)
     return true;
 
 }
+
 
 void TRT_Engine_Params::print_show_params()
 {

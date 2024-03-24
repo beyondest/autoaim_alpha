@@ -97,7 +97,7 @@ private:
     cudaStream_t stream;
     int input_idx, output_idx;
     size_t input_sz, output_sz;
-
+    bool if_dynamic_shape = false;
     TRT_Engine_Params params;
 
 public:
@@ -109,7 +109,7 @@ public:
 
     TRT_Engine operator=(const TRT_Engine &) = delete;
 
-    float* operator()(const std::vector<cv::Mat> &src_imgs) const;    
+    float* operator()(const std::vector<cv::Mat> &src_imgs, int& this_batchsize) const;    
 
 };
 
