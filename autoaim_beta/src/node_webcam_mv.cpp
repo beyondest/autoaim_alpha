@@ -19,7 +19,6 @@ std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
 std::string tradition_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/tradition_config";
 std::string net_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config";
 std::string pnp_config_params_path = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/other_config/pnp_params.yaml";
-
 using namespace std::chrono_literals;
 
 class Node_Webcam_MV : public rclcpp::Node
@@ -34,6 +33,8 @@ private:
     bool if_show_img_remote = false;
     int img_show_wid = 640;
     int img_show_hei = 384;
+    cv::Mat* img = nullptr;
+    cv::Mat* img_show = nullptr;
     rclcpp::Publisher<autoaim_interface::msg::DetectResult>::SharedPtr pub_detect_result_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_img_for_visualize_;
     rclcpp::TimerBase::SharedPtr timer_;
@@ -41,8 +42,6 @@ private:
     Mindvision_Camera* mv = nullptr;
     Net_Detector* net_detector = nullptr;
     PNP_Solver* pnp_solver = nullptr;
-    cv::Mat* img = nullptr;
-    cv::Mat* img_show = nullptr;
     std::chrono::time_point<std::chrono::high_resolution_clock> pre_t = std::chrono::high_resolution_clock::now();
 
 public:
@@ -61,6 +60,7 @@ public:
         int node_webcam_mv_ms = general_config["node_webcam_mv_ms"].as<int>();
         this->if_show_img_local = general_config["if_show_img_local"].as<bool>();
         this->if_show_img_remote = general_config["if_show_img_remote"].as<bool>();
+        
         std::vector<Enemy_Car_Info> enemy_car_info_list;
         for (size_t i = 0; i < general_config["enemy_car_info"].size(); i++)
         {
@@ -70,7 +70,7 @@ public:
             enemy_car_info_list.push_back(enemy_car_info);
             RCLCPP_WARN(this->get_logger(), "ENEMY_CAR_INFO: %s %d", enemy_car_info.armor_name.c_str(), enemy_car_info.armor_nums);
         }
-        this->img = new cv::Mat(1280,1024,CV_8UC3);
+        this->img = new cv::Mat(1024,1280,CV_8UC3);
         this->img_show = new cv::Mat(img_show_hei,img_show_wid,CV_8UC3);
         this->mv = new Mindvision_Camera(mode,camera_config_folder,false,armor_color,if_yolov5);
         if (!if_yolov5)
@@ -96,17 +96,16 @@ public:
         delete mv;
         delete net_detector;
         delete pnp_solver;
-        delete img_show;
         delete img;
+        delete img_show;
     }
 private:
     void timer_callback()
     {
         auto msg = autoaim_interface::msg::DetectResult();
         auto msg_each = autoaim_interface::msg::EachDetectResult();
-        
         mv->get_img(*img);
-        cv::resize(*img,*img_show,cv::Size(img_show_wid,img_show_hei));
+        cv::resize(*img,*img_show,cv::Size(img_show_hei,img_show_wid));
         if(if_reverse) cv::flip(*img_show,*img_show,-1);
         if(!if_yolov5)
         {
