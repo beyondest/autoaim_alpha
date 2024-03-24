@@ -71,7 +71,7 @@ int main()
                 cv::flip(img_show,img_show, -1);
 
                 results = trt_module(img_show);
-            
+                
                 for (auto &b : results)
                 {
                     
@@ -80,6 +80,7 @@ int main()
                     cv::line(img_show, b.pts[2], b.pts[3], colors[2], 2);
                     cv::line(img_show, b.pts[3], b.pts[0], colors[2], 2);
                     cv::putText(img_show, std::to_string(b.tag_id), b.pts[0], cv::FONT_HERSHEY_SIMPLEX, 1, colors[b.color_id]);
+                    std::cout <<"color_id: " << b.color_id << std::endl;
                 } 
 
                 cv::imshow("camera", img_show);
