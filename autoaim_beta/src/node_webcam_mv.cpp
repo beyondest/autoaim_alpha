@@ -41,7 +41,7 @@ private:
     Mindvision_Camera* mv = nullptr;
     Net_Detector* net_detector = nullptr;
     PNP_Solver* pnp_solver = nullptr;
-    cv::Mat* img;
+    cv::Mat* img = nullptr;
     cv::Mat* img_show = nullptr;
     std::chrono::time_point<std::chrono::high_resolution_clock> pre_t = std::chrono::high_resolution_clock::now();
 
