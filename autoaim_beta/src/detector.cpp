@@ -469,7 +469,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
     for (auto& result : yolo_results)
     {
         bool if_in_target_list = false;
-        std::string armor_name_string = std::to_string(result.class_id) + std::to_string(result.tag_id);
+        std::string armor_name_string = std::to_string(result.color_id) + std::to_string(result.tag_id);
         for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == armor_name_string) {if_in_target_list = true;break;}
         if (!if_in_target_list) continue;
         if (result.confidence < this->params.conf_thres) continue;
