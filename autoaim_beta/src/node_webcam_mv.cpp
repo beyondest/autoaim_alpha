@@ -62,11 +62,11 @@ public:
         this->if_show_img_remote = general_config["if_show_img_remote"].as<bool>();
         
         std::vector<Enemy_Car_Info> enemy_car_info_list;
-        for (size_t i = 0; i < general_config["enemy_car_info"].size(); i++)
+        for (size_t i = 0; i < general_config["enemy_car_list"].size(); i++)
         {
             Enemy_Car_Info enemy_car_info;
-            enemy_car_info.armor_name = general_config["enemy_car_info"][i]["armor_name"].as<std::string>();
-            enemy_car_info.armor_nums = general_config["enemy_car_info"][i]["armor_nums"].as<int>();
+            enemy_car_info.armor_name = general_config["enemy_car_list"][i]["armor_name"].as<std::string>();
+            enemy_car_info.armor_nums = general_config["enemy_car_list"][i]["armor_nums"].as<int>();
             enemy_car_info_list.push_back(enemy_car_info);
             RCLCPP_WARN(this->get_logger(), "ENEMY_CAR_INFO: %s %d", enemy_car_info.armor_name.c_str(), enemy_car_info.armor_nums);
         }
@@ -175,6 +175,7 @@ int main(int argc, char * argv[])
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<Node_Webcam_MV>());
     rclcpp::shutdown();
+    spdlog::get("lr1")->flush();
     return 0;
 }
 
