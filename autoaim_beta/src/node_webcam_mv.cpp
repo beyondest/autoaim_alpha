@@ -43,7 +43,7 @@ private:
     PNP_Solver* pnp_solver = nullptr;
     cv::Mat* img;
     cv::Mat* img_show = nullptr;
-    auto pre_t = std::chrono::high_resolution_clock::now();
+    std::chrono::time_point<std::chrono::high_resolution_clock> pre_t = std::chrono::high_resolution_clock::now();
 
 public:
     Node_Webcam_MV()
@@ -107,12 +107,12 @@ private:
         
         mv->get_img(*img);
         cv::resize(*img,*img_show,cv::Size(img_show_wid,img_show_hei));
-        if(if_reverse) cv::flip(*img_show,-1);
+        if(if_reverse) cv::flip(*img_show,*img_show,-1);
         if(!if_yolov5)
         {
             std::vector<std::vector<cv::Point2f>> big_rec_list;
             std::vector<cv::Mat> roi_list;
-            (*tradition_detector)(img_show,big_rec_list,roi_list);
+            (*tradition_detector)(*img_show,big_rec_list,roi_list);
             if (big_rec_list.size() > 0) 
             {
                 auto d_rsts =(*net_detector)(roi_list,big_rec_list);
