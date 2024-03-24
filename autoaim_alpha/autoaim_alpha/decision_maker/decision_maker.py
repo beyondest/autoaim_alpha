@@ -199,7 +199,7 @@ class Decision_Maker:
 
                 relative_yaw = -np.arctan(img_x / 651.7) 
                 pid_rel_yaw = -self.yaw_pid_controller.get_output(0.0,relative_yaw)
-                relative_pitch = -np.arctan(img_y / 969.7)
+                relative_pitch = -np.arctan(img_y /581.3) # 581.3 = 384/2/np.tan(0.319),384 is img_show_hei
                 pid_rel_pit = self.pitch_pid_controller.get_output(0.0,relative_pitch) 
                 
                 

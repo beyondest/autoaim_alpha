@@ -1,8 +1,8 @@
-# img_y is from -320 to 320
+# img_y is from -192 to 192
 # Vertical Feild of View : max: -23 ~ 23,  or ~ -20 ~ 20 degree considering focal length change(-0.319 to 0.319 radian)
 # x = img_x /f * deep, x / deep = img_x /f
-# f = 687~775, f = 700, or img_y / f = tan(0.319) = 0.330, f = 969.7
-# img_x = 0 ~ 320
+# f = 687~775, f = 700, or img_y / f = tan(0.319) = 0.330, f = 581.32
+
 #relative_yaw = -np.arctan(img_x / 700) 
 #pid_rel_yaw = -self.yaw_pid_controller.get_output(0.0,relative_yaw)
 #relative_pitch = -np.arctan(img_z / 700)
