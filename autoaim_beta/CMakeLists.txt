@@ -73,7 +73,7 @@ add_executable(node_webcam_mv ${ROOT_DIR}/src/node_webcam_mv.cpp
                               ${ROOT_DIR}/src/mv_class.cpp
                               ${ROOT_DIR}/src/trt_module.cpp
                               ${TensorRT_SOURCE})
-ament_target_dependencies(node_webcam_mv rclcpp autoaim_interface sensor_msgs)
+ament_target_dependencies(node_webcam_mv rclcpp autoaim_interface sensor_msgs cv_bridge)
 target_link_libraries(node_webcam_mv ${OpenCV_LIBS} 
                                      ${lib_list} 
                                      ${spdlog_LIBRARIES}
