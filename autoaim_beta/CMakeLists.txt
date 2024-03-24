@@ -5,8 +5,7 @@ set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(EXECUTABLE_OUTPUT_PATH ${ROOT_DIR}/build/exe)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib)
-set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #set(USE_EIGEN ON)
@@ -14,7 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(autoaim_beta CXX)
 
-
+include(FindTensorRT.cmake)
 find_package(OpenCV REQUIRED)
 #find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -23,7 +22,7 @@ find_package(ament_cmake REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(spdlog REQUIRED)
-
+#find_package(TensorRT REQUIRED)
 
 set(lib_list)
 set(header_list)
@@ -50,13 +49,17 @@ list(APPEND inc_list /usr/local/include " ")
 list(APPEND lib_list /usr/local/lib/libyaml-cpp.a
                      /lib/libMVSDK.so)
 
-include_directories(${inc_list} PUBLIC ${OpenCV_INCLUDE_DIRS} ${spdlog_INCLUDE_DIRS})
+include_directories(${inc_list} PUBLIC 
+                                ${OpenCV_INCLUDE_DIRS} 
+                                ${spdlog_INCLUDE_DIRS}
+                                ${TensorRT_INCLUDE_DIRS} )
 
 
 
 
 
-add_compile_options(-Wall -Wextra -Wpedantic)
+
+add_compile_options(-Wall -Wextra -Wpedantic -Wno-deprecated-declarations -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -90,4 +93,6 @@ install(
 
 
 
+
 ament_package()
+
