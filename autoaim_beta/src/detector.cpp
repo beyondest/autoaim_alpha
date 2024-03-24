@@ -477,7 +477,9 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
         result.pts = extendRectangle(result.pts,0,0.3);
         std::vector<float> tvec = {0, 0, 0};
         std::vector<float> rvec = {0, 0, 0};
-        results.push_back(detect_result_t{result.pts,result.confidence,armor_name_string,tvec,rvec});
+        std::vector<cv::Point2f> big_rec;
+        for (auto& point : result.pts) big_rec.push_back(cv::Point2f(point.x,point.y));
+        results.push_back(detect_result_t{big_rec,result.confidence,armor_name_string,tvec,rvec});
     }
     return results;
 }
