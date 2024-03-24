@@ -81,8 +81,8 @@ static inline int argmax(const float *ptr, int len) {
 }
 
 static inline cv::Mat concatMats(const std::vector<cv::Mat>& imgs,const int& max_batchsize, int& this_batchsize) {
-    this_batchsize = std::min(static_cast<int>(mats.size()), max_batchsize); 
-    std::vector<cv::Mat> selectedMats(mats.begin(), mats.begin() + this_batchsize);
+    this_batchsize = std::min(static_cast<int>(imgs.size()), max_batchsize); 
+    std::vector<cv::Mat> selectedMats(imgs.begin(), imgs.begin() + this_batchsize);
     cv::Mat result;
     cv::vconcat(selectedMats, result);
     return result;
