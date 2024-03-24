@@ -13,7 +13,7 @@
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-std::string general_config_yaml_path = "~/ggbond/autoaim_ws/src/autoaim_alpha/config/general_config.yaml";
+std::string general_config_yaml_path = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/general_params.yaml";
 std::string camera_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/camera_config";
 std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
 std::string tradition_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/tradition_config";
@@ -55,7 +55,7 @@ public:
         auto armor_color = general_config["armor_color"].as<std::string>();
         RCLCPP_WARN(this->get_logger(), "ENEMY_CAR_COLOR: %s", armor_color.c_str());
         this->if_yolov5 = general_config["if_yolov5"].as<bool>();
-        this->if_reverse = general_config["if_reverse"].as<bool>();
+        this->if_reverse = general_config["if_reverse_img"].as<bool>();
         this->img_show_wid = general_config["img_show_wid"].as<int>();
         this->img_show_hei = general_config["img_show_hei"].as<int>();
         int node_webcam_mv_ms = general_config["node_webcam_mv_ms"].as<int>();
