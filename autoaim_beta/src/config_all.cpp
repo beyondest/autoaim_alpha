@@ -30,14 +30,11 @@ std::string log_save_folder = "/home/rcclub/.ros/log/custom_log";
 std::string tradition_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/tradition_config";
 std::string net_config_folder = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/net_config";
 std::string pnp_config_params_path = "/home/rcclub/ggbond/autoaim_ws/src/autoaim_alpha/config/other_config/pnp_params.yaml";
-std::vector<int> roi_shape = {32,32};
-
 
 std::chrono::high_resolution_clock::time_point t1, t2;
 int fps = 0;
-
-
 std::vector<Enemy_Car_Info> enemy_car_info_list;
+
 
 int main()
 {
@@ -52,7 +49,7 @@ int main()
                             true);
 
         Tradition_Detector detector(mode, tradition_config_folder, armor_color);
-        Net_Detector net_detector(mode,net_config_folder,false,enemy_car_info_list);
+        Net_Detector net_detector(mode,net_config_folder,if_yolov5,enemy_car_info_list);
         PNP_Solver pnp_solver(mode,pnp_config_params_path,img_show_wid,img_show_hei);
         Mindvision_Camera mv(mode,
                             camera_config_folder,

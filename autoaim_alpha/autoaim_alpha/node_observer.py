@@ -66,12 +66,12 @@ class Node_Observer(Node,Custom_Context_Obj):
             tvec = np.array([each_detect_result.pose.pose.position.x,
                              each_detect_result.pose.pose.position.y,
                              each_detect_result.pose.pose.position.z])
-            q = Quaternion(each_detect_result.pose.pose.orientation.w,
+            '''q = Quaternion(each_detect_result.pose.pose.orientation.w,
                            each_detect_result.pose.pose.orientation.x,
                            each_detect_result.pose.pose.orientation.y,
-                           each_detect_result.pose.pose.orientation.z)
-            
-            rvec = q.get_axis() * q.angle
+                           each_detect_result.pose.pose.orientation.z)'''
+            #rvec = q.get_axis() * q.angle
+            rvec = np.array([0.0,0.0,1.0])
             t = each_detect_result.pose.header.stamp.sec + each_detect_result.pose.header.stamp.nanosec * 1e-9
             all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':t})
 
