@@ -71,7 +71,7 @@ public:
             RCLCPP_WARN(this->get_logger(), "ENEMY_CAR_INFO: %s %d", enemy_car_info.armor_name.c_str(), enemy_car_info.armor_nums);
         }
         this->img = new cv::Mat(1024,1280,CV_8UC3);
-        this->img_show = new cv::Mat(img_show_hei,img_show_wid,CV_8UC3);
+        this->img_show = new cv::Mat(img_show_wid,img_show_hei,CV_8UC3);
         this->mv = new Mindvision_Camera(mode,camera_config_folder,false,armor_color,if_yolov5);
         if (!if_yolov5)
         {
@@ -105,7 +105,7 @@ private:
         auto msg = autoaim_interface::msg::DetectResult();
         auto msg_each = autoaim_interface::msg::EachDetectResult();
         mv->get_img(*img);
-        cv::resize(*img,*img_show,cv::Size(img_show_hei,img_show_wid));
+        cv::resize(*img,*img_show,cv::Size(img_show_wid,img_show_hei));
         if(if_reverse) cv::flip(*img_show,*img_show,-1);
         if(!if_yolov5)
         {
