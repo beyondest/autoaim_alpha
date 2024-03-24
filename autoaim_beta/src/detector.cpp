@@ -230,7 +230,6 @@ armor_color(armor_color_)
     if (this->mode == Mode::Dbg)    
     {
         this->params.print_show_params();
-        spdlog::warn("FUCK");
     }
     
 }
