@@ -32,10 +32,10 @@ class Node_Visualizer(Node,Custom_Context_Obj):
         super().__init__(name)
         
         
-        self.sub_img_for_vis = self.create_subscription(topic_img_raw['type'],
-                                                        topic_img_raw['name'],
+        self.sub_img_for_vis = self.create_subscription(topic_img_for_visualize['type'],
+                                                        topic_img_for_visualize['name'],
                                                         self.img_for_vis_callback,
-                                                        topic_img_raw['qos_profile'])
+                                                        topic_img_for_visualize['qos_profile'])
             
         self.sub_ele_sys_com = self.create_subscription(topic_electric_sys_com['type'],
                                                         topic_electric_sys_com['name'],

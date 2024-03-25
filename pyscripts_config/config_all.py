@@ -62,14 +62,15 @@ if __name__ == '__main__':
             t2 = time.perf_counter()
             print(f'get_img time:{t2-t1}')
             #img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-            #result_list,t = de.get_result(img)
+            result_list,t = de.get_result(img)
 
             t3 = time.perf_counter()
             print(f'get_result_time:{t3-t2}')
             
             
-            #img = de.visualize(img,fps)
-                    
+            img = de.visualize(img,fps)
+            cv2.imshow('camera',img)
+            cv2.waitKey(1)
             
             #ca._detect_trackbar_config()
             #de.tradition_detector._detect_trackbar_config()
