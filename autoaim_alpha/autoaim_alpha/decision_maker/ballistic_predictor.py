@@ -207,11 +207,12 @@ class Ballistic_Predictor:
         if delta < 0:
             lr1.error(f"Ballistic_Predictor : get pitch diff failed, delta < 0, x1: {x1:.3f}, a: {a:.3f}, b: {b:.3f}, c: {c:.3f}, delta: {delta:.3f}")
             return 0.0
+        cos_theta_1_1 = (-b + np.sqrt(delta)) / (2 * a)
+        
         if cos_theta_1_1 > 1:
             cos_theta_1_1 = 1
             lr1.error(f"Ballistic_Predictor : get pitch diff error,  cos_theta_1_1 > 1, x1: {x1:.3f}, a: {a:.3f}, b: {b:.3f}, c: {c:.3f}, delta: {delta:.3f}, cos_theta_1_1: {cos_theta_1_1:.3f}")
         
-        cos_theta_1_1 = (-b + np.sqrt(delta)) / (2 * a)
         #cos_theta_1_2 = (-b - np.sqrt(delta)) / (2 * a)
         
         theta_1 = np.arccos(cos_theta_1_1)
