@@ -140,9 +140,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         
         com_msg = ElectricsysCom()
-        
+        t1 = time.time()
         next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
-        
+        t2 = time.time()
+        if node_decision_maker_mode == 'Dbg':
+            self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
+            
+            
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch
         com_msg.target_abs_yaw = next_yaw
