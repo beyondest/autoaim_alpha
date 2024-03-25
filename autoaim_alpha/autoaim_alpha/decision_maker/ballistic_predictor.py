@@ -206,6 +206,9 @@ class Ballistic_Predictor:
         cos_theta_1_1 = (-b + np.sqrt(delta)) / (2 * a)
         theta_1 = np.arccos(cos_theta_1_1)
         # cos_theta_1_2 = (-b - np.sqrt(delta)) / (2 * a) must be negative, so ignore it
+        if self.mode == 'Dbg':
+            lr1.debug(f"Ballistic_Predictor : x1: {x1:.3f}, theta_2: {theta_2:.3f}, a: {a:.3f}, b: {b:.3f}, delta: {delta:.3f}, cos_theta_1_1: {cos_theta_1_1:.3f}, theta_1: {theta_1:.3f}")
+        
         return theta_2 - theta_1
         
         
