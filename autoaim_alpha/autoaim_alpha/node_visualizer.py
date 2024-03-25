@@ -49,7 +49,10 @@ class Node_Visualizer(Node,Custom_Context_Obj):
 
         self.detect_window_name = 'detect_img'
 
-        
+        self.cur_yaw = 0
+        self.cur_pitch = 0
+        self.target_yaw = 0
+        self.target_pitch = 0
         
         self.bridge = CvBridge()
         self.get_logger().warn(f"!!!You have started visualizer, armor_name_to_draw_pos need to be set if armor_name is new!!!")

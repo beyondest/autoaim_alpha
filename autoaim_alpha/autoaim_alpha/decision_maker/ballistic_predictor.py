@@ -48,11 +48,14 @@ class Ballistic_Predictor_Params(Params):
         self.newton_error_tolerance = 0.01 # error tolerance for newton method, radian angle
         self.newton_dx = 0.001 # step for newton method, radian angle
         
-        self.target_min_hei_above_ground = 0.10 # m, min height of target above ground
         self.max_shooting_dis_in_pivot_frame = 10 # m, max shooting distance in camera frame, consider target min height
         self.max_shooting_hei_above_ground = 0    # need to be updated by cal_max_shooting_hei_above_ground()
         
-        self.gun_pivot_height_above_ground = 0.375 # m, height of camera above ground
+        self.gun_pivot_height_above_ground = 0.367 # m, height of camera above ground, h2
+        self.camera_height_above_gun_pivot = 0.041 # m, height of camera above gun pivot, h3
+        self.target_height_above_gound = 0.10 # m,  height of target above ground, h1
+        
+        
         self.learning_rate = 0.002 # learning rate for gradient descent method
         self.gradient_error_tolerance = 0.001 # error tolerance for gradient descent method, radian angle
         
@@ -92,8 +95,19 @@ class Ballistic_Predictor:
         self.params.muzzle_pos_in_gun_pivot_frame = np.array([0.0, 
                                                               self.params.muzzle_radius * np.cos(self.params.muzzle_init_theta),
                                                               self.params.muzzle_radius * np.sin(self.params.muzzle_init_theta), ])
-
         
+        self.h1 = self.params.target_height_above_gound
+        self.h2 = self.params.gun_pivot_height_above_ground
+        self.h3 = self.params.camera_height_above_gun_pivot
+        self.h2_m_h1_2_m_h3_2 = (self.h2 - self.h1)**2 - self.h3**2
+        self.h2_m_h1_2 = (self.h2 - self.h1)**2
+        self.h3_h2_m_h1 = self.h3 * (self.h2 - self.h1)
+        self.h3_2 = self.h3**2
+        self.min_depth = (self.h3**2 - (self.h2 - self.h1)**2)/4 # if x1 = depth > min_depth , then get_pitch_diff is solvable
+        if self.mode == 'Dbg':
+            lr1.info(f"Ballistic_Predictor :  min_depth: {self.min_depth:.3f} ,h1: {self.h1:.3f}, h2: {self.h2:.3f}, h3: {self.h3:.3f}, h2_m_h1_2_m_h3_2: {self.h2_m_h1_2_m_h3_2:.3f}, h2_m_h1_2: {self.h2_m_h1_2:.3f}, h3_h2_m_h1: {self.h3_h2_m_h1:.3f}, h3_2: {self.h3_2:.3f}")
+            
+            
      
         
     def save_params_to_yaml(self,yaml_path:str):
@@ -126,12 +140,12 @@ class Ballistic_Predictor:
         
         
         if target_pos_in_camera_frame[1] > self.params.max_shooting_dis_in_pivot_frame \
-            or target_hei_above_ground < self.params.target_min_hei_above_ground\
+            or target_hei_above_ground < self.params.target_height_above_gound\
                 or target_hei_above_ground > self.params.max_shooting_hei_above_ground:
                 
             if self.mode == 'Dbg':
                 
-                lr1.warn(f"Ballistic_Predictor : Target out of range, return current yaw and pitch,target_hei_above_ground: {target_hei_above_ground:.3f}, target_dis_in_cam_frame: {target_pos_in_camera_frame[1]:.3f}, shooting_hei_range: {self.params.target_min_hei_above_ground:.3f} - {self.params.max_shooting_hei_above_ground:.3f}, max_shooting_dis_in_pivot_frame: {self.params.max_shooting_dis_in_pivot_frame:.3f}")
+                lr1.warn(f"Ballistic_Predictor : Target out of range, return current yaw and pitch,target_hei_above_ground: {target_hei_above_ground:.3f}, target_dis_in_cam_frame: {target_pos_in_camera_frame[1]:.3f}, shooting_hei_range: {self.params.target_height_above_gound:.3f} - {self.params.max_shooting_hei_above_ground:.3f}, max_shooting_dis_in_pivot_frame: {self.params.max_shooting_dis_in_pivot_frame:.3f}")
                 
             return [cur_yaw, cur_pitch, 0, False]
         
@@ -160,13 +174,49 @@ class Ballistic_Predictor:
         
         return required_yaw, required_pitch, flight_time, if_success
     
+    def get_fire_abs_pitch(self,
+                       depth:float)->float:
+        raise NotImplementedError("Ballistic_Predictor : get_fire_abs_pitch() not implemented yet")
+    
+    def get_pitch_diff(self,depth:float)->float:
+        """
+        Calculate the pitch difference between the camera and gun
+        
+        Args:
+            depth (float): _description_
+        Note:
+            theta_2 : the pitch radians when gun aim at target
+            theta_1 : the pitch radians when camera aim at target
+            if target_height_above_gound > gun_pivot_height_above_ground, then theta_2 > theta_1, otherwise theta_2 < theta_1
+        
+        Returns:
+            theta_2 - theta_1
+        """
+        if depth <= 0:
+            return 0.0
+        
+        x1 = depth
+        
+        theta_2 = np.arctan(abs(self.h2 - self.h1)/x1)
+        
+        a = 1 + self.h2_m_h1_2 / (x1**2)
+        b = 2 * self.h3_h2_m_h1 / (x1**2)
+        delta = 4 + self.h2_m_h1_2_m_h3_2 / (x1**2)
+        
+        cos_theta_1_1 = (-b + np.sqrt(delta)) / (2 * a)
+        theta_1 = np.arccos(cos_theta_1_1)
+        # cos_theta_1_2 = (-b - np.sqrt(delta)) / (2 * a) must be negative, so ignore it
+        return theta_2 - theta_1
+        
+        
+    
     
     def cal_max_shooting_dis_by_gradient(self)->float:
         '''
         Returns:
             float: max shooting distance in camera frame, consider target min height
         '''
-        target_hei_in_world_frame = self.params.target_min_hei_above_ground
+        target_hei_in_world_frame = self.params.target_height_above_gound
         if target_hei_in_world_frame > self.params.max_shooting_hei_above_ground:
             lr1.error(f"Ballistic_Predictor : target min height > max shooting height, {target_hei_in_world_frame} > {self.params.max_shooting_hei_above_ground}")
             lr1.error(f"Ballistic_Predictor : cal max shooting dis by gradient failed, return 0.0")
@@ -195,7 +245,7 @@ class Ballistic_Predictor:
         
         actual_dis = float(actual_dis)
         self.params.max_shooting_dis_in_pivot_frame = actual_dis
-        lr1.info(f"Ballistic_Predictor : target_min_hei_above_ground: {self.params.target_min_hei_above_ground:.3f} , max_shooting_dis_in_pivot_frame: {actual_dis:.3f}")
+        lr1.info(f"Ballistic_Predictor : target_height_above_gound: {self.params.target_height_above_gound:.3f} , max_shooting_dis_in_pivot_frame: {actual_dis:.3f}")
                 
         return actual_dis
             

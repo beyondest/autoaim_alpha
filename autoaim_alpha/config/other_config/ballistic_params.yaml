@@ -1,9 +1,8 @@
 # Debug modifiable value:
 # gun_pivot_height_above_ground 
 # max_shooting_hei_above_ground 
-# target_min_hei_above_ground 
 # max_shooting_dis_in_pivot_frame 
-# target_min_hei_above_ground 
+# target_height_above_gound 
 # pitch_range
 
 
@@ -25,7 +24,7 @@ learning_rate: 0.002
 # base armor height 0.4 m
 max_shooting_dis_in_pivot_frame: 12.0
 max_shooting_hei_above_ground: 5.0
-target_min_hei_above_ground: 0.0
+target_height_above_gound: 0.10 # h2
 
 muzzle_x_len: 0.15
 muzzle_y_len: 0.0

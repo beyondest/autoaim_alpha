@@ -42,11 +42,17 @@ class Decision_Maker_Params(Params):
         
         
         self.if_use_pid_control = True
-        self.fire_mode = 1
+        self.fire_mode = 0
         """fire mode:
-            0: firepower priority
-            1: accuracy priority
-            2: fixed angle interval shooting
+            0: only track target, not shooting, no pitch compensation, no predict
+            1: track target and shooting, apply pitch compensation, no predict
+            2: track target and shooting, apply pitch compensation, predict
+        """
+        self.choose_mode = 0
+        """choose mode:
+            0: precision_first
+            1: distance_first
+            2: balanced
         """
         
 
@@ -77,17 +83,23 @@ class Decision_Maker:
         self.enemy_car_list = enemy_car_list
         if decision_maker_params_yaml_path is not None:
             self.params.load_params_from_yaml(decision_maker_params_yaml_path)
+        if self.params.if_use_pid_control == False:
+            lr1.warning("PID control is disabled, fire mode ignored, apply pitch compensation forced")
         
         self.armor_state_list = [Armor_Params(enemy_car['armor_name'],armor_id) \
                                                         for enemy_car in self.enemy_car_list \
                                                             for armor_id in range(enemy_car['armor_nums'])]
-        
+        self.target = self.armor_state_list[0]
+        self.next_yaw = 0.0
+        self.next_pitch = 0.0
+        self.fire_times = 0
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
         self.remaining_health = 0.0
         self.remaining_ammo = 200
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
+        
         self._init_yaw_pitch_search_data()
         
         self.yaw_idx = 0
@@ -162,6 +174,7 @@ class Decision_Maker:
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
     
+    
     def make_decision(self)->tuple:
         """
         Args:
@@ -169,91 +182,50 @@ class Decision_Maker:
         Returns:
             tuple: next_yaw,next_pitch, fire_times
         """
+        last_update_target_list = self._find_last_update_target()
+        self._choose_target(last_update_target_list)
         
-        target = max(self.armor_state_list,key=lambda x:x.continuous_detected_num)
-        
-        img_x = target.tvec[0]
-        img_y = target.tvec[2]
-        
-        if target.if_update and target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
-            
+        if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
             if not self.params.if_use_pid_control:
-                fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(target.tvec,
-                                                            self.cur_yaw,
-                                                            self.cur_pitch)
-                if if_success:
-                    next_yaw = fire_yaw if not self.if_relative else fire_yaw - self.cur_yaw
-                    next_pitch = fire_pitch if not self.if_relative else fire_pitch - self.cur_pitch
-                    fire_times = 1
-                    lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-                    if self.mode == 'Dbg':
-                        lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, fy = {fire_yaw:.3f}, fp = {fire_pitch:.3f}, ny = {next_yaw:.3f}, np = {next_pitch:.3f}, x = {target.tvec[0]:.3f}, y = {target.tvec[1]:.3f}, z = {target.tvec[2]:.3f}")
-                    
-                else:
-                    next_yaw = 0.0 if self.if_relative else self.cur_yaw
-                    next_pitch = 0.0 if self.if_relative else self.cur_pitch
-                    fire_times = 0
-                    lr1.warn(f"Bad Target, Stay, d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-            
+                # abs pitch, apply pitch compensation automatically
+                self._get_next_yaw_pitch_by_ballistic()
+                        
             else:
-
-                relative_yaw = -np.arctan(img_x / 651.7) 
-                pid_rel_yaw = -self.yaw_pid_controller.get_output(0.0,relative_yaw)
-                relative_pitch = -np.arctan(img_y /581.3) # 581.3 = 384/2/np.tan(0.319),384 is img_show_hei
-                pid_rel_pit = self.pitch_pid_controller.get_output(0.0,relative_pitch) 
-                
-                
-                if not self.if_relative:
-                    next_yaw = self.cur_yaw + pid_rel_yaw
-                    next_pitch = self.cur_pitch + pid_rel_pit
-                else:
-                    next_yaw = pid_rel_yaw
-                    next_pitch = pid_rel_pit
+                if self.params.fire_mode == 0:
+                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=0.0)
                     
-                fire_times = 1
-                lr1.warn(f"Target Locked {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-                if self.mode == 'Dbg':  
-                    lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, ry = {relative_yaw:.3f}, rp = {relative_pitch:.3f}, ny = {next_yaw:.3f}, np = {next_pitch:.3f}, x = {target.tvec[0]:.3f}, y = {target.tvec[1]:.3f}, z = {target.tvec[2]:.3f}")
+                elif self.params.fire_mode == 1:
+                    gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
+                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=gun_aim_minus_camera_aim_pitch_diff)
                     
-        
         else:
-            if target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
-                next_yaw = 0.0 if self.if_relative else self.cur_yaw
-                next_pitch = 0.0 if self.if_relative else self.cur_pitch
-                fire_times = 0
-                lr1.warn(f"Target Blink, Stay {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}")
-            
-            else: 
-                next_yaw,next_pitch = self._search_target()
-                if self.params.if_use_pid_control:
-                    self.yaw_pid_controller.reset()
-                    self.pitch_pid_controller.reset()
-                fire_times = 0
-                lr1.warn(f'Target Lost {target.name} {target.id} , d,l = {target.continuous_detected_num}, {target.continuous_lost_num}')
-        
+            self._get_next_yaw_pitch_by_stay_or_search()
         if self.params.if_enable_mouse_control:
-            next_yaw,next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
+            self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
+            self.fire_times = 0
             
-        SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,next_yaw)
-        SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,next_pitch) 
+        SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,self.next_yaw)
+        SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,self.next_pitch) 
         
         
         if self.if_relative:
-            next_yaw = CIRCLE(next_yaw, [-np.pi, np.pi])
-            next_pitch = CIRCLE(next_pitch, [-np.pi, np.pi])
+            self.next_yaw = CIRCLE(self.next_yaw, [-np.pi, np.pi])
+            self.next_pitch = CIRCLE(self.next_pitch, [-np.pi, np.pi])
         else:
-            next_yaw = CLAMP(next_yaw, [-np.pi, np.pi])
-            next_pitch = CLAMP(next_pitch, [-np.pi, np.pi])
+            self.next_yaw = CLAMP(self.next_yaw, [-np.pi, np.pi])
+            self.next_pitch = CLAMP(self.next_pitch, [-np.pi, np.pi])
             
         
         
         if self.params.record_data_path is not None:
-            SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,target.tvec)
-            self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([next_yaw,next_pitch]))
+            SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
+            self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
         
         
-        return next_yaw,next_pitch, fire_times
+        return self.next_yaw,self.next_pitch, self.fire_times
 
+    
+    
     
     def _search_target(self):
         if self.if_relative:
@@ -283,7 +255,7 @@ class Decision_Maker:
                     self.pitch_add = True
                     
         else:
-            yaw,pitch = self._get_next_yaw_pitch()
+            yaw,pitch = self._get_search_next_yaw_pitch()
         
         return yaw,pitch
     
@@ -313,7 +285,7 @@ class Decision_Maker:
                 
                 
                 
-    def _get_next_yaw_pitch(self):
+    def _get_search_next_yaw_pitch(self):
         if self.search_mode:
             next_yaw = self.yaw_search_data[self.search_index]
             next_pitch = self.pitch_search_data[self.search_index]
@@ -380,4 +352,84 @@ class Decision_Maker:
         
         self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
         self.mouse_pos_prior = (0,0)
+    
+    def _find_last_update_target(self)->list:
+        last_update_target = []
+        for armor_params in self.armor_state_list:
+            if armor_params.if_update:
+                last_update_target.append(armor_params)
+        return last_update_target
+    
+    def _choose_target(self, last_update_target_list:list):
+        if len(last_update_target_list) == 0:
+            self.target = self.target
+        else:
+            if self.params.choose_mode == 0:
+                self.target = max(last_update_target_list,key=lambda x:x.continuous_detected_num)
+            elif self.params.choose_mode == 1:
+                self.target = min(last_update_target_list,key=lambda x:x.tvec[1])
+            elif self.params.choose_mode == 2:
+                last_update_target_list.sort(key = lambda x : x.tvec[1])
+                for target in last_update_target_list:
+                    target = Armor_Params()
+                    if target.continuous_detected_num >= int(self.params.continuous_detected_num_min_threshold/2)+1:
+                        self.target = target
+                        break
+                else:
+                    self.target = last_update_target_list[0]
+    
+    def _get_next_yaw_pitch_by_stay_or_search(self):
+        
+        if self.target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
+            self.next_yaw = 0.0 if self.if_relative else self.cur_yaw
+            self.next_pitch = 0.0 if self.if_relative else self.cur_pitch
+            self.fire_times = 0
+            lr1.warn(f"Stay cause blink {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
+        
+        else: 
+            self.next_yaw,self.next_pitch = self._search_target()
+            if self.params.if_use_pid_control:
+                self.yaw_pid_controller.reset()
+                self.pitch_pid_controller.reset()
+            self.fire_times = 0
+            lr1.warn(f'Search {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}')
+    
+    def _get_next_yaw_pitch_by_ballistic(self):
+        
+        fire_yaw,fire_pitch,flight_time,if_success = self.ballistic_predictor.get_fire_yaw_pitch(self.target.tvec,
+                                                    self.cur_yaw,
+                                                    self.cur_pitch)
+        if if_success:
+            self.next_yaw = fire_yaw if not self.if_relative else fire_yaw - self.cur_yaw
+            self.next_pitch = fire_pitch if not self.if_relative else fire_pitch - self.cur_pitch
+            self.fire_times = 1
+            lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
+            if self.mode == 'Dbg':
+                lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, fy = {fire_yaw:.3f}, fp = {fire_pitch:.3f}, ny = {self.next_yaw:.3f}, np = {self.next_pitch:.3f}, x = {self.target.tvec[0]:.3f}, y = {self.target.tvec[1]:.3f}, z = {self.target.tvec[2]:.3f}")
+            
+        else:
+            self.next_yaw = 0.0 if self.if_relative else self.cur_yaw
+            self.next_pitch = 0.0 if self.if_relative else self.cur_pitch
+            self.fire_times = 0
+            lr1.warn(f"Stay cause fail to solve , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
+    
+    def _get_next_yaw_pitch_by_pid(self,yaw_pid_target:float = 0.0,pitch_pid_target:float = 0.0):
+        
+        img_x = self.target.tvec[0]
+        img_y = self.target.tvec[2]
+        relative_yaw = -np.arctan(img_x / 651.7) 
+        pid_rel_yaw = -self.yaw_pid_controller.get_output(yaw_pid_target,relative_yaw)
+        relative_pitch = -np.arctan(img_y /581.3) # 581.3 = 384/2/np.tan(0.319),384 is 
+        pid_rel_pit = self.pitch_pid_controller.get_output(pitch_pid_target,relative_pitch) 
+        if not self.if_relative:
+            self.next_yaw = self.cur_yaw + pid_rel_yaw
+            self.next_pitch = self.cur_pitch + pid_rel_pit
+        else:
+            self.next_yaw = pid_rel_yaw
+            self.next_pitch = pid_rel_pit
+            
+        self.fire_times = 1
+        lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
+        if self.mode == 'Dbg':  
+            lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, ry = {relative_yaw:.3f}, rp = {relative_pitch:.3f}, ny = {self.next_yaw:.3f}, np = {self.next_pitch:.3f}, x = {self.target.tvec[0]:.3f}, y = {self.target.tvec[1]:.3f}, z = {self.target.tvec[2]:.3f}")
             

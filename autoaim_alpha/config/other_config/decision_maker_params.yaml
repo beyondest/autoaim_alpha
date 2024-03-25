@@ -2,13 +2,14 @@ yaw_left_degree: -60.0
 yaw_right_degree: 60.0
 pitch_down_degree: -15.0
 pitch_up_degree: 0.0
-yaw_search_step: 0.03
+yaw_search_step: 0.02
         
 pitch_search_left_waves: 5
 pitch_search_right_waves: 6
-fire_mode: 1
-sleep_time_after_move_command: 0.0
-repeat_times_for_move_command: 1
+
+sleep_time_after_move_command: 0.0 # deprecated
+repeat_times_for_move_command: 1   # deprecated
+
 yaw_pitch_history_length: 20
 
 continuous_detected_num_min_threshold: 2
@@ -40,8 +41,8 @@ y_axis_sensitivity: 0.5
 
 if_use_pid_control: True
 
-
-
+fire_mode: 0 # 0 track, 1 pitch_compensation, 2 predict and pitch_compensation
+choose_mode: 0 # 0 precision_first, 1 distance_first, 2 balanced
 
 
 
