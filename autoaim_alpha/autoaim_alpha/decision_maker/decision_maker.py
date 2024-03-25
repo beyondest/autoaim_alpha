@@ -209,6 +209,7 @@ class Decision_Maker:
         if abs(self.next_yaw_history_list[0] - self.next_yaw_history_list[1]) < self.params.min_yaw_thresh_for_fire:
             if self.params.fire_mode != 0:
                 self.fire_times = 1
+                lr1.warn("FIRE !!!")
         else: 
             self.fire_times = 0
     

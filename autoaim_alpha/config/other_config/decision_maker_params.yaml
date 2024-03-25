@@ -15,7 +15,7 @@ yaw_pitch_history_length: 20
 continuous_detected_num_min_threshold: 2
 continuous_lost_num_max_threshold: 15
 
-min_yaw_thresh_for_fire: 0.05
+min_yaw_thresh_for_fire: 0.1
 #min_pitch_thresh_for_fire: 0.01
 
 
