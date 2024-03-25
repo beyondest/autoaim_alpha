@@ -19,7 +19,10 @@ class Node_Observer(Node,Custom_Context_Obj):
                  name,
                 ):
         super().__init__(name)
-
+        self.observer =  Observer(node_observer_mode,
+                                        observer_config_yaml_path,
+                                        enemy_car_list) 
+        
         self.sub = self.create_subscription(
                                             topic_detect_result['type'],
                                             topic_detect_result['name'],
@@ -38,9 +41,7 @@ class Node_Observer(Node,Custom_Context_Obj):
         
         
 
-        self.observer =  Observer(node_observer_mode,
-                                  observer_config_yaml_path,
-                                  enemy_car_list) 
+        
         
         
         

@@ -41,21 +41,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                         topic_show['name'],
                                         topic_show['qos_profile'])
 
-        self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
-                                                      topic_electric_sys_state['name'],
-                                                      self.recv_from_ele_sys_callback,
-                                                      topic_electric_sys_state['qos_profile'])
-        
-        self.sub_armor_pos_list = self.create_subscription(topic_armor_pos_list['type'],
-                                                        topic_armor_pos_list['name'],
-                                                        self.sub_armor_pos_list_callback,
-                                                        topic_armor_pos_list['qos_profile'])
-        
-        
-        self.sub_pid_config = self.create_subscription(topic_pid_config['type'],
-                                                    topic_pid_config['name'],
-                                                    self.sub_pid_config_callback,
-                                                    topic_pid_config['qos_profile'])
         
         self.ballistic_predictor = Ballistic_Predictor(node_decision_maker_mode,
                                                        ballistic_predictor_config_yaml_path,
@@ -86,7 +71,23 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.yaw_test_idx = 0
         self.pitch_test_idx = 0
-
+        
+        self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
+                                                      topic_electric_sys_state['name'],
+                                                      self.recv_from_ele_sys_callback,
+                                                      topic_electric_sys_state['qos_profile'])
+        
+        self.sub_armor_pos_list = self.create_subscription(topic_armor_pos_list['type'],
+                                                        topic_armor_pos_list['name'],
+                                                        self.sub_armor_pos_list_callback,
+                                                        topic_armor_pos_list['qos_profile'])
+        
+        
+        self.sub_pid_config = self.create_subscription(topic_pid_config['type'],
+                                                    topic_pid_config['name'],
+                                                    self.sub_pid_config_callback,
+                                                    topic_pid_config['qos_profile'])
+        
         
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
@@ -136,6 +137,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
+        
         
         com_msg = ElectricsysCom()
         

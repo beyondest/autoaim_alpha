@@ -15,18 +15,7 @@ class Node_Com(Node,Custom_Context_Obj):
         
         super().__init__(name)
         
-        self.ele_sys_state_pub = self.create_publisher(topic_electric_sys_state['type'],
-                                                topic_electric_sys_state['name'],
-                                                topic_electric_sys_state['qos_profile'])
-        
-        self.subscription_ = self.create_subscription(topic_electric_sys_com['type'],
-                                                      topic_electric_sys_com['name'],
-                                                      self.listener_callback,
-                                                      topic_electric_sys_com['qos_profile'])
 
-        #self.timer_send_msg = self.create_timer(1/send_msg_freq, self.timer_send_msg_callback)
-        self.timer_recv_msg = self.create_timer(1/recv_from_ele_sys_freq, self.timer_recv_msg_callback)
-        
         self.port = Port(node_com_mode,
                          port_config_yaml_path)
         
@@ -41,6 +30,19 @@ class Node_Com(Node,Custom_Context_Obj):
         # When init, yaw is 0 in ele_sys, so we need to set it to 0 in this node
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
+        
+        self.ele_sys_state_pub = self.create_publisher(topic_electric_sys_state['type'],
+                                        topic_electric_sys_state['name'],
+                                        topic_electric_sys_state['qos_profile'])
+        
+        self.subscription_ = self.create_subscription(topic_electric_sys_com['type'],
+                                                      topic_electric_sys_com['name'],
+                                                      self.listener_callback,
+                                                      topic_electric_sys_com['qos_profile'])
+
+        #self.timer_send_msg = self.create_timer(1/send_msg_freq, self.timer_send_msg_callback)
+        self.timer_recv_msg = self.create_timer(1/recv_from_ele_sys_freq, self.timer_recv_msg_callback)
+        
         
     def listener_callback(self, msg: ElectricsysCom):
         if self.zero_unix_time is None and gimbal_action_mode != 4:
