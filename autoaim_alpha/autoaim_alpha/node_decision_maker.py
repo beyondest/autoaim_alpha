@@ -25,13 +25,15 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                 1:self.repeat_recv_from_ele_callback,
                                 2:self.test_yaw_callback,
                                 3:self.test_pitch_callback,
-                                4:self.doing_nothing_callback}
+                                4:self.doing_nothing_callback,
+                                5:self.test_fire_callback}
         
         self.action_mode_to_note = {0:"Follow mode",
                                 1:"Repeat recv from ele",
                                 2:"Test yaw",
                                 3:"Test pitch",
-                                4:"Doing nothing"}
+                                4:"Doing nothing",
+                                5:"Test fire"}
         
         self.pub_ele_sys_com = self.create_publisher(topic_electric_sys_com['type'],
                                                 topic_electric_sys_com['name'],
