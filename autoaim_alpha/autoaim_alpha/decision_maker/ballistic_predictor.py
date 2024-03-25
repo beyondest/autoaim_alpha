@@ -106,9 +106,8 @@ class Ballistic_Predictor:
         self.min_depth = (self.h3**2 - (self.h2 - self.h1)**2)/4 # if x1 = depth > min_depth , then get_pitch_diff is solvable
         if self.mode == 'Dbg':
             lr1.info(f"Ballistic_Predictor :  min_depth: {self.min_depth:.3f} ,h1: {self.h1:.3f}, h2: {self.h2:.3f}, h3: {self.h3:.3f}, h2_m_h1_2_m_h3_2: {self.h2_m_h1_2_m_h3_2:.3f}, h2_m_h1_2: {self.h2_m_h1_2:.3f}, h3_h2_m_h1: {self.h3_h2_m_h1:.3f}, h3_2: {self.h3_2:.3f}")
-            
-            
-     
+        
+             
         
     def save_params_to_yaml(self,yaml_path:str):
         self.params.camera_init_theta = None
@@ -201,13 +200,21 @@ class Ballistic_Predictor:
         
         a = 1 + self.h2_m_h1_2 / (x1**2)
         b = 2 * self.h3_h2_m_h1 / (x1**2)
-        delta = 4 + self.h2_m_h1_2_m_h3_2 / (x1**2)
+        c = self.h3_2 / x1**2 - 1
+        
+        #delta = 4 + self.h2_m_h1_2_m_h3_2 / (x1**2)
+        delta = b**2 - 4 * a * c
+        if delta < 0:
+            lr1.error(f"Ballistic_Predictor : get pitch diff failed, delta < 0, x1: {x1:.3f}, a: {a:.3f}, b: {b:.3f}, c: {c:.3f}, delta: {delta:.3f}")
+            return 0.0
         
         cos_theta_1_1 = (-b + np.sqrt(delta)) / (2 * a)
+        cos_theta_1_2 = (-b - np.sqrt(delta)) / (2 * a)
+        
         theta_1 = np.arccos(cos_theta_1_1)
         # cos_theta_1_2 = (-b - np.sqrt(delta)) / (2 * a) must be negative, so ignore it
         if self.mode == 'Dbg':
-            lr1.debug(f"Ballistic_Predictor : x1: {x1:.3f}, theta_2: {theta_2:.3f}, a: {a:.3f}, b: {b:.3f}, delta: {delta:.3f}, cos_theta_1_1: {cos_theta_1_1:.3f}, theta_1: {theta_1:.3f}")
+            lr1.debug(f"Ballistic_Predictor : x1: {x1:.3f}, theta_2: {theta_2:.3f}, a: {a:.3f}, b: {b:.3f}, delta: {delta:.3f}, cos_theta_1_1: {cos_theta_1_1:.3f}, theta_1: {theta_1:.3f}, cos_theta_1_2: {cos_theta_1_2:.3f}")
         
         return theta_2 - theta_1
         
