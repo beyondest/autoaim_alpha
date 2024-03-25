@@ -101,33 +101,7 @@ class Node_Com(Node,Custom_Context_Obj):
         if node_com_mode == 'Dbg':
             self.get_logger().debug(f"First Recv from electric sys, init synchronization time : zero_unix_time {self.zero_unix_time:.3f}")
         
-    def timer_send_msg_callback(self):
-        if self.zero_unix_time is None:
-            self.get_logger().debug(f"No zero_unix_time, waiting for connection")
-            return
-        cur_time = time.time()
-        if cur_time - self.last_sub_topic_time > 0.5:
-            
-            # gimbal just has to stay location, so next_time = cur_time + communication_delay
-            next_time = cur_time + self.port.params.communication_delay
-            self.port.action_data.fire_times = 0
-            self.port.action_data.abs_pitch_10000 = int(0 * 10000)
-            self.port.action_data.abs_yaw_10000 = int(0 * 10000)  # due to int16 is from -32768 to 32767, so we need to convert angle to this range
-            self.port.action_data.reserved_slot = 0
-            minute, second, second_frac = TRANS_UNIX_TIME_TO_T(next_time, self.zero_unix_time)
-            self.port.action_data.target_minute = minute
-            self.port.action_data.target_second = second
-            self.port.action_data.target_second_frac_10000 = int(second_frac * 10000)
-            self.port.send_msg('A')
-            if node_com_mode == 'Dbg':
-                self.get_logger().warn(f"Decision too old, you should control gimbal all time, last sub time {self.last_sub_topic_time:.3f}, cur_time {cur_time:.3f}, remain cur pos")
-            
-        else:
-            
-            self.port.send_msg('A')
-            if node_com_mode == 'Dbg':
-                self.get_logger().debug(f"Obey , cur pos(p,y) {self.cur_pitch:.3f}, {self.cur_yaw:.3f}, target_pos : {self.port.action_data.abs_pitch_10000/10000:.3f}, {self.port.action_data.abs_yaw_10000/10000:.3f}")
-            
+    
     def timer_recv_msg_callback(self):
         
         if_error, current_yaw, current_pitch, cur_time_minute, cur_time_second, cur_time_second_frac = self.port.recv_feedback()

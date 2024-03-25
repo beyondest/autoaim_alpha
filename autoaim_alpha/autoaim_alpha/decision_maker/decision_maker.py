@@ -212,6 +212,7 @@ class Decision_Maker:
                 lr1.warn("FIRE !!!")
         else: 
             self.fire_times = 0
+            lr1.warn("NOT FIRE!!!")
     
         if self.if_relative:
             self.next_yaw = CIRCLE(self.next_yaw, [-np.pi, np.pi])

@@ -28,7 +28,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                 4:self.doing_nothing_callback,
                                 5:self.test_fire_callback}
         
-        self.action_mode_to_note = {0:"Follow mode",
+        self.action_mode_to_note = {0:"Make decision mode",
                                 1:"Repeat recv from ele",
                                 2:"Test yaw",
                                 3:"Test pitch",

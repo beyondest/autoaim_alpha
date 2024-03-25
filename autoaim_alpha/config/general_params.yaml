@@ -9,7 +9,7 @@ mode : Dbg
 # 3: test gimbal, turn down, then turn up, then turn down, then turn horizontal
 # 4: doing nothing, use rqt to control gimbal, use rqt to see target value
 # 5: test_fire mode
-gimbal_action_mode: 4
+gimbal_action_mode: 0
 if_relative: False
 
 if_ignore_elesys: True
@@ -29,7 +29,7 @@ enemy_car_list :
 - armor_distance:
   - 0.5
   - 0.5
-  armor_name: B3
+  armor_name: "03"
   armor_nums: 1  
 #- armor_distance:
 #  - 0.5
@@ -43,7 +43,7 @@ enemy_car_list :
 
 # in camera frame
 armor_name_to_init_state:
-  B3:
+  "03":
     rvec:
     - 0.0
     - 0.0
