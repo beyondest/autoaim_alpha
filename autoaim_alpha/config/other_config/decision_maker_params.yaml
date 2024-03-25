@@ -1,11 +1,11 @@
-yaw_left_degree: -60.0
-yaw_right_degree: 60.0
-pitch_down_degree: -15.0
-pitch_up_degree: 0.0
+yaw_left_degree: -160.0
+yaw_right_degree: 160.0
+pitch_down_degree: -20.0
+pitch_up_degree: 10.0
 yaw_search_step: 0.02
         
-pitch_search_left_waves: 5
-pitch_search_right_waves: 6
+pitch_search_left_waves: 4
+pitch_search_right_waves: 5
 
 sleep_time_after_move_command: 0.0 # deprecated
 repeat_times_for_move_command: 1   # deprecated
@@ -18,7 +18,6 @@ continuous_lost_num_max_threshold: 15
 
 relative_yaw_move_step: 0.05
 relative_pitch_move_step: 0.03
-relative_pitch_move_step: 0.05
 yaw_idx_max: 100
 pitch_idx_max: 10
 
@@ -34,10 +33,12 @@ screen_width: 1920
 screen_height: 1080
 if_enable_mouse_control: False
 
-# 0-1, x from left to right = 100degree, y from top to bottom = 100degree
+    # 0-1, x from left to right = 100degree, y from top to bottom = 100degree
 x_axis_sensitivity: 0.5
 y_axis_sensitivity: 0.5
 
+
+# general config
 
 if_use_pid_control: True
 
