@@ -84,7 +84,11 @@ public:
         this->pnp_solver = new PNP_Solver(mode,pnp_config_params_path,img_show_wid,img_show_hei);
         this->timer_ = this->create_wall_timer(std::chrono::milliseconds(node_webcam_mv_ms), std::bind(&Node_Webcam_MV::timer_callback, this));
         this->pub_detect_result_ = this->create_publisher<autoaim_interface::msg::DetectResult>("detect_result", 5); // must same as in __init__.py topic_detect_result
-        this->pub_img_for_visualize_ = this->create_publisher<sensor_msgs::msg::Image>("img_for_visualize", 10); // must same as in __init__.py topic_img_for_visualize
+        auto qos = rclcpp::SensorDataQoS();
+        qos.keep_last(10);
+        qos.reliable();
+        qos.durability_volatile();
+        this->pub_img_for_visualize_ = this->create_publisher<sensor_msgs::msg::Image>("img_for_visualize", qos); // must same as in __init__.py topic_img_for_visualize
         
 
         RCLCPP_INFO(this->get_logger(), "Node_Webcam_MV Start");
