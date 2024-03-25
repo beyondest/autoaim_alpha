@@ -9,7 +9,7 @@
 #include <csignal>
 #include <vector>
 
-//#define DEBUG_ROI
+#define DEBUG_ROI
 
 std::string armor_color = "blue";
 Mode mode = Mode::Dbg;
@@ -39,7 +39,7 @@ std::vector<Enemy_Car_Info> enemy_car_info_list;
 int main()
 {
     signal(SIGINT, signal_handler);
-    enemy_car_info_list.push_back(Enemy_Car_Info{"03",1});
+    enemy_car_info_list.push_back(Enemy_Car_Info{"3x",1});
     try
     {
 

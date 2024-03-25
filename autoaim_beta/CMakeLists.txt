@@ -84,7 +84,19 @@ target_link_libraries(node_webcam_mv ${OpenCV_LIBS}
                                      nvonnxparser
                                      cuda)
 
-
+add_executable(config_all2 ${ROOT_DIR}/src/config_all.cpp
+                              ${ROOT_DIR}/src/basic.cpp
+                              ${ROOT_DIR}/src/detector.cpp
+                              ${ROOT_DIR}/src/mv_class.cpp
+                              ${ROOT_DIR}/src/trt_module.cpp
+                              ${TensorRT_SOURCE})
+ament_target_dependencies(config_all2 rclcpp autoaim_interface sensor_msgs cv_bridge)
+target_link_libraries(config_all2 ${OpenCV_LIBS} 
+                                     ${lib_list} 
+                                     ${spdlog_LIBRARIES}
+                                     ${TensorRT_LIBS}
+                                     nvonnxparser
+                                     cuda)
 install(
     TARGETS 
     node_webcam_mv

@@ -255,7 +255,7 @@ IF_SUCCESS Tradition_Detector::operator()(const cv::Mat& img,
 #endif
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, this->close_ksize);
     cv::morphologyEx(img_split[0], img_split[0], cv::MORPH_CLOSE, kernel,cv::Point(-1,-1), 1);
-    cv::morphologyEx(img_split[0], img_split[0], cv::MORPH_OPEN, kernel,cv::Point(-1,-1), 1);
+    //cv::morphologyEx(img_split[0], img_split[0], cv::MORPH_OPEN, kernel,cv::Point(-1,-1), 1);
 #ifdef DEBUG_TRADITION_DETECTOR
     cv::imshow("img_split0", img_split[0]);
     cv::waitKey(1);
