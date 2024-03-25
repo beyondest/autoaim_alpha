@@ -21,7 +21,7 @@ class Decision_Maker_Params(Params):
         self.repeat_times_for_move_command = 3
         
         self.yaw_pitch_history_length = 20
-        
+        self.min_yaw_thresh_for_fire = 0.05
         self.continuous_detected_num_min_threshold = 2
         self.continuous_lost_num_max_threshold = 4
         
@@ -206,8 +206,12 @@ class Decision_Maker:
             
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,self.next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,self.next_pitch) 
-        
-        
+        if abs(self.next_yaw_history_list[0] - self.next_yaw_history_list[1]) < self.params.min_yaw_thresh_for_fire:
+            if self.params.fire_mode != 0:
+                self.fire_times = 1
+        else: 
+            self.fire_times = 0
+    
         if self.if_relative:
             self.next_yaw = CIRCLE(self.next_yaw, [-np.pi, np.pi])
             self.next_pitch = CIRCLE(self.next_pitch, [-np.pi, np.pi])
