@@ -431,6 +431,7 @@ Net_Detector::Net_Detector(Mode mode,
 }
 
 
+
 std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>& bin_rois,const std::vector<std::vector<cv::Point2f>>& big_recs) const
 {
     int batch_size ;
@@ -438,7 +439,8 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
     float conf = 0.0;
     std::string class_name = "";
     float* output_buffer = (*engine)(bin_rois,batch_size);
-    for (int i = 0; i < batch_size; i+=this->class_num)
+    int i_max = (int)(batch_size * this->class_num);
+    for (int i = 0; i < i_max ; i+=this->class_num)
     {  
         int max_idx = i;
         for (int j = i; j < this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}
@@ -456,7 +458,6 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
     }
     return results;
 }
-
 /**
  * @brief: yolov5 detector
  * @note: armor_name_string = color_id + tag_id, color_id 0 for blue, 1 for red,2 for gray, tag 0 for sentry, 1 for 1;
