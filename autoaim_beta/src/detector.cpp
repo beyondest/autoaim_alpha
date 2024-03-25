@@ -221,7 +221,8 @@ armor_color(armor_color_)
     YAML::Node filter2_config = YAML::LoadFile(tradition_config_folder+"/"+armor_color+"/filter2_params.yaml");
     accept_big_rec_ratio_range[0] = filter2_config["accept_aspect_ratio_range"][0].as<float>();
     accept_big_rec_ratio_range[1] = filter2_config["accept_aspect_ratio_range"][1].as<float>();
-
+    accept_big_rec_angle_range[0] = filter2_config["accept_area_range"][0].as<int>();
+    accept_big_rec_angle_range[1] = filter2_config["accept_area_range"][1].as<int>();
     this->params.load_params_from_yaml(preprocess_params_path);
 
     this->gauss_ksize = cv::Size(params.gauss_ksize[0], params.gauss_ksize[1]);
@@ -286,6 +287,7 @@ IF_SUCCESS Tradition_Detector::operator()(const cv::Mat& img,
                     cv::RotatedRect big_rec = cv::minAreaRect(merged_contour);
                     aspect_ratio = big_rec.size.width / big_rec.size.height;
                     if (aspect_ratio < this->accept_big_rec_ratio_range[0] || aspect_ratio > this->accept_big_rec_ratio_range[1]) continue;
+                    if (big_rec.angle < this->accept_big_rec_angle_range[0] || big_rec.angle > this->accept_big_rec_angle_range[1]) continue;   
                     big_rec.points(vertices);
                     std::vector<cv::Point2f> big_rec_contour;
                     for (int k = 0; k < 4; k++) big_rec_contour.push_back(vertices[k]);
@@ -312,7 +314,6 @@ IF_SUCCESS Tradition_Detector::operator()(const cv::Mat& img,
     }
     if (big_rec_list.empty()) return IF_SUCCESS::FAIL;
     cv::Mat roi;
-    cv::RotatedRect big_rec;
     cv::Size roi_shape_ = {this->roi_shape[0], this->roi_shape[1]};
 
     // pick up roi and perspective transform
@@ -440,10 +441,11 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
     std::string class_name = "";
     float* output_buffer = (*engine)(bin_rois,batch_size);
     int i_max = (int)(batch_size * this->class_num);
+    int count = 0;
     for (int i = 0; i < i_max ; i+=this->class_num)
     {  
         int max_idx = i;
-        for (int j = i; j < this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}
+        for (int j = i; j < i + this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}
         conf = sigmoid(output_buffer[max_idx]);
         class_name = this->class_info[std::to_string(max_idx - i)].as<std::string>();
         bool if_in_target_list = false;
@@ -452,9 +454,10 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
         {
             std::vector<float> tvec = {0, 0, 0};
             std::vector<float> rvec = {0, 0, 0};
-            detect_result_t detect_result = {big_recs[i], conf, class_name,tvec,rvec};
+            detect_result_t detect_result = {big_recs[count], conf, class_name,tvec,rvec};
             results.push_back(detect_result);
         }
+        count++;
     }
     return results;
 }

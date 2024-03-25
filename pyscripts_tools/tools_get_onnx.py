@@ -5,7 +5,7 @@ from autoaim_alpha.utils_network.data import *
 
 weight_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/weights/11multi.pth'
 output_path = '/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/weights/11multi.onnx'
-dummy_input = torch.randn(1, 1,32,32)
+dummy_input = torch.randn(20, 1,32,32)
 model = QNet(11)
 
 Data.save_model_to_onnx(model,
@@ -14,7 +14,7 @@ Data.save_model_to_onnx(model,
                         weight_path,
                         input_names=['input'],
                         output_names=['output'],
-                        if_dynamic_batch_size=True
+                        if_dynamic_batch_size=False
                         )
 Data.save_model_to_onnx()
 

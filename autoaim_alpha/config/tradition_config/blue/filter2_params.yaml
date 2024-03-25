@@ -1,8 +1,8 @@
 
-# Deprecated
+# accept_big_rec_angle_range
 accept_area_range:
-- 10
-- 350000
+- 0
+- 360
 
 # 0.4 to 3.13
 accept_aspect_ratio_range:

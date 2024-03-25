@@ -51,6 +51,7 @@ private:
     std::string armor_color;
     std::vector<float> accept_big_rec_ratio_range = {0.01, 10.0};
     std::vector<float> accept_lightbar_ratio_range = {0.5, 2.0};
+    std::vector<int> accept_big_rec_angle_range = {0, 90};
     cv::Size gauss_ksize;
     cv::Size close_ksize;
     const std::vector<int> roi_shape = {32, 32};
