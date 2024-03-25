@@ -437,10 +437,10 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
     std::vector<detect_result_t> results;
     float conf = 0.0;
     std::string class_name = "";
-    int max_idx = 0;
     float* output_buffer = (*engine)(bin_rois,batch_size);
     for (int i = 0; i < batch_size; i+=this->class_num)
     {  
+        int max_idx = i;
         for (int j = i; j < this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}
         conf = sigmoid(output_buffer[max_idx]);
         class_name = this->class_info[std::to_string(max_idx)].as<std::string>();

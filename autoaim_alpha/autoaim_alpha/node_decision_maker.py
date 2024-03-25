@@ -244,7 +244,31 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.decision_maker.pitch_pid_controller.params.kp = msg.pitch_kp
         self.decision_maker.pitch_pid_controller.params.ki = msg.pitch_ki
         self.decision_maker.pitch_pid_controller.params.kd = msg.pitch_kd
-    
+        
+    def test_fire_callback(self):
+        if self.if_connetect_to_ele_sys == False:
+            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            return
+        
+        com_msg = ElectricsysCom()
+        t1 = time.time()
+        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
+        t2 = time.time()
+        if node_decision_maker_mode == 'Dbg':
+            self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
+            
+            
+        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
+        com_msg.target_abs_pitch = self.decision_maker.cur_pitch if not self.decision_maker.if_relative else 0.0
+        com_msg.target_abs_yaw = self.decision_maker.cur_yaw if not self.decision_maker.if_relative else 0.0
+        com_msg.sof = 'A'
+        com_msg.reserved_slot = 0
+        com_msg.fire_times = int(self.decision_maker.pitch_pid_controller.params.ki)
+        
+        self.pub_ele_sys_com.publish(com_msg)
+        if node_decision_maker_mode == 'Dbg':
+            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+       
 
     def _start(self):
         
