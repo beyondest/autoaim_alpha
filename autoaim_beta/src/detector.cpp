@@ -287,7 +287,7 @@ IF_SUCCESS Tradition_Detector::operator()(const cv::Mat& img,
                     cv::RotatedRect big_rec = cv::minAreaRect(merged_contour);
                     aspect_ratio = big_rec.size.width / big_rec.size.height;
                     if (aspect_ratio < this->accept_big_rec_ratio_range[0] || aspect_ratio > this->accept_big_rec_ratio_range[1]) continue;
-                    if (big_rec.angle < this->accept_big_rec_angle_range[0] || big_rec.angle > this->accept_big_rec_angle_range[1]) continue;   
+                    //if (big_rec.angle < this->accept_big_rec_angle_range[0] || big_rec.angle > this->accept_big_rec_angle_range[1]) continue;   
                     big_rec.points(vertices);
                     std::vector<cv::Point2f> big_rec_contour;
                     for (int k = 0; k < 4; k++) big_rec_contour.push_back(vertices[k]);
