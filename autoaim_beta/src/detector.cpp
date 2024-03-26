@@ -53,7 +53,9 @@ void visualize_results(cv::Mat& img_show, const std::vector<detect_result_t> res
         auto rect_int = trans_float_contour_to_int(result.big_rec);
         std::vector<std::vector<cv::Point>> rect_int_list = {rect_int};
         cv::drawContours(img_show,rect_int_list,-1,cv::Scalar(255,0,0),2);
-        cv::putText(img_show,result.result+":"+std::to_string((int)round(result.conf * 100)),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,cv::Scalar(255,0,0),2);
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(2) << result.conf;
+        cv::putText(img_show,result.result+":"+ss.str(),cv::Point(rect_int[0].x,rect_int[0].y),cv::FONT_HERSHEY_SIMPLEX,1,cv::Scalar(255,0,0),2);
         std::string xyz = "xyz";
         for (size_t i = 0; i < 3; i++)
         {
@@ -204,7 +206,7 @@ constexpr float sigmoid(float x) {
 static inline float softmax(float* buffer, int& begin_idx, const int& class_num, int& actual_idx)
 {
     float sum_exp = 0;
-    for (int i = begin_idx; i < class_num; i++) sum_exp += std::exp(buffer[i]);
+    for (int i = begin_idx; i <begin_idx + class_num; i++) sum_exp += std::exp(buffer[i]);
     return std::exp(buffer[actual_idx]) / sum_exp;
 }
 

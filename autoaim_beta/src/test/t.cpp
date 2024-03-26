@@ -1,70 +1,19 @@
-#include <opencv2/opencv.hpp>
-#include <vector>
-
-cv::Mat concatenateMats(const std::vector<cv::Mat>& mats) {
-    // Check if the vector is empty
-    if (mats.empty()) {
-        return cv::Mat();
-    }
-
-    // Calculate the total number of rows
-    int totalRows = mats.size() * mats[0].rows;
-
-
-    // Create the output matrix
-    std::cout <<"type"<<mats[0].type()<<std::endl;
-    cv::Mat concatenatedMat(totalRows, mats[0].cols, mats[0].type());
-    cv::vconcat(mats, concatenatedMat);
-
-
-    /*
-    int currentRow = 0;
-    for (const auto& mat : mats) {
-        cv::Mat subMat = concatenatedMat.rowRange(currentRow, currentRow + mat.rows);
-        mat.copyTo(subMat);
-        currentRow += mat.rows;
-    }*/
-
-    return concatenatedMat;
+#include <iostream>
+#include <cmath>
+static inline float softmax(float* buffer, int& begin_idx, const int& class_num, int& actual_idx)
+{
+    float sum_exp = 0;
+    for (int i = begin_idx; i < class_num; i++) sum_exp += std::exp(buffer[i]);
+    return std::exp(buffer[actual_idx]) / sum_exp;
 }
-
-
-
-cv::Mat matsToBatch(const std::vector<cv::Mat>& mats) {
-    // Concatenate the Mats
-    cv::Mat concatenatedMat = concatenateMats(mats);
-
-    // Reshape the concatenated Mat to batch format
-    cv::Mat batch = concatenatedMat.reshape(1, mats.size()).reshape(0, 1);
-
-    return batch;
-}
-
-static inline cv::Mat concatMats(const std::vector<cv::Mat>& imgs,const int& max_batchsize, int& this_batchsize) {
-    this_batchsize = std::min(static_cast<int>(imgs.size()), max_batchsize); 
-    std::vector<cv::Mat> selectedMats(imgs.begin(), imgs.begin() + this_batchsize);
-    cv::Mat result;
-    cv::vconcat(selectedMats, result);
-    return result;
-}
-
-int main() {
-    // Create some sample Mats
-    cv::Mat mat1 = cv::Mat::ones(3, 3, CV_8UC1) * 1;
-    cv::Mat mat2 = cv::Mat::ones(3, 3, CV_8UC1) * 2;
-    cv::Mat mat3 = cv::Mat::ones(3, 3, CV_8UC1) * 3;
-
-    // Create a vector of Mats
-    std::vector<cv::Mat> mats = {mat1, mat2, mat3};
-    std::cout << "fuck   "<<mats.data()<<std::endl;
-    int b;
-    // Concatenate the Mats
-    cv::Mat concatenatedMat = concatMats(mats, 2,b);
-    std::cout<<b <<std::endl;
-    std::cout << "fuck2  "<<concatenatedMat.data<<std::endl;
-    // Print the concatenated Mat
-    std::cout << "Concatenated Mat:\n" << concatenatedMat << std::endl;
-    std::cout<<"Shape of concatenated Mat:"<<concatenatedMat.size()<<std::endl;
-
+int main()
+{
+    float buffer[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    int begin_idx = 0;
+    int class_num = 10;
+    int actual_idx = 5;
+    softmax(buffer, begin_idx, class_num, actual_idx);
+    std::cout << "softmax result: " << softmax(buffer, begin_idx, class_num, actual_idx) << std::endl;
     return 0;
+
 }
