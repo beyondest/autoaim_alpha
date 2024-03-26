@@ -263,6 +263,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
+        if self.fire_times == -1:
+            self.decision_maker.params.manual_pitch_compensation = self.rel_pitch
+            self.decision_maker.params.manual_yaw_compensation = self.rel_yaw
         
         com_msg = ElectricsysCom()
         t1 = time.time()
@@ -270,11 +273,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         t2 = time.time()
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
-        
-        
-        if self.fire_times == -1:
-            next_yaw = self.rel_yaw if if_relative else self.rel_yaw + self.decision_maker.cur_yaw
-            next_pitch = self.rel_pitch if if_relative else self.rel_pitch + self.decision_maker.cur_pitch
         
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch

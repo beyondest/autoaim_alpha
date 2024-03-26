@@ -21,7 +21,8 @@ continuous_lost_num_max_threshold: 15
 # if apply predict, target.img_x is predicted value, time is depth/flight_time
 min_img_x_for_locked: 10.0
 
-
+manual_pitch_compensation: 0.0
+manual_yaw_compensation: 0.0
 
 relative_yaw_move_step: 0.05
 relative_pitch_move_step: 0.03

@@ -56,7 +56,8 @@ class Decision_Maker_Params(Params):
             2: balanced
         """
         self.min_img_x_for_locked = 10.0
-        
+        self.manual_pitch_compensation = 0.0
+        self.manual_yaw_compensation = 0.0
 
 class Decision_Maker:
     def __init__(self,
@@ -198,8 +199,9 @@ class Decision_Maker:
                     
                 elif self.params.fire_mode == 1:
                     gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
-                    self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff
-                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=gun_aim_minus_camera_aim_pitch_diff)
+                    self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff + self.params.manual_pitch_compensation
+                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
+                                                    pitch_pid_target=self.params.manual_pitch_compensation)
                     
         else:
             self._get_next_yaw_pitch_by_stay_or_search()
