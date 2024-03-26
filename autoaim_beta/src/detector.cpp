@@ -201,6 +201,12 @@ constexpr float sigmoid(float x) {
     return 1 / (1 + std::exp(-x));
 }
 
+static inline float softmax(float* buffer, int& begin_idx, int& class_num, int& actual_idx)
+{
+    float sum_exp = 0;
+    for (int i = begin_idx; i < class_num; i++) sum_exp += std::exp(buffer[i]);
+    return std::exp(buffer[actual_idx]) / sum_exp;
+}
 
 //****************************************************Tradition Detector*************************************************
 
@@ -446,7 +452,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
     {  
         int max_idx = i;
         for (int j = i; j < i + this->class_num; j++){if (output_buffer[j] > output_buffer[max_idx])max_idx = j;}
-        conf = sigmoid(output_buffer[max_idx]);
+        conf = softmax(output_buffer, i, this->class_num, max_idx);
         class_name = this->class_info[std::to_string(max_idx - i)].as<std::string>();
         bool if_in_target_list = false;
         for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == class_name) if_in_target_list = true;                
