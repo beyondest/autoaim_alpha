@@ -71,6 +71,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
             
+            
         self.yaw_test_idx = 0
         self.pitch_test_idx = 0
         
@@ -89,6 +90,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                     topic_pid_config['name'],
                                                     self.sub_pid_config_callback,
                                                     topic_pid_config['qos_profile'])
+        
+        self.pub_debug_fire = self.create_publisher(topic_debug_fire['type'],
+                                                topic_debug_fire['name'],
+                                                topic_debug_fire['qos_profile'])
         
         
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
@@ -266,7 +271,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = int(self.decision_maker.pitch_pid_controller.params.ki)
-        
+        debug_fire_msg = DebugFire()
+        debug_fire_msg.img_x = float(self.decision_maker.target.tvec[0])
+        debug_fire_msg.img_y = float(self.decision_maker.target.tvec[2])
+        debug_fire_msg.depth = float(self.decision_maker.target.tvec[1])
+        debug_fire_msg.pitch_compensation = float(self.decision_maker.pitch_compensation)
+        self.pub_debug_fire.publish(debug_fire_msg)
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")

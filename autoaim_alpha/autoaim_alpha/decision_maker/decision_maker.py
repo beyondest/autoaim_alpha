@@ -101,7 +101,7 @@ class Decision_Maker:
         self.remaining_ammo = 200
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
-        
+        self.pitch_compensation = 0.0
         self._init_yaw_pitch_search_data()
         
         self.yaw_idx = 0
@@ -198,6 +198,7 @@ class Decision_Maker:
                     
                 elif self.params.fire_mode == 1:
                     gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
+                    self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff
                     self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=gun_aim_minus_camera_aim_pitch_diff)
                     
         else:
