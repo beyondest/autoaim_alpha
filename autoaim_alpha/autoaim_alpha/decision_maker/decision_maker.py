@@ -21,8 +21,9 @@ class Decision_Maker_Params(Params):
         self.repeat_times_for_move_command = 3
         
         self.yaw_pitch_history_length = 20
-        self.min_yaw_thresh_for_fire = 0.05
-        self.continuous_detected_num_min_threshold = 2
+        
+        self.continuous_detected_num_for_track = 2
+        self.continuous_detected_num_for_lock = 4
         self.continuous_lost_num_max_threshold = 4
         
         self.relative_yaw_move_step = 0.05
@@ -54,6 +55,7 @@ class Decision_Maker_Params(Params):
             1: distance_first
             2: balanced
         """
+        self.min_img_x_for_locked = 10.0
         
 
 class Decision_Maker:
@@ -185,7 +187,7 @@ class Decision_Maker:
         last_update_target_list = self._find_last_update_target()
         self._choose_target(last_update_target_list)
         
-        if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_min_threshold:
+        if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
             if not self.params.if_use_pid_control:
                 # abs pitch, apply pitch compensation automatically
                 self._get_next_yaw_pitch_by_ballistic()
@@ -202,18 +204,22 @@ class Decision_Maker:
             self._get_next_yaw_pitch_by_stay_or_search()
         if self.params.if_enable_mouse_control:
             self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
-            self.fire_times = 0
             
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,self.next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,self.next_pitch) 
         
-        if abs(self.next_yaw_history_list[0] - self.next_yaw_history_list[1]) < self.params.min_yaw_thresh_for_fire:
-            if self.params.fire_mode != 0:
-                self.fire_times = 0
-                lr1.warn("FIRE !!!")
-        else: 
+        if_locked = self._if_target_locked()
+        if if_locked:
+            self.fire_times = 1
+            lr1.warn("Target Locked, FIRE")
+            if self.mode == 'Dbg':
+                lr1.debug(f"Target Locked, FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+                
+        else:
             self.fire_times = 0
-            lr1.warn("NOT FIRE!!!")
+            if self.mode == 'Dbg':
+                lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+        
     
         if self.if_relative:
             self.next_yaw = CIRCLE(self.next_yaw, [-np.pi, np.pi])
@@ -379,7 +385,7 @@ class Decision_Maker:
                 last_update_target_list.sort(key = lambda x : x.tvec[1])
                 for target in last_update_target_list:
                     target = Armor_Params()
-                    if target.continuous_detected_num >= int(self.params.continuous_detected_num_min_threshold/2)+1:
+                    if target.continuous_detected_num >= int(self.params.continuous_detected_num_for_track/2)+1:
                         self.target = target
                         break
                 else:
@@ -390,7 +396,6 @@ class Decision_Maker:
         if self.target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
             self.next_yaw = 0.0 if self.if_relative else self.cur_yaw
             self.next_pitch = 0.0 if self.if_relative else self.cur_pitch
-            self.fire_times = 0
             lr1.warn(f"Stay cause blink {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
         
         else: 
@@ -398,7 +403,6 @@ class Decision_Maker:
             if self.params.if_use_pid_control:
                 self.yaw_pid_controller.reset()
                 self.pitch_pid_controller.reset()
-            self.fire_times = 0
             lr1.warn(f'Search {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}')
     
     def _get_next_yaw_pitch_by_ballistic(self):
@@ -409,7 +413,6 @@ class Decision_Maker:
         if if_success:
             self.next_yaw = fire_yaw if not self.if_relative else fire_yaw - self.cur_yaw
             self.next_pitch = fire_pitch if not self.if_relative else fire_pitch - self.cur_pitch
-            self.fire_times = 1
             lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
             if self.mode == 'Dbg':
                 lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, fy = {fire_yaw:.3f}, fp = {fire_pitch:.3f}, ny = {self.next_yaw:.3f}, np = {self.next_pitch:.3f}, x = {self.target.tvec[0]:.3f}, y = {self.target.tvec[1]:.3f}, z = {self.target.tvec[2]:.3f}")
@@ -417,7 +420,6 @@ class Decision_Maker:
         else:
             self.next_yaw = 0.0 if self.if_relative else self.cur_yaw
             self.next_pitch = 0.0 if self.if_relative else self.cur_pitch
-            self.fire_times = 0
             lr1.warn(f"Stay cause fail to solve , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
     
     def _get_next_yaw_pitch_by_pid(self,yaw_pid_target:float = 0.0,pitch_pid_target:float = 0.0):
@@ -435,8 +437,14 @@ class Decision_Maker:
             self.next_yaw = pid_rel_yaw
             self.next_pitch = pid_rel_pit
             
-        self.fire_times = 1
         lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
         if self.mode == 'Dbg':  
             lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, ry = {relative_yaw:.3f}, rp = {relative_pitch:.3f}, ny = {self.next_yaw:.3f}, np = {self.next_pitch:.3f}, x = {self.target.tvec[0]:.3f}, y = {self.target.tvec[1]:.3f}, z = {self.target.tvec[2]:.3f}")
-            
+    
+    
+    def _if_target_locked(self):
+        if self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
+            if self.target.if_update:
+                if abs(self.target.tvec[0]) < self.params.min_img_x_for_locked:
+                    return True
+    

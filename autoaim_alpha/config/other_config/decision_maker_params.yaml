@@ -1,7 +1,7 @@
-yaw_left_degree: -160.0
-yaw_right_degree: 160.0
+yaw_left_degree: -30.0
+yaw_right_degree: 30.0
 pitch_down_degree: -20.0
-pitch_up_degree: 10.0
+pitch_up_degree: 0.0
 yaw_search_step: 0.02
         
 pitch_search_left_waves: 4
@@ -12,11 +12,15 @@ repeat_times_for_move_command: 1   # deprecated
 
 yaw_pitch_history_length: 20
 
-continuous_detected_num_min_threshold: 2
+continuous_detected_num_for_track: 2
+continuous_detected_num_for_lock: 4
 continuous_lost_num_max_threshold: 15
 
-min_yaw_thresh_for_fire: 0.1
-#min_pitch_thresh_for_fire: 0.01
+# WARN: Only fit for 640 * 384 img_show size, img_x is x,img_y is z, by default, img_y locked when img_x is locked 
+# only when abs(img_x) < min_img_x_for_locked and continuous_detected_num_for_lock is reached and target.if_update, target is locked
+# if apply predict, target.img_x is predicted value, time is depth/flight_time
+min_img_x_for_locked: 10.0
+
 
 
 relative_yaw_move_step: 0.05
@@ -45,7 +49,7 @@ y_axis_sensitivity: 0.5
 
 if_use_pid_control: True
 
-fire_mode: 0 # 0 track, 1 pitch_compensation, 2 predict and pitch_compensation
+fire_mode: 1 # 0 track, 1 pitch_compensation, 2 predict and pitch_compensation
 choose_mode: 0 # 0 precision_first, 1 distance_first, 2 balanced
 
 

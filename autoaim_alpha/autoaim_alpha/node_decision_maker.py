@@ -261,8 +261,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
             
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
-        com_msg.target_abs_pitch = self.decision_maker.cur_pitch if not self.decision_maker.if_relative else 0.0
-        com_msg.target_abs_yaw = self.decision_maker.cur_yaw if not self.decision_maker.if_relative else 0.0
+        com_msg.target_abs_pitch = next_pitch
+        com_msg.target_abs_yaw = next_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = int(self.decision_maker.pitch_pid_controller.params.ki)
