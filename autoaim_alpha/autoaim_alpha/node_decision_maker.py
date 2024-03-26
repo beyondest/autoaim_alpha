@@ -74,7 +74,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.yaw_test_idx = 0
         self.pitch_test_idx = 0
-        
+        self.rel_yaw = 0.0
+        self.rel_pitch = 0.0
+        self.fire_times = 0
         self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
                                                       topic_electric_sys_state['name'],
                                                       self.recv_from_ele_sys_callback,
@@ -95,6 +97,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                 topic_debug_fire['name'],
                                                 topic_debug_fire['qos_profile'])
         
+        self.sub_gimbal_action = self.create_subscription(topic_gimbal_action['type'],
+                                                    topic_gimbal_action['name'],
+                                                    self.sub_gimbal_action_callback,
+                                                    topic_gimbal_action['qos_profile'])
         
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
@@ -264,24 +270,35 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         t2 = time.time()
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
-            
+        
+        
+        if self.fire_times == -1:
+            next_yaw = self.rel_yaw if if_relative else self.rel_yaw + self.decision_maker.cur_yaw
+            next_pitch = self.rel_pitch if if_relative else self.rel_pitch + self.decision_maker.cur_pitch
+        
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch
         com_msg.target_abs_yaw = next_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
-        com_msg.fire_times = int(self.decision_maker.pitch_pid_controller.params.ki)
+        com_msg.fire_times = self.fire_times if self.fire_times != -1 else 0
         debug_fire_msg = DebugFire()
         debug_fire_msg.img_x = float(self.decision_maker.target.tvec[0])
         debug_fire_msg.img_y = float(self.decision_maker.target.tvec[2])
         debug_fire_msg.depth = float(self.decision_maker.target.tvec[1])
         
         self.pub_debug_fire.publish(debug_fire_msg)
+        
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
-       
 
+
+    def sub_gimbal_action_callback(self, msg:GimbalAction):
+        self.fire_times = msg.fire_times
+        self.rel_pitch = msg.rel_pitch
+        self.rel_yaw = msg.rel_yaw
+        
     def _start(self):
         
         self.get_logger().info(f"Node {self.get_name()} start success")
