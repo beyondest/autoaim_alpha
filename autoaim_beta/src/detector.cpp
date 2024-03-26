@@ -201,7 +201,7 @@ constexpr float sigmoid(float x) {
     return 1 / (1 + std::exp(-x));
 }
 
-static inline float softmax(float* buffer, int& begin_idx, int& class_num, int& actual_idx)
+static inline float softmax(float* buffer, int& begin_idx, const int& class_num, int& actual_idx)
 {
     float sum_exp = 0;
     for (int i = begin_idx; i < class_num; i++) sum_exp += std::exp(buffer[i]);
