@@ -275,7 +275,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         debug_fire_msg.img_x = float(self.decision_maker.target.tvec[0])
         debug_fire_msg.img_y = float(self.decision_maker.target.tvec[2])
         debug_fire_msg.depth = float(self.decision_maker.target.tvec[1])
-        debug_fire_msg.pitch_compensation = float(self.decision_maker.pitch_compensation)
+        
         self.pub_debug_fire.publish(debug_fire_msg)
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
