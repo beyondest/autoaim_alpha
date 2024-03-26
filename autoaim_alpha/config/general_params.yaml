@@ -8,7 +8,7 @@ mode : Dbg
 # 2: test gimbal, turn around yaw
 # 3: test gimbal, turn down, then turn up, then turn down, then turn horizontal
 # 4: doing nothing, use rqt to control gimbal, use rqt to see target value
-# 5: test_fire mode
+# 5: test_fire mode, use pid_config pitch ki to fire, ki = 1.5, fire int(ki) = 1 times
 gimbal_action_mode: 0
 if_relative: False
 
