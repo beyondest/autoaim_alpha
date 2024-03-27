@@ -381,18 +381,8 @@ class Decision_Maker:
         if len(last_update_target_list) == 0:
             self.target.if_update = False
         else:
-            armor_name_to_target_count = {enemy_car['armor_name']:0 for enemy_car in self.enemy_car_list}
-            new_last_update_target_list = []
-            for i,target in enumerate(last_update_target_list):
-                armor_name_to_target_count[target.name] += 1
-            for target in last_update_target_list:
-                if armor_name_to_target_count[target.name] == 1:
-                    new_last_update_target_list.append(target)
-                else:
-                    if target.id == 0:
-                        new_last_update_target_list.append(target)
-                        
-            last_update_target_list = new_last_update_target_list
+            
+            
             if self.params.choose_mode == 0:
                 self.target = max(last_update_target_list,key=lambda x:x.continuous_detected_num)
             elif self.params.choose_mode == 1:
@@ -400,12 +390,16 @@ class Decision_Maker:
             elif self.params.choose_mode == 2:
                 last_update_target_list.sort(key = lambda x : x.tvec[1])
                 for target in last_update_target_list:
-                    target = Armor_Params()
                     if target.continuous_detected_num >= int(self.params.continuous_detected_num_for_track/2)+1:
                         self.target = target
                         break
                 else:
                     self.target = last_update_target_list[0]
+            for target in last_update_target_list:
+                if target.name == self.target.name and target.id != self.target.id:
+                    if target.tvec[0] < self.target.tvec[0]:
+                        self.target = target
+                        break
     
     def _get_next_yaw_pitch_by_stay_or_search(self):
         
