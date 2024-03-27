@@ -38,9 +38,9 @@ yaw_range:
 - 3.141592653589793
 
 
-target_height_above_gound: 0.40 # h1
-gun_pivot_height_above_ground: 0.367 #h2
-camera_height_above_gun_pivot: 0.041 #h3
+target_height_above_gound: 0.40 # h1  ###################################################IMPORTANT
+gun_pivot_height_above_ground: 0.367 #h2  #####################################################IMPORTANT
+camera_height_above_gun_pivot: 0.041 #h3  ###############################################################IMPORTANT
 
 camera_init_theta: null
 muzzle_init_theta: null

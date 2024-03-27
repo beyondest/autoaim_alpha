@@ -122,19 +122,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                     armor_pos.pose.pose.position.y,
                                                     armor_pos.pose.pose.position.z])
             
-            q = Quaternion(armor_pos.pose.pose.orientation.w,
-                        armor_pos.pose.pose.orientation.x,
-                        armor_pos.pose.pose.orientation.y,
-                        armor_pos.pose.pose.orientation.z)
-            
-            rvec = q.get_axis() * q.angle
-            
+
             self.decision_maker.update_enemy_side_info(armor_pos.armor_name,
                                                     armor_pos.armor_id,
                                                     target_pos_in_camera_frame,
-                                                    rvec,
+                                                    np.array([0.0,0.0,1.0]),
                                                     armor_pos.confidence,
-                                                    armor_pos.pose.header.stamp.sec + armor_pos.pose.header.stamp.nanosec/1e9,
+                                                    time.time(),
                                                     armor_pos.continuous_detected_num,
                                                     armor_pos.continuous_lost_num,
                                                     armor_pos.if_update

@@ -28,31 +28,20 @@ class Node_Observer(Node,Custom_Context_Obj):
                                             topic_detect_result['name'],
                                             self.detect_sub_callback,
                                             topic_detect_result['qos_profile'])
+        
         self.pub = self.create_publisher(topic_armor_pos_list['type'],
                                           topic_armor_pos_list['name'],
                                           topic_armor_pos_list['qos_profile'])
 
-
-
-        if if_pub_car_state:
-            self.pub_car_pos = self.create_publisher(topic_car_pos['type'],
-                                                    topic_car_pos['name'],
-                                                    topic_car_pos['qos_profile'])
-        
-        
-
-        
-        
-        
         
         self.observer.set_armor_initial_state(armor_name_to_init_state)
         
         for armor_name in armor_name_to_init_state.keys():
             CHECK_INPUT_VALID(armor_name,*[car_dict['armor_name'] for car_dict in enemy_car_list])
-            armor_state_list = self.observer.get_armor_latest_state(if_correct_state=True)
+            armor_state_list = self.observer.get_armor_latest_state()
             
             for armor_state in armor_state_list:
-                self.get_logger().info(f"Init Armor State:\n{armor_state}\n")
+                self.get_logger().warn(f"Init Armor: {armor_state.name} id {armor_state.id}")
         
         
         if node_observer_mode == 'Dbg':
@@ -73,11 +62,10 @@ class Node_Observer(Node,Custom_Context_Obj):
                            each_detect_result.pose.pose.orientation.z)'''
             #rvec = q.get_axis() * q.angle
             rvec = np.array([0.0,0.0,1.0])
-            t = time.time()
-            all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':t})
+            all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':0.0})
 
         self.observer.update_by_detection_list(all_target_list)
-        armor_params_detect_list = self.observer.get_armor_latest_state(if_correct_state=False)
+        armor_params_detect_list = self.observer.get_armor_latest_state()
         
         msg2 = ArmorPosList()
         for armor_params in armor_params_detect_list:
@@ -88,95 +76,17 @@ class Node_Observer(Node,Custom_Context_Obj):
             armor_pos.pose.pose.position.x = armor_params.tvec[0]
             armor_pos.pose.pose.position.y = armor_params.tvec[1]
             armor_pos.pose.pose.position.z = armor_params.tvec[2]
-            q = Quaternion(axis = armor_params.rvec,angle = np.linalg.norm(armor_params.rvec))
-            armor_pos.pose.pose.orientation.w = q.w
-            armor_pos.pose.pose.orientation.x = q.x
-            armor_pos.pose.pose.orientation.y = q.y
-            armor_pos.pose.pose.orientation.z = q.z
-            armor_pos.pose.header.stamp.sec = int(armor_params.time)
-            armor_pos.pose.header.stamp.nanosec = int((armor_params.time - int(armor_params.time)) * 1e9) 
             armor_pos.continuous_detected_num = armor_params.continuous_detected_num
             armor_pos.continuous_lost_num = armor_params.continuous_lost_num
             armor_pos.if_update = armor_params.if_update
             msg2.armor_pos_list.append(armor_pos)
+            
         self.pub.publish(msg2)
-        
-
-        if if_pub_car_state:
-            car_state_list = self.observer.get_car_latest_state()
-            self.publish_car_state(self.pub_car_pos,car_state_list)
 
     
-    def timer_predict_callback(self):
-        
-        if if_pub_armor_state_predicted:
-            armor_state_list = self.observer.get_armor_latest_state(if_correct_state=True)
-            
-            for armor_state in armor_state_list:
-                predict_time = armor_state['armor_time'] + predict_time_offset 
-                
-                tvec,rvec = self.observer.predict_armor_state_by_itself(armor_state['armor_name'],
-                                                                        armor_state['armor_id'],
-                                                                        predict_time
-                                                                        )
-                armor_state['armor_tvec'] = tvec
-                armor_state['armor_rvec'] = rvec
-                armor_state['armor_time'] = predict_time
-                
-            self.publish_armor_state(self.pub_armor_pos_predicted,armor_state_list)
-            
-            if node_observer_mode == 'Dbg':
-                self.get_logger().debug(f"Predicted Armor State:\n{armor_state_list}\n")
-        else:
-            pass
-            
 
     
-    def publish_armor_state(self,pub_listher,armor_state_list:list):
-        
-        for armor_state in armor_state_list:
-            msg = ArmorPos()
-            msg.armor_name = armor_state['armor_name']
-            msg.armor_id = armor_state['armor_id']
-            msg.confidence = float(armor_state['armor_confidence'])
-            msg.pose.pose.position.x = armor_state['armor_tvec'][0]
-            msg.pose.pose.position.y = armor_state['armor_tvec'][1]
-            msg.pose.pose.position.z = armor_state['armor_tvec'][2]
-            q = Quaternion(axis = armor_state['armor_rvec'],angle = np.linalg.norm(armor_state['armor_rvec']))
-            msg.pose.pose.orientation.w = q.w
-            msg.pose.pose.orientation.x = q.x
-            msg.pose.pose.orientation.y = q.y
-            msg.pose.pose.orientation.z = q.z
-            msg.pose.header.stamp.sec = int(armor_state['armor_time'])
-            msg.pose.header.stamp.nanosec = int((armor_state['armor_time'] - int(armor_state['armor_time'])) * 1e9)
-            pub_listher.publish(msg)
-        
-    def publish_car_state(self,publisher,car_state_list:list):
-        for car_state in car_state_list:
-                
-            msg = CarPos()
-            msg.armor_name = car_state['armor_name']
-            msg.confidence = car_state['car_confidence']
-            msg.pose.pose.position.x = car_state['car_center_tvec'][0]
-            msg.pose.pose.position.y = car_state['car_center_tvec'][1]
-            msg.pose.pose.position.z = car_state['car_center_tvec'][2]
-            q = Quaternion(axis = car_state['car_center_rvec'],angle = np.linalg.norm(car_state['car_center_tvec']))
-            msg.pose.pose.orientation.w = q.w
-            msg.pose.pose.orientation.x = q.x
-            msg.pose.pose.orientation.y = q.y
-            msg.pose.pose.orientation.z = q.z
-            msg.pose.header.stamp.sec = int(car_state['car_time'])
-            msg.pose.header.stamp.nanosec = int((car_state['car_time'] - int(car_state['car_time'])) * 1e9)
-            
-            msg.twist.twist.linear.x = car_state['car_center_tv_vec'][0]
-            msg.twist.twist.linear.y = car_state['car_center_tv_vec'][1]
-            msg.twist.twist.linear.z = car_state['car_center_tv_vec'][2]
-            rv_vec = car_rotation_axis * car_state['car_rotation_speed']
-            msg.twist.twist.angular.x = rv_vec[0]
-            msg.twist.twist.angular.y = rv_vec[1]
-            msg.twist.twist.angular.z = rv_vec[2]
-            publisher.publish(msg)
-                
+    
     
     def _start(self):
         

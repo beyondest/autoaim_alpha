@@ -10,6 +10,7 @@ class Decision_Maker_Params(Params):
     def __init__(self) -> None:
         super().__init__()
         
+        # for abs search
         self.yaw_left_degree = -100
         self.yaw_right_degree = 100
         self.pitch_down_degree = -10
@@ -17,31 +18,34 @@ class Decision_Maker_Params(Params):
         self.yaw_search_step = 0.01
         self.pitch_search_left_waves = 5
         self.pitch_search_right_waves = 6
-        self.sleep_time_after_move_command = 0.1
-        self.repeat_times_for_move_command = 3
         
-        self.yaw_pitch_history_length = 20
         
-        self.continuous_detected_num_for_track = 2
-        self.continuous_detected_num_for_lock = 4
-        self.continuous_lost_num_max_threshold = 4
-        
+        # for relative search
         self.relative_yaw_move_step = 0.05
         self.relative_pitch_move_step = 0.05
         self.yaw_idx_max = 100
         self.pitch_idx_max = 10
         
+        
+        # for track and lock
+        self.continuous_detected_num_for_track = 2
+        self.continuous_detected_num_for_lock = 4
+        self.continuous_lost_num_max_threshold = 4
+        
+        # for data record
         self.tvec_history_length = 10
+        self.record_data_path = None
+
+        
+        # mouse control
         self.screen_width = 1920
         self.screen_height = 1080
-        
-        # 0.0 - 1.0
-        self.x_axis_sensitivity = 0.5
+        self.x_axis_sensitivity = 0.5        # 0.0 - 1.0   
         self.y_axis_sensitivity = 0.5
         self.if_enable_mouse_control = False
-        self.record_data_path = None
         
         
+        # general config
         self.if_use_pid_control = True
         self.fire_mode = 0
         """fire mode:
@@ -55,9 +59,21 @@ class Decision_Maker_Params(Params):
             1: distance_first
             2: balanced
         """
-        self.min_img_x_for_locked = 10.0
+        
+        # for ballistic
+        self.min_img_x_for_locked = 10.0    # only work for fire_mode == 1
+        self.min_img_x_diff_for_predict = 10.0 # only work for fire_mode == 2
         self.manual_pitch_compensation = 0.0
         self.manual_yaw_compensation = 0.0
+        
+        # for predict
+        self.yaw_pitch_history_length = 20
+        self.armor_continuous_num_for_predict = 3   # only when track same(name,id) target bigger than this, predict myself
+        self.predict_period = 0.0    # only work when fire_mode == 2, if > 0, use specified time to predict, if <0, predict int(period) 1/fps time, if ==0, auto predict rely on depth
+        self.target_history_length = 10
+        self.ele_latence = 0.01
+        
+        
 
 class Decision_Maker:
     def __init__(self,
@@ -115,7 +131,7 @@ class Decision_Maker:
         # this is for predict
         self.next_yaw_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
         self.next_pitch_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
-        
+        self.target_list = [Armor_Params('None',0) for i in range(self.params.yaw_pitch_history_length)]
         
         # this is for record
         if self.params.record_data_path is not None:
@@ -207,9 +223,12 @@ class Decision_Maker:
             self._get_next_yaw_pitch_by_stay_or_search()
         if self.params.if_enable_mouse_control:
             self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
-            
+        
+        
+
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,self.next_yaw)
         SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,self.next_pitch) 
+        SHIFT_LIST_AND_ASSIG_VALUE(self.target_list,self.target)
         
         if_locked = self._if_target_locked()
         if if_locked:
@@ -221,27 +240,25 @@ class Decision_Maker:
         else:
             self.fire_times = 0
             if self.mode == 'Dbg':
-                lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+                if self.params.fire_mode != 0:
+                    lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
         
-    
+        if self.params.fire_mode == 2:
+            self._predict()
+        
         if self.if_relative:
             self.next_yaw = CIRCLE(self.next_yaw, [-np.pi, np.pi])
             self.next_pitch = CIRCLE(self.next_pitch, [-np.pi, np.pi])
         else:
             self.next_yaw = CLAMP(self.next_yaw, [-np.pi, np.pi])
             self.next_pitch = CLAMP(self.next_pitch, [-np.pi, np.pi])
-            
-        
         
         if self.params.record_data_path is not None:
             SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
             self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
         
-        
         return self.next_yaw,self.next_pitch, self.fire_times
 
-    
-    
     
     def _search_target(self):
         if self.if_relative:
@@ -300,7 +317,6 @@ class Decision_Maker:
                 self.pitch_search_data[i] = pitch * self.pitch_up
                 
                 
-                
     def _get_search_next_yaw_pitch(self):
         if self.search_mode:
             next_yaw = self.yaw_search_data[self.search_index]
@@ -353,22 +369,7 @@ class Decision_Maker:
         
         return next_yaw,next_pitch
         
-    def force_enable_mouse_control(self,
-                                   data_path:Union[str,None]=None):
-        self.params.if_enable_mouse_control = True
-        
-        if data_path is not None:
-            self.data_recorder = Data_Recoreder(data_path,
-                                            (self.params.tvec_history_length,3),
-                                            (2,),
-                                            np.float32,
-                                            np.float32)
-            
-            self.tvec_history_list = [np.zeros(3) for i in range(self.params.tvec_history_length)]
-        
-        self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
-        self.mouse_pos_prior = (0,0)
-    
+
     def _find_last_update_target(self)->list:
         last_update_target = []
         for armor_params in self.armor_state_list:
@@ -378,7 +379,7 @@ class Decision_Maker:
     
     def _choose_target(self, last_update_target_list:list):
         if len(last_update_target_list) == 0:
-            self.target = self.target
+            self.target.if_update = False
         else:
             if self.params.choose_mode == 0:
                 self.target = max(last_update_target_list,key=lambda x:x.continuous_detected_num)
@@ -446,8 +447,82 @@ class Decision_Maker:
     
     
     def _if_target_locked(self):
-        if self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
-            if self.target.if_update:
-                if abs(self.target.tvec[0]) < self.params.min_img_x_for_locked:
-                    return True
+        if self.params.fire_mode == 1:
+            if self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track\
+            and self.target.if_update \
+            and abs(self.target.tvec[0]) < self.params.min_img_x_for_locked:
+                return True
+            
+        elif self.params.fire_mode == 2:
+            if self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track\
+            and self.__find_update_target_num() >= 3\
+            and self.__find_continuous_track_armor_num() >= 3\
+            and abs(self.target_list[0].tvec[0] - self.target_list[1].tvec[0]) < self.params.min_img_x_diff_for_predict\
+            and abs(self.target_list[1].tvec[0] - self.target_list[2].tvec[0]) < self.params.min_img_x_diff_for_predict:
+                return True
+        else:
+            return False
+    
+
+    def __find_update_target_num(self)->int:
+        for i, target in enumerate(self.target_list):
+            if target.if_update:
+                continue
+            else:
+                return i
+        return len(self.target_list)
+    
+    def __find_continuous_track_armor_num(self):
+        for i in range(len(self.target_list)-1):
+            if self.target_list[i].name == self.target_list[i+1].name and self.target_list[i].id == self.target_list[i+1].id:
+                continue
+            else:
+                return i + 1
+        return len(self.target_list)
+    
+    def _predict(self):
+        armor_continuous_num = self.__find_continuous_track_armor_num()
+        update_target_num = self.__find_update_target_num()
+        
+        if armor_continuous_num >= self.params.armor_continuous_num_for_predict\
+        and update_target_num >= self.params.armor_continuous_num_for_predict:
+            if self.params.predict_period > 0:
+                predict_time = self.params.predict_period + self.params.ele_latence
+            else:
+                predict_time = self.target_list[0].tvec[1] / self.ballistic_predictor.params.bullet_speed + self.params.ele_latence
+            
+            t01 = self.target_list[0].time - self.target_list[1].time
+            t12 = self.target_list[1].time - self.target_list[2].time
+            yaw_v01 = (self.next_yaw_history_list[0] - self.next_yaw_history_list[1]) / t01 if t01 > 0 else 0
+            yaw_v12 = (self.next_yaw_history_list[1] - self.next_yaw_history_list[2]) / t12 if t12 > 0 else 0
+            yaw_a = (yaw_v12 - yaw_v01) / (t12 + t01) if t12 + t01 > 0 else 0
+            self.next_yaw = self.next_yaw_history_list[0] + yaw_v01 * predict_time + 0.5 * yaw_a * predict_time ** 2
+            
+            pit_v01 = (self.next_pitch_history_list[0] - self.next_pitch_history_list[1]) / t01 if t01 > 0 else 0
+            pit_v12 = (self.next_pitch_history_list[1] - self.next_pitch_history_list[2]) / t12 if t12 > 0 else 0
+            pit_a = (pit_v12 - pit_v01) / (t12 + t01) if t12 + t01 > 0 else 0
+            self.next_pitch = self.next_pitch_history_list[0] + pit_v01 * predict_time + 0.5 * pit_a * predict_time ** 2
+            if self.mode == 'Dbg':
+                lr1.debug(f"Predict {self.target.name} {self.target.id} , predict_time: {predict_time:.3f}, yaw_v01: {yaw_v01:.3f},yaw_a: {yaw_a:.3f}, pit_v01: {pit_v01:.3f},  pit_a: {pit_a:.3f}")
+        
+        else:
+            if self.mode == 'Dbg':
+                lr1.debug(f"Predict fail {self.target.name} {self.target.id} , armor_continuous_num: {armor_continuous_num}, update_target_num: {update_target_num}")
+                
+                
+    def force_enable_mouse_control(self,
+                                   data_path:Union[str,None]=None):
+        self.params.if_enable_mouse_control = True
+        
+        if data_path is not None:
+            self.data_recorder = Data_Recoreder(data_path,
+                                            (self.params.tvec_history_length,3),
+                                            (2,),
+                                            np.float32,
+                                            np.float32)
+            
+            self.tvec_history_list = [np.zeros(3) for i in range(self.params.tvec_history_length)]
+        
+        self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
+        self.mouse_pos_prior = (0,0)
     
