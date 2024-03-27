@@ -107,7 +107,8 @@ class Node_Com(Node,Custom_Context_Obj):
         if_error, current_yaw, current_pitch, cur_time_minute, cur_time_second, cur_time_second_frac = self.port.recv_feedback()
         if if_error:
             if self.port.ser is not None:
-                self.get_logger().error(f"Com receive occur error")
+                if not if_relative:
+                    self.get_logger().error(f"Com receive occur error")
             else:
                 pass 
                 #self.get_logger().error(f"Com port {self.port.params.port_abs_path} cannot open")
