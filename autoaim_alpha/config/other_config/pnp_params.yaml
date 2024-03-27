@@ -18,19 +18,23 @@ img_shrink_scale: 0.5
 
 
 # up left/ up right/ down right/ down left
+# 135.0, 125.0 mm 
+# 120.0 110.0 works fine for mv on sentry now on baiche past
 small_obj_points:
-- - -67.5
-  - -62.5
+- - -60.0
+  - -55.0
   - 0.0
-- - 67.5
-  - -62.5
+- - 60.0
+  - -55.0
   - 0.0
-- - 67.5
-  - 62.5
+- - 60.0
+  - 55.0
   - 0.0
-- - -67.5
-  - 62.5
+- - -60.0
+  - 55.0
   - 0.0
+
+
 
 
 obj_wid_in_world: 135.0
