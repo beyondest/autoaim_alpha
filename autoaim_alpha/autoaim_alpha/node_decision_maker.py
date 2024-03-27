@@ -12,9 +12,7 @@ pitch_down = -0.3491    # -20
 pitch_up = 1.2227       # +70
 pitch_step = 0.01
 
-yaw_test_data = np.round(np.arange(yaw_left,yaw_right,yaw_step),3)
 
-pitch_test_data = np.r_[(np.round(np.arange(pitch_down,pitch_up,pitch_step),3)),np.round(np.arange(pitch_up,pitch_down,-pitch_step)),np.round(np.arange(pitch_down,0,pitch_step),3)]
 
 class Node_Decision_Maker(Node,Custom_Context_Obj):
 
@@ -72,8 +70,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
             
             
-        self.yaw_test_idx = 0
-        self.pitch_test_idx = 0
         self.rel_yaw = 0.0
         self.rel_pitch = 0.0
         self.fire_times = 0
@@ -135,7 +131,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                     )
             
         self.action_mode_to_callback[gimbal_action_mode]()
-        
+
 
     
     
@@ -175,14 +171,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg = ElectricsysCom()
         abs_yaw, abs_pitch = self.decision_maker._search_target()
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
-        com_msg.target_abs_pitch = abs_pitch
+        com_msg.target_abs_pitch = 0.0
         com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
-        self.yaw_test_idx += 1
-        if self.yaw_test_idx >= len(yaw_test_data):
-            self.yaw_test_idx = 0
         
         self.pub_ele_sys_com.publish(com_msg)
         
@@ -194,14 +187,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg = ElectricsysCom()
         
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
-        com_msg.target_abs_pitch = pitch_test_data[self.pitch_test_idx]
+        next_yaw, next_pitch = self.decision_maker._search_target()
         com_msg.target_abs_yaw = 0.0
+        com_msg.target_abs_pitch = next_pitch
         com_msg.sof = 'A'
         com_msg.reserved_slot = 0
         com_msg.fire_times = 0
-        self.pitch_test_idx += 1
-        if self.pitch_test_idx >= len(pitch_test_data):
-            self.pitch_test_idx = 0
         
         self.pub_ele_sys_com.publish(com_msg)
     

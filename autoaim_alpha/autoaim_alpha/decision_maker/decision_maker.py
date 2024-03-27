@@ -260,6 +260,11 @@ class Decision_Maker:
 
     
     def _search_target(self):
+        """
+
+        Returns:
+            yaw, pitch
+        """
         if self.if_relative:
             
             if self.yaw_add:
@@ -485,7 +490,10 @@ class Decision_Maker:
                 return i + 1
         return len(self.target_list)
     
+    
     def _predict(self):
+        """Unsatisfactory , need to be improved
+        """
         armor_continuous_num = self.__find_continuous_track_armor_num()
         update_target_num = self.__find_update_target_num()
         
