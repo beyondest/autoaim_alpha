@@ -451,7 +451,6 @@ class Decision_Maker:
             if self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track\
             and self.target.if_update \
             and abs(self.target.tvec[0]) < self.params.min_img_x_for_locked:
-                lr1.warn(f"FIRE!!!")
                 return True
             
         elif self.params.fire_mode == 2:
@@ -460,7 +459,6 @@ class Decision_Maker:
             and self.__find_continuous_track_armor_num() >= 3\
             and abs(self.target_list[0].tvec[0] - self.target_list[1].tvec[0]) < self.params.min_img_x_diff_for_predict\
             and abs(self.target_list[1].tvec[0] - self.target_list[2].tvec[0]) < self.params.min_img_x_diff_for_predict:
-                lr1.warn(f"NOT FIRE!!!")
                 return True
         else:
             return False
