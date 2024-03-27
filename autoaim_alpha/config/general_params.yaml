@@ -10,13 +10,13 @@ mode : Dbg
 # 4: doing nothing, use rqt to control gimbal, use rqt to see target value
 # 5: test_fire mode, use rqt to control gimbal, if fire_times == -1, then can control rel_yaw,rel_pitch, or can control fire_times
 
-gimbal_action_mode: 5
+gimbal_action_mode: 0
 if_relative: False
 
 if_ignore_elesys: False
 if_show_img_local: False
 if_show_img_remote: False
-# enemy armor color
+# enemy armor color: blue or red
 armor_color : blue
 
 if_reverse_img: True
@@ -76,4 +76,4 @@ armor_name_to_init_state:
 
 img_show_wid: 640
 img_show_hei: 384
-node_webcam_mv_ms: 10
+node_webcam_mv_ms: 20

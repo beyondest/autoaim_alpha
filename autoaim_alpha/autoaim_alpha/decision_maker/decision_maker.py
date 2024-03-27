@@ -29,7 +29,6 @@ class Decision_Maker_Params(Params):
         
         # for track and lock
         self.continuous_detected_num_for_track = 2
-        self.continuous_detected_num_for_lock = 4
         self.continuous_lost_num_max_threshold = 4
         
         # for data record
