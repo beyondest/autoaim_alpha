@@ -102,10 +102,10 @@ target_link_libraries(config_all2 ${OpenCV_LIBS}
                                      cuda)
                                      
 
-add_executable(gg_test        ${ROOT_DIR}/src/gg_test.cpp
+add_executable(gg_test        ${ROOT_DIR}/src/test/gg_test.cpp
                               ${ROOT_DIR}/src/basic.cpp
                               ${ROOT_DIR}/src/gg_class.cpp)
-                              
+
 target_link_libraries(gg_test ${OpenCV_LIBS} 
                                      ${lib_list} 
                                      ${spdlog_LIBRARIES})
