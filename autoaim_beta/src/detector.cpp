@@ -519,7 +519,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
 bool Net_Detector::if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& big_rec) 
 {
     cv::Mat roi;
-    cv::Size roi_shape_ = {32,32};
+    cv::Size roi_shape = {32,32};
     order_points(big_rec);
     // pick up roi and perspective transform
     std::vector<cv::Point2f> dst_points;
@@ -528,7 +528,7 @@ bool Net_Detector::if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& 
     dst_points.push_back(cv::Point2f(roi_shape[0] - 1, roi_shape[1] - 1));
     dst_points.push_back(cv::Point2f(0, roi_shape[1] - 1));
     cv::Mat trans_mat = cv::getPerspectiveTransform(big_rec, dst_points);
-    cv::warpPerspective(img_bgr, roi, trans_mat, roi_shape_, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+    cv::warpPerspective(img_bgr, roi, trans_mat, roi_shape, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
     std::vector<cv::Mat> img_split(3);
     cv::cvtColor(roi, roi, cv::COLOR_BGR2YUV);
     cv::split(roi, img_split);
