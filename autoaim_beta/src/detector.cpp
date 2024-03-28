@@ -211,31 +211,7 @@ static inline float softmax(float* buffer, int& begin_idx, const int& class_num,
 }
 
 
-static bool if_is_gray(const cv::Mat& img, std::vector<cv::Point2f>& big_rec, std::string& armor_color, const int& white_num_thresh)
-{
-    cv::Mat roi;
-    cv::Size roi_shape_ = {32,32};
-    order_points(big_rec);
-    // pick up roi and perspective transform
-    std::vector<cv::Point2f> dst_points;
-    dst_points.push_back(cv::Point2f(0, 0));
-    dst_points.push_back(cv::Point2f(this->roi_shape[0] - 1, 0));
-    dst_points.push_back(cv::Point2f(this->roi_shape[0] - 1, this->roi_shape[1] - 1));
-    dst_points.push_back(cv::Point2f(0, this->roi_shape[1] - 1));
-    cv::Mat trans_mat = cv::getPerspectiveTransform(big_rec, dst_points);
-    cv::warpPerspective(img, roi, trans_mat, roi_shape_, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-    std::vector<cv::Mat> img_split(3);
-    cv::cvtColor(roi, roi, cv::COLOR_BGR2YUV);
-    cv::split(roi, img_split);
-    if (armor_color == "red") cv::inRange(img_split[2], this->params.yuv_range[0], this->params.yuv_range[1], img_split[0]);
-    else                      cv::inRange(img_split[1], this->params.yuv_range[0], this->params.yuv_range[1], img_split[0]);
-    int white_pixel_num = cv::countNonZero(img_split[0]);
-    cv::imshow("split0", img_split[0]);
-    cv::waitKey(1);
-    std::cout << "white_pixel_num: " << white_pixel_num << std::endl;
-    if (white_pixel_num < white_num_thresh) return true;
-    else return false;
-}
+
 
 //****************************************************Tradition Detector*************************************************
 
@@ -429,6 +405,17 @@ bool Net_Detector_Params::load_params_from_yaml(const std::string& file_path)
     this->iou_thres = config["iou_thres"].as<float>();
     this->max_det = config["max_det"].as<int>();
     this->white_num_thresh = config["white_num_thresh"].as<int>();
+    if (this->armor_color == "blue")
+    {
+    this->yuv_range[0] = config["blue_yuv_range"][0].as<int>();
+    this->yuv_range[1] = config["blue_yuv_range"][1].as<int>();
+    }
+    else
+    {
+        this->yuv_range[0] = config["red_yuv_range"][0].as<int>();
+        this->yuv_range[1] = config["red_yuv_range"][1].as<int>();
+    }
+    }
     return true;
 }
 
@@ -436,6 +423,7 @@ void Net_Detector_Params::print_show_params()
 {
     spdlog::info(" conf_thres: {}, agnostic: {}, iou_thres: {}, max_det: {} , white_num_thresh: {}",
                   this->conf_thres, this->agnostic, this->iou_thres, this->max_det,this->white_num_thresh);
+    spdlog::info(" yuv_range: {}, {}", this->yuv_range[0], this->yuv_range[1]);
     for (auto& enemy_car : this->enemy_car_list)
     {
         spdlog::info(" enemy_car_info: armor_name: {}, armor_nums: {}", enemy_car.armor_name, enemy_car.armor_nums);
@@ -452,7 +440,8 @@ Net_Detector::Net_Detector(Mode mode,
                  mode(mode),
                  if_yolov5(if_yolov5),
                  params(enemy_car_list_),
-                 armor_color(armor_color_)
+                 armor_color(armor_color_),
+                 params(armor_color_)
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
     if (if_yolov5) 
@@ -517,9 +506,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
         
         for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == armor_name_string) {if_in_target_list = true;break;}
         if (!if_in_target_list) continue;
-        if (if_is_gray(img_bgr, big_rec,this->armor_color,this->params.white_num_thresh)) continue;
-
-        order_points(big_rec);
+        if (this->if_is_gray(img_bgr, big_rec)) continue;
         big_rec = extendRectangle(big_rec,0,0.3);
         std::vector<float> tvec = {0, 0, 0};
         std::vector<float> rvec = {0, 0, 0};
@@ -529,6 +516,31 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
 }
 
 
+bool Net_Detector::if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& big_rec) 
+{
+    cv::Mat roi;
+    cv::Size roi_shape_ = {32,32};
+    order_points(big_rec);
+    // pick up roi and perspective transform
+    std::vector<cv::Point2f> dst_points;
+    dst_points.push_back(cv::Point2f(0, 0));
+    dst_points.push_back(cv::Point2f(roi_shape[0] - 1, 0));
+    dst_points.push_back(cv::Point2f(roi_shape[0] - 1, roi_shape[1] - 1));
+    dst_points.push_back(cv::Point2f(0, roi_shape[1] - 1));
+    cv::Mat trans_mat = cv::getPerspectiveTransform(big_rec, dst_points);
+    cv::warpPerspective(img_bgr, roi, trans_mat, roi_shape_, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+    std::vector<cv::Mat> img_split(3);
+    cv::cvtColor(roi, roi, cv::COLOR_BGR2YUV);
+    cv::split(roi, img_split);
+    if (this->armor_color == "red") cv::inRange(img_split[2], this->params.yuv_range[0], this->params.yuv_range[1], img_split[0]);
+    else                            cv::inRange(img_split[1], this->params.yuv_range[0], this->params.yuv_range[1], img_split[0]);
+    int white_pixel_num = cv::countNonZero(img_split[0]);
+    cv::imshow("split0", img_split[0]);
+    cv::waitKey(1);
+    std::cout << "white_pixel_num: " << white_pixel_num << std::endl;
+    if (white_pixel_num < this->params.white_num_thresh) return true;
+    else return false;
+}
 
 /*******************************PNP Solver********************************************************/
 

@@ -82,6 +82,10 @@ public:
     int max_det = 20;
     bool agnostic = false;
     int white_num_thresh = 5;
+    std::vector<int> yuv_range = {152,255};
+    std::string armor_color = "blue";
+    Net_Detector_Params(std::string armor_color_):armor_color(armor_color_){};
+    ~Net_Detector_Params(){};
     bool load_params_from_yaml(const std::string& file_path);
     void print_show_params();
     Net_Detector_Params(std::vector<Enemy_Car_Info> enemy_car_list_):enemy_car_list(enemy_car_list_){};
@@ -95,11 +99,12 @@ private:
     YAML::Node class_info;
     Mode mode;
     bool if_yolov5 = false; 
-    Net_Detector_Params params;
     TRT_Engine* engine = nullptr;
     TRTModule* yolo_engine = nullptr;
     int class_num = 0;
     std::string armor_color;
+    Net_Detector_Params params;
+
 public:
     Net_Detector(Mode mode,
                  const std::string& net_config_folder,
@@ -112,6 +117,8 @@ public:
     };
     std::vector<detect_result_t> operator()(const std::vector<cv::Mat>& bin_rois,const std::vector<std::vector<cv::Point2f>>& big_recs) const;
     std::vector<detect_result_t> operator()(const cv::Mat& img_bgr) const;
+    bool if_is_gray(const cv::Mat& img_bgr, const std::vector<cv::Point2f>& big_rec) ;
+
 };
 
 

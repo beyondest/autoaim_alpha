@@ -49,7 +49,7 @@ int main()
                             true);
 
         Tradition_Detector detector(mode, tradition_config_folder, armor_color);
-        Net_Detector net_detector(mode,net_config_folder,if_yolov5,enemy_car_info_list);
+        Net_Detector net_detector(mode,net_config_folder,if_yolov5,enemy_car_info_list,armor_color);
         PNP_Solver pnp_solver(mode,pnp_config_params_path,img_show_wid,img_show_hei);
         Mindvision_Camera mv(mode,
                             camera_config_folder,

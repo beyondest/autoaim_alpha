@@ -40,6 +40,7 @@ endforeach(header_file ${header_list})
 
 list(APPEND inc_list /usr/include " ")
 list(APPEND inc_list /usr/local/include " ")
+list(APPEND inc_list ${ROOT_DIR}/inc/gg " ")
 #list(APPEND inc_list /usr/local/incluse/opencv4 " ")
 #list(APPEND inc_list /usr/local/incluse/opencv4/opencv2 " ")
 

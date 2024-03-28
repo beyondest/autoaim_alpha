@@ -29,5 +29,11 @@ max_det: 20
 # this if for if_is_gray() , cause yolov5 sometimes mistinguish gray with blue and red
 white_num_thresh: 5
 
+blue_yuv_range: 
+- 152
+- 255
+red_yuv_range: 
+- 164 
+- 255
 
 
