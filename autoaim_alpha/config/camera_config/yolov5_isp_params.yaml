@@ -1,11 +1,11 @@
-analog_gain: 64
+analog_gain: 100
 analog_gain_x: 2
 b_gain: 100
 contrast: 100
-exposure_time_us: 3000
+exposure_time_us: 2500   # 1500 for gg, 2500 for mv
 fps: 2
 g_gain: 100
-gamma: 100
+gamma: 80
 grab_resolution_hei: 640
 grab_resolution_wid: 640
 r_gain: 100

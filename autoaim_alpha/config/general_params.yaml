@@ -20,9 +20,6 @@ if_show_img_remote: False
 armor_color : blue
 
 
-# WARNING: if use gg_camera, this should be 1
-# WARNING: if use mv_camera, this should be -1
-flip_img_code: -1 # -1 means rotate 360 degrees, 0 means flip vertical, 1 means flip horizontal
 
 
 
@@ -64,6 +61,7 @@ enemy_car_list :
 # config ballistic config : gun_pivot_height !!!
 
 camera_type: "mv"   # "mv" or "gg"
+flip_img_code: -1 # -1 for mv, 1 for gg
 img_show_wid: 640
 img_show_hei: 384
 node_webcam_ms: 10

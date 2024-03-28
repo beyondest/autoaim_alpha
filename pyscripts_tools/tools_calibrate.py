@@ -66,7 +66,7 @@ if __name__ == '__main__':
     
     if action == 'record':
         ca = Mindvision_Camera(output_format='bgr8',
-                            camera_mode='Dbg',
+                            camera_mode='Dbg', 
                             camera_config_folder=None,
                             if_auto_exposure=True)
         
