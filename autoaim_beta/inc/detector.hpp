@@ -115,7 +115,7 @@ public:
     };
     std::vector<detect_result_t> operator()(const std::vector<cv::Mat>& bin_rois,const std::vector<std::vector<cv::Point2f>>& big_recs) const;
     std::vector<detect_result_t> operator()(const cv::Mat& img_bgr) const;
-    bool if_is_gray(const cv::Mat& img_bgr, const std::vector<cv::Point2f>& big_rec) ;
+    bool if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& big_rec) ;
 
 };
 
