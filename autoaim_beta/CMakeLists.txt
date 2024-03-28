@@ -47,7 +47,9 @@ list(APPEND inc_list /usr/local/include " ")
 
 
 list(APPEND lib_list /usr/local/lib/libyaml-cpp.a
-                     /lib/libMVSDK.so)
+                     /lib/libMVSDK.so
+                     /lib/libgxiapi.so
+                     /lib/)
 
 include_directories(${inc_list} PUBLIC 
                                 ${OpenCV_INCLUDE_DIRS} 
@@ -70,14 +72,15 @@ endif()
 
 
 
-add_executable(node_webcam_mv ${ROOT_DIR}/src/node_webcam_mv.cpp
+add_executable(node_webcam ${ROOT_DIR}/src/node_webcam.cpp
                               ${ROOT_DIR}/src/basic.cpp
                               ${ROOT_DIR}/src/detector.cpp
                               ${ROOT_DIR}/src/mv_class.cpp
                               ${ROOT_DIR}/src/trt_module.cpp
+                              ${ROOT_DIR}/src/gg_class.cpp
                               ${TensorRT_SOURCE})
-ament_target_dependencies(node_webcam_mv rclcpp autoaim_interface sensor_msgs cv_bridge)
-target_link_libraries(node_webcam_mv ${OpenCV_LIBS} 
+ament_target_dependencies(node_webcam rclcpp autoaim_interface sensor_msgs cv_bridge)
+target_link_libraries(node_webcam ${OpenCV_LIBS} 
                                      ${lib_list} 
                                      ${spdlog_LIBRARIES}
                                      ${TensorRT_LIBS}
@@ -97,9 +100,10 @@ target_link_libraries(config_all2 ${OpenCV_LIBS}
                                      ${TensorRT_LIBS}
                                      nvonnxparser
                                      cuda)
+                                     
 install(
     TARGETS 
-    node_webcam_mv
+    node_webcam
     DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -7,8 +7,8 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package="autoaim_beta",
-            node_executable='node_webcam_mv',
-            node_name='node_webcam_mv',
+            node_executable='node_webcam',
+            node_name='node_webcam',
             output='log'
         ),
         Node(

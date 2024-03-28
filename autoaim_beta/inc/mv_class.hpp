@@ -65,6 +65,8 @@ public:
     const int trigger_mode = 0; // 0: continuous, 1: software trigger, 2: hardware trigger
     const unsigned int output_format = CAMERA_MEDIA_TYPE_BGR8;
     const unsigned int wTimes_ms = 1000;
+    const int nWidth = 1280;
+    const int nHeight = 1024;
     CameraHandle hcamera = -1;
     Mindvision_Camera(const Mode camera_mode,
                        const std::string& camera_config_folder,

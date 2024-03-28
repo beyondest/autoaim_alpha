@@ -33,8 +33,6 @@ void CHECK_MV_STATUS(CameraSdkStatus status)
 
 
 
-
-
 /**
  * @param camera_config_folder: the folder path of camera config files, including isp params, roi params, etc.
  * @param output_format: the output format of grabbed image, such as YUYV, RGB, BGR, etc.
@@ -78,8 +76,8 @@ IF_SUCCESS Mindvision_Camera::init(bool if_use_last_params)
     CHECK_MV_STATUS(CameraEnumerateDevice(sCameraList , &iCameraNums));
     if (iCameraNums == 0)
     {
-        spdlog::critical("CAMERA : No camera found!");
-        throw std::runtime_error("CAMERA : No camera found!");
+        spdlog::critical("CAMERA : No MV Camera found!");
+        throw std::runtime_error("CAMERA : No MV Camera found!");
     }
     else if (iCameraNums > 1)
     {
@@ -208,8 +206,6 @@ IF_SUCCESS Mindvision_Camera::get_img(cv::Mat& img)
 
         CHECK_MV_STATUS(CameraImageProcess(this->hcamera, buffer, img.data, &head));
         CHECK_MV_STATUS(CameraReleaseImageBuffer(this->hcamera, buffer));
-
-        
     }
     else
     {
@@ -221,11 +217,7 @@ IF_SUCCESS Mindvision_Camera::get_img(cv::Mat& img)
         SPDLOG_ERROR("CAMERA : get image buffer fail! {}", error_msg);
         CHECK_MV_STATUS(CameraReleaseImageBuffer(this->hcamera, buffer));
     }
-
-
-
     return IF_SUCCESS::SUCCESS;
-
 }
 
 

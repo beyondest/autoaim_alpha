@@ -26,4 +26,8 @@ agnostic: False
 max_det: 20
 
 
+# this if for if_is_gray() , cause yolov5 sometimes mistinguish gray with blue and red
+white_num_thresh: 5
+
+
 

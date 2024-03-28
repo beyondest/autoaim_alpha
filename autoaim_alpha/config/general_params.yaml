@@ -74,6 +74,7 @@ armor_name_to_init_state:
 # Notice :
 # config ballistic config : gun_pivot_height !!!
 
+camera_type: "mv"   # "mv" or "gg"
 img_show_wid: 640
 img_show_hei: 384
-node_webcam_mv_ms: 20
+node_webcam_ms: 20

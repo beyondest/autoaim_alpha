@@ -81,6 +81,7 @@ public:
     float iou_thres = 0.5;
     int max_det = 20;
     bool agnostic = false;
+    int white_num_thresh = 5;
     bool load_params_from_yaml(const std::string& file_path);
     void print_show_params();
     Net_Detector_Params(std::vector<Enemy_Car_Info> enemy_car_list_):enemy_car_list(enemy_car_list_){};
@@ -98,11 +99,13 @@ private:
     TRT_Engine* engine = nullptr;
     TRTModule* yolo_engine = nullptr;
     int class_num = 0;
+    std::string armor_color;
 public:
     Net_Detector(Mode mode,
                  const std::string& net_config_folder,
                  bool if_yolov5,
-                 std::vector<Enemy_Car_Info> enemy_car_list_);
+                 std::vector<Enemy_Car_Info> enemy_car_list_,
+                 const std::string& armor_color_);
     ~Net_Detector(){
         if (if_yolov5) delete yolo_engine;
         else delete engine;
