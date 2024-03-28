@@ -415,7 +415,7 @@ bool Net_Detector_Params::load_params_from_yaml(const std::string& file_path)
         this->yuv_range[0] = config["red_yuv_range"][0].as<int>();
         this->yuv_range[1] = config["red_yuv_range"][1].as<int>();
     }
-    }
+    
     return true;
 }
 
