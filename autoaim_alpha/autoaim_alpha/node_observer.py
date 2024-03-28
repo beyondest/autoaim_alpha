@@ -34,15 +34,12 @@ class Node_Observer(Node,Custom_Context_Obj):
                                           topic_armor_pos_list['qos_profile'])
 
         
-        self.observer.set_armor_initial_state(armor_name_to_init_state)
+        self.observer.set_armor_initial_state()
+        armor_state_list = self.observer.get_armor_latest_state()
         
-        for armor_name in armor_name_to_init_state.keys():
-            CHECK_INPUT_VALID(armor_name,*[car_dict['armor_name'] for car_dict in enemy_car_list])
-            armor_state_list = self.observer.get_armor_latest_state()
-            
-            for armor_state in armor_state_list:
-                self.get_logger().warn(f"Init Armor: {armor_state.name} id {armor_state.id}")
-        
+        for armor_state in armor_state_list:
+            self.get_logger().warn(f"Init Armor: {armor_state.name} id {armor_state.id}")
+    
         
         if node_observer_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)

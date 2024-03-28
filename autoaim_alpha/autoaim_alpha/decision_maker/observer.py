@@ -284,8 +284,7 @@ class Observer:
         self.observer_params.save_params_to_yaml(yaml_path)
  
     
-    def set_armor_initial_state(self,
-                                 armor_name_to_init_state:dict):
+    def set_armor_initial_state(self):
         
         for car_params in self.observer_params.armor_name_to_car_params.values():
             armor_name = car_params.armor_name
@@ -293,8 +292,8 @@ class Observer:
             t = time.time()
             confidence =0.0
             
-            tvec = np.array(armor_name_to_init_state[armor_name]['tvec'])
-            rvec = np.array(armor_name_to_init_state[armor_name]['rvec'])
+            tvec = np.array([0.0,0.0,0.0])
+            rvec = np.array([0.0,0.0,1.0])
             
 
             for armor_id in range(car_params.armor_nums):
