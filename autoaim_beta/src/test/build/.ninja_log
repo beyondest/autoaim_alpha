@@ -1,9 +1,0 @@
-# ninja log v5
-1	1143	1711595874	CMakeFiles/ggtest.dir/gg_test.cpp.o	fa2a5936fd47b7b7
-1143	1318	1711595874	exe/ggtest	bfdc19a7b8b1e7df
-1	12795	1711603028	CMakeFiles/ggtest.dir/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/basic.cpp.o	fa797b53c2f60d01
-1	15225	1711603031	CMakeFiles/ggtest.dir/gg_test.cpp.o	799ef5d40bd33b40
-1	15594	1711603031	CMakeFiles/ggtest.dir/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/gg_class.cpp.o	89b07149f3440acb
-15594	15740	1711603031	exe/ggtest	aba7110ef412d252
-1	6954	1711603075	CMakeFiles/ggtest.dir/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/gg_class.cpp.o	89b07149f3440acb
-6954	7085	1711603075	exe/ggtest	aba7110ef412d252
