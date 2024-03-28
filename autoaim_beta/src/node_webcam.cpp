@@ -99,7 +99,8 @@ public:
         }
         else
             RCLCPP_WARN(this->get_logger(), "USE YOLOV5 METHOD");
-        mv->open();
+        if (this->camera_type == "mv") mv->open();
+        else gg->open();
         this->net_detector = new Net_Detector(mode, net_config_folder, if_yolov5, enemy_car_info_list,armor_color);
         this->pnp_solver = new PNP_Solver(mode, pnp_config_params_path, img_show_wid, img_show_hei);
         this->timer_ = this->create_wall_timer(std::chrono::milliseconds(node_webcam_ms), std::bind(&Node_Webcam::timer_callback, this));
