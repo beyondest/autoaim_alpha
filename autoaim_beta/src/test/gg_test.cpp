@@ -12,7 +12,9 @@ int main()
     {
         auto t1 = std::chrono::high_resolution_clock::now();
         gg.get_img(img);
+
         cv::resize(img,img_show,cv::Size(680,384));
+        cv::flip(img_show,img_show,1);
         cv::imshow("img",img_show);
         cv::waitKey(1);
         auto t2 = std::chrono::high_resolution_clock::now();

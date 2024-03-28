@@ -52,8 +52,7 @@ class Node_Webcam_MV(Node,Custom_Context_Obj):
         img = self.mv.get_img()
         
         if img is not None:
-            if if_reverse_img:
-                img = cv2.rotate(img, cv2.ROTATE_180)
+            img = cv2.flip(img,flip_img_code)
             
             
             self.publisher.publish(self.cv_bridge.cv2_to_imgmsg(img,camera_output_format))

@@ -19,7 +19,10 @@ if_show_img_remote: False
 # enemy armor color: blue or red
 armor_color : blue
 
-if_reverse_img: True
+
+# WARNING: if use gg_camera, this should be 1
+# WARNING: if use mv_camera, this should be -1
+flip_img_code: -1 # -1 means rotate 360 degrees, 0 means flip vertical, 1 means flip horizontal
 
 
 

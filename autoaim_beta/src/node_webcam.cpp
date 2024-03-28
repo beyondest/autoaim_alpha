@@ -27,7 +27,7 @@ class Node_Webcam : public rclcpp::Node
 private:
     int fps = 0;
     Mode mode = Mode::Rel;
-    bool if_reverse = false;
+    int flip_img_code = -1;
     bool if_yolov5 = false;
     bool if_show_img_local = false;
     bool if_show_img_remote = false;
@@ -57,7 +57,7 @@ public:
         auto armor_color = general_config["armor_color"].as<std::string>();
         RCLCPP_WARN(this->get_logger(), "ENEMY_CAR_COLOR: %s", armor_color.c_str());
         this->if_yolov5 = general_config["if_yolov5"].as<bool>();
-        this->if_reverse = general_config["if_reverse_img"].as<bool>();
+        this->flip_img_code = general_config["flip_img_code"].as<int>();
         this->img_show_wid = general_config["img_show_wid"].as<int>();
         this->img_show_hei = general_config["img_show_hei"].as<int>();
         int node_webcam_ms = general_config["node_webcam_ms"].as<int>();
@@ -139,8 +139,7 @@ private:
             gg->get_img(*img);
         }
         cv::resize(*img, *img_show, cv::Size(img_show_wid, img_show_hei));
-        if (if_reverse)
-            cv::flip(*img_show, *img_show, -1);
+        cv::flip(*img_show, *img_show, flip_img_code);
         /*
         if(!if_yolov5)
         {
