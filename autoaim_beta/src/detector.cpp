@@ -439,7 +439,6 @@ Net_Detector::Net_Detector(Mode mode,
                  const std::string& armor_color_):
                  mode(mode),
                  if_yolov5(if_yolov5),
-                 params(enemy_car_list_),
                  armor_color(armor_color_),
                  params(enemy_car_list_,armor_color_)
 {
@@ -516,7 +515,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
 }
 
 
-bool Net_Detector::if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& big_rec) 
+bool Net_Detector::if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& big_rec) const 
 {
     cv::Mat roi;
     cv::Size roi_shape = {32,32};
