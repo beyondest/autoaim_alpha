@@ -82,7 +82,8 @@ public:
         else if (camera_type == "gg")
         {
             RCLCPP_WARN(this->get_logger(), "USE GG Camera");
-            this->gg = new GG_Camera(mode);
+            double exposure_time = YAML::LoadFile(camera_config_folder + "/yolov5_isp_params.yaml")["exposure_time_us"].as<double>();
+            this->gg = new GG_Camera(mode,exposure_time);
             this->img = new cv::Mat(gg->nHeight, gg->nWidth, CV_8UC3);
         }
         else

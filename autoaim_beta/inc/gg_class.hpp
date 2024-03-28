@@ -21,7 +21,7 @@ public:
     PGX_FRAME_BUFFER pFrameBuffer = NULL;
     const int nWidth = 1920;
     const int nHeight = 1200;
-    GG_Camera(const Mode camera_mode);
+    GG_Camera(const Mode camera_mode, double exposure_time);
 
     ~GG_Camera();
     IF_SUCCESS open();

@@ -4,7 +4,7 @@
 #include <chrono>
 int main()
 {
-    GG_Camera gg(Mode::Dbg);
+    GG_Camera gg(Mode::Dbg,500.0);
     cv::Mat img(gg.nHeight, gg.nWidth, CV_8UC3);
     cv::Mat img_show(384,680,CV_8UC3);
     gg.open();

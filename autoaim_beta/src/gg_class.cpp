@@ -11,7 +11,7 @@ void CHECK_GG_STATUS(GX_STATUS status)
     }
 }
 
-GG_Camera::GG_Camera(const Mode mode)
+GG_Camera::GG_Camera(const Mode mode, double exposure_time)
 {
     uint32_t nDeviceNum = 0;
     this->camera_mode = camera_mode;
@@ -23,6 +23,7 @@ GG_Camera::GG_Camera(const Mode mode)
         throw std::runtime_error("No GG Camera found!");
     }
     CHECK_GG_STATUS(GXOpenDeviceByIndex(1, &hDevice));
+    CHECK_GG_STATUS(GXSetFloat(hDevice, GX_FLOAT_EXPOSURE_TIME,exposure_time));
 }
 
 GG_Camera::~GG_Camera()
