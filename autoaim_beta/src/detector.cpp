@@ -441,7 +441,7 @@ Net_Detector::Net_Detector(Mode mode,
                  if_yolov5(if_yolov5),
                  params(enemy_car_list_),
                  armor_color(armor_color_),
-                 params(armor_color_)
+                 params(enemy_car_list_,armor_color_)
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
     if (if_yolov5) 

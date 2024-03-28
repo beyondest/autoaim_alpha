@@ -84,11 +84,9 @@ public:
     int white_num_thresh = 5;
     std::vector<int> yuv_range = {152,255};
     std::string armor_color = "blue";
-    Net_Detector_Params(std::string armor_color_):armor_color(armor_color_){};
-    ~Net_Detector_Params(){};
     bool load_params_from_yaml(const std::string& file_path);
     void print_show_params();
-    Net_Detector_Params(std::vector<Enemy_Car_Info> enemy_car_list_):enemy_car_list(enemy_car_list_){};
+    Net_Detector_Params(std::vector<Enemy_Car_Info> enemy_car_list_, std::string armor_color_):enemy_car_list(enemy_car_list_),armor_color(armor_color_){};
     ~Net_Detector_Params(){};
 
 };
