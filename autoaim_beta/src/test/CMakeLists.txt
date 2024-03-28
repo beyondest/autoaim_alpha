@@ -41,7 +41,10 @@ list(APPEND inc_list ${ROOT_DIR}/inc/gg " ")
 
 list(APPEND lib_list /usr/local/lib/libyaml-cpp.a
                      /lib/libMVSDK.so
-                     /lib/libgxiapi.so)
+                     /lib/libgxiapi.so
+                     /lib/GxGVTL.cti
+                     /lib/GxU3VTL.cti
+                     )
 
 include_directories(${inc_list} PUBLIC 
                                 ${OpenCV_INCLUDE_DIRS} 
