@@ -21,7 +21,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
     def __init__(self,
                  name):
         super().__init__(name)
-        self.action_mode_to_callback = {0:self.make_decision_callback,
+        self.action_mode_to_callback = {0:self.search_and_fire_callback,
                                 1:self.repeat_recv_from_ele_callback,
                                 2:self.test_yaw_callback,
                                 3:self.test_pitch_callback,
@@ -58,10 +58,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.decision_maker = Decision_Maker(node_decision_maker_mode,
                                              decision_maker_params_yaml_path,
-                                             pid_controller_config_yaml_path,
+                                             yaw_pid_path,
+                                             pitch_pid_path,
                                              self.ballistic_predictor,
                                              enemy_car_list,
-                                             if_relative=if_relative)
+                                             )
         
         
         
@@ -123,7 +124,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
     
     
     
-    def make_decision_callback(self):
+    def search_and_fire_callback(self):
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
@@ -132,14 +133,14 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         
         
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
+        self.decision_maker.search_and_fire() 
         
         com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
-        com_msg.target_abs_pitch = next_pitch
-        com_msg.target_abs_yaw = next_yaw
+        com_msg.target_abs_pitch = self.decision_maker.next_pitch
+        com_msg.target_abs_yaw = self.decision_maker.next_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
-        com_msg.fire_times = fire_times
+        com_msg.reserved_slot = 11
+        com_msg.fire_times = self.decision_maker.fire_times
         
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
@@ -158,7 +159,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = abs_pitch
         com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
+        com_msg.reserved_slot = 11
         com_msg.fire_times = 0
         self.yaw_test_idx += 1
         if self.yaw_test_idx >= len(yaw_test_data):
@@ -177,7 +178,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = pitch_test_data[self.pitch_test_idx]
         com_msg.target_abs_yaw = 0.0
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
+        com_msg.reserved_slot = 11
         com_msg.fire_times = 0
         self.pitch_test_idx += 1
         if self.pitch_test_idx >= len(pitch_test_data):
@@ -191,10 +192,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             return
         
         com_msg = ElectricsysState()
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
+        self.decision_maker.search_and_fire() 
        
-        com_msg.cur_yaw = next_yaw
-        com_msg.cur_pitch = next_pitch
+        com_msg.cur_yaw = self.decision_maker.next_yaw
+        com_msg.cur_pitch = self.decision_maker.next_pitch
         
         self.pub_show.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
@@ -216,7 +217,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = self.decision_maker.cur_pitch
         com_msg.target_abs_yaw = self.decision_maker.cur_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
+        com_msg.reserved_slot = 11
         com_msg.fire_times = 0
         
         self.pub_ele_sys_com.publish(com_msg)

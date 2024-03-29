@@ -20,11 +20,6 @@ class Decision_Maker_Params(Params):
         self.pitch_search_right_waves = 6
         
         
-        # for relative search
-        self.relative_yaw_move_step = 0.05
-        self.relative_pitch_move_step = 0.05
-        self.yaw_idx_max = 100
-        self.pitch_idx_max = 10
         
         
         # for track and lock
@@ -43,7 +38,6 @@ class Decision_Maker_Params(Params):
         self.y_axis_sensitivity = 0.5
         self.if_enable_mouse_control = False
         
-        
         # general config
         self.if_use_pid_control = True
         self.fire_mode = 0
@@ -61,16 +55,24 @@ class Decision_Maker_Params(Params):
         
         # for ballistic
         self.min_img_x_for_locked = 10.0    # only work for fire_mode == 1
-        self.min_img_x_diff_for_predict = 10.0 # only work for fire_mode == 2
+        self.min_continuous_detected_num_for_lock = 2
         self.manual_pitch_compensation = 0.0
         self.manual_yaw_compensation = 0.0
         
         # for predict
-        self.yaw_pitch_history_length = 20
-        self.armor_continuous_num_for_predict = 3   # only when track same(name,id) target bigger than this, predict myself
-        self.predict_period = 0.0    # only work when fire_mode == 2, if > 0, use specified time to predict, if <0, predict int(period) 1/fps time, if ==0, auto predict rely on depth
-        self.target_history_length = 10
-        self.ele_latence = 0.01
+        self.target_history_lenght = 20
+        
+        # for event
+        self.auto_bounce_back_period = 5 #if < 0, disable auto bounce back
+        
+        self.doing_nothing_continue_frames = 40
+        self.search_and_fire_continue_frames = 40
+        self.auto_bounce_back_continue_frames = 40
+        self.go_right_continue_frames = 40
+        self.go_left_continue_frames = 40
+        self.go_straight_continue_frames = 40
+        self.go_back_continue_frames = 40
+        
         
         
 
@@ -81,8 +83,7 @@ class Decision_Maker:
                  yaw_pid_controller_params_yaml_path:Union[str,None] = None,
                  pitch_pid_controller_params_yaml_path:Union[str,None] = None,
                  ballistic_predictor:Union[Ballistic_Predictor,None] = None,
-                 enemy_car_list:list = None,
-                 if_relative: bool = False
+                 enemy_car_list:list = None
                  ) -> None:
         CHECK_INPUT_VALID(mode,"Dbg",'Rel')
         if enemy_car_list is None:
@@ -91,7 +92,6 @@ class Decision_Maker:
         self.mode = mode
         self.params = Decision_Maker_Params()
         self.ballistic_predictor = ballistic_predictor
-        
         self.yaw_pid_controller = PID_Controller()
         self.pitch_pid_controller = PID_Controller()
         
@@ -111,6 +111,8 @@ class Decision_Maker:
         self.next_yaw = 0.0
         self.next_pitch = 0.0
         self.fire_times = 0
+        self.reserved_slot = 11 # tens digit is 1 means not bounce back, 2 means bounce back; digit is 1 means stay, 2 means go forward towards gimbal direction, 0 means go backward 
+        
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
         self.remaining_health = 0.0
@@ -118,19 +120,14 @@ class Decision_Maker:
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
         self.pitch_compensation = 0.0
+        
         self._init_yaw_pitch_search_data()
         
-        self.yaw_idx = 0
-        self.yaw_add = True
-        self.pitch_idx = 0
-        self.pitch_add = True
-        self.if_relative = if_relative
-        
+        # if -1, means first enter action func, then set to continue frame count, if == 0, means action finished, if > 0, means not finished
+        self.action_count = -1
        
         # this is for predict
-        self.next_yaw_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
-        self.next_pitch_history_list = [0.0 for i in range(self.params.yaw_pitch_history_length)]
-        self.target_list = [Armor_Params('None',0) for i in range(self.params.yaw_pitch_history_length)]
+        self.target_list = [Armor_Params('None',0) for i in range(self.params.target_history_lenght)]
         
         # this is for record
         if self.params.record_data_path is not None:
@@ -191,73 +188,122 @@ class Decision_Maker:
         self.params.save_params_to_yaml(yaml_path)
     
     
-    def make_decision(self)->tuple:
+    def search_and_fire(self)->bool:
         """
         Args:
             target_armor_params (Armor_Params): _description_
         Returns:
-            tuple: next_yaw,next_pitch, fire_times
+            if action finished, return True, else return False
         """
-        last_update_target_list = self._find_last_update_target()
-        self._choose_target(last_update_target_list)
+        if self.action_count == -1:
+            self.action_count = self.params.search_and_fire_continue_frames
+            if self.mode == 'Dbg':
+                lr1.debug("Start Search and Fire")
+            return False
         
-        if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
-            if not self.params.if_use_pid_control:
-                # abs pitch, apply pitch compensation automatically
-                self._get_next_yaw_pitch_by_ballistic()
+        elif self.action_count > 0:
+            self.action_count -= 1
+            last_update_target_list = self._find_last_update_target()
+            self._choose_target(last_update_target_list)
+            
+            if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
+                if not self.params.if_use_pid_control:
+                    # abs pitch, apply pitch compensation automatically
+                    self._get_next_yaw_pitch_by_ballistic()
+                            
+                else:
+                    if self.params.fire_mode == 0:
+                        self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=0.0)
+                        
+                    elif self.params.fire_mode == 1:
+                        gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
+                        self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff + self.params.manual_pitch_compensation
+                        self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
+                                                        pitch_pid_target=self.pitch_compensation)
+                    elif self.params.fire_mode == 2:
+                        gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
+                        gravity_compensation = self.ballistic_predictor.get_gravity_compensation(self.target.tvec[1])
+                        self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff +gravity_compensation + self.params.manual_pitch_compensation
+                        self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
+                                                        pitch_pid_target=self.pitch_compensation)
                         
             else:
-                if self.params.fire_mode == 0:
-                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=0.0)
-                    
-                elif self.params.fire_mode == 1:
-                    gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
-                    self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff + self.params.manual_pitch_compensation
-                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
-                                                    pitch_pid_target=self.params.manual_pitch_compensation)
-                    
-        else:
-            self._get_next_yaw_pitch_by_stay_or_search()
-        if self.params.if_enable_mouse_control:
-            self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
-        
-        
+                self._get_next_yaw_pitch_by_stay_or_search()
+            if self.params.if_enable_mouse_control:
+                self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
+            
 
-        SHIFT_LIST_AND_ASSIG_VALUE(self.next_yaw_history_list,self.next_yaw)
-        SHIFT_LIST_AND_ASSIG_VALUE(self.next_pitch_history_list,self.next_pitch) 
-        SHIFT_LIST_AND_ASSIG_VALUE(self.target_list,self.target)
+            SHIFT_LIST_AND_ASSIG_VALUE(self.target_list,self.target)
+            
+            if_locked = self._if_target_locked()
+            if if_locked:
+                self.fire_times = 1
+                lr1.warn("Target Locked, FIRE")
+                if self.mode == 'Dbg':
+                    lr1.debug(f"Target Locked, FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+                    
+            else:
+                self.fire_times = 0
+                if self.mode == 'Dbg':
+                    if self.params.fire_mode != 0:
+                        lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+            
+            self.reserved_slot = 11
+            if self.params.record_data_path is not None:
+                SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
+                self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
+            return False
         
-        if_locked = self._if_target_locked()
-        if if_locked:
-            self.fire_times = 1
-            lr1.warn("Target Locked, FIRE")
+        elif self.action_count == 0:
+            self.action_count = -1
             if self.mode == 'Dbg':
-                lr1.debug(f"Target Locked, FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
-                
-        else:
+                lr1.debug("Search and Fire Finished")
+            return True
+
+
+    def auto_bounce_back(self):
+        if self.action_count == -1:
+            self.action_count = self.params.auto_bounce_back_continue_frames
+            if self.mode == 'Dbg':
+                lr1.debug("Start Auto Bounce Back")
+            return False
+        elif self.action_count > 0:
+            self.action_count -= 1
+            self.next_pitch = self.cur_pitch
+            self.next_yaw = self.cur_yaw
             self.fire_times = 0
+            self.reserved_slot = 21
             if self.mode == 'Dbg':
-                if self.params.fire_mode != 0:
-                    lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+                lr1.debug("Auto Bounce Back")
+            return False
+        elif self.action_count == 0:
+            self.action_count = -1
+            if self.mode == 'Dbg':
+                lr1.debug("Auto Bounce Back Finished")
+            return True
+            
         
-        if self.params.fire_mode == 2:
-            self._predict()
-        
-        
-        
-        '''if self.if_relative:
-            self.next_yaw = CIRCLE(self.next_yaw, [-np.pi, np.pi])
-            self.next_pitch = CIRCLE(self.next_pitch, [-np.pi, np.pi])
-        else:
-            self.next_yaw = CLAMP(self.next_yaw, [-np.pi, np.pi])
-            self.next_pitch = CLAMP(self.next_pitch, [-np.pi, np.pi])'''
-        
-        if self.params.record_data_path is not None:
-            SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
-            self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
-        
-        return self.next_yaw,self.next_pitch, self.fire_times
-
+    def doing_nothing(self):
+        if self.action_count == -1:
+            self.action_count = self.params.doing_nothing_continue_frames
+            if self.mode == 'Dbg':
+                lr1.debug("Start Doing Nothing")
+            return False
+        elif self.action_count > 0:
+            self.action_count -= 1
+            self.next_pitch = self.cur_pitch
+            self.next_yaw = self.cur_yaw
+            self.fire_times = 0
+            self.reserved_slot = 11
+            if self.mode == 'Dbg':
+                lr1.debug("Doing Nothing")
+            return False
+        elif self.action_count == 0:
+            self.action_count = -1
+            if self.mode == 'Dbg':
+                lr1.debug("Doing Nothing Finished")
+            return True
+    
     
     def _search_target(self):
         """
@@ -265,34 +311,7 @@ class Decision_Maker:
         Returns:
             yaw, pitch
         """
-        if self.if_relative:
-            
-            if self.yaw_add:
-                yaw = self.params.relative_yaw_move_step
-                self.yaw_idx += 1
-                if self.yaw_idx >= self.params.yaw_idx_max:
-                    self.yaw_add = False
-                    
-            else:
-                yaw = -self.params.relative_yaw_move_step
-                self.yaw_idx -= 1
-                if self.yaw_idx < 0:
-                    self.yaw_add = True
-                    
-            if self.pitch_add:
-                pitch = self.params.relative_pitch_move_step
-                self.pitch_idx += 1
-                if self.pitch_idx >= self.params.pitch_idx_max:
-                    self.pitch_add = False
-                    
-            else:
-                pitch = -self.params.relative_pitch_move_step
-                self.pitch_idx -= 1
-                if self.pitch_idx < 0:
-                    self.pitch_add = True
-                    
-        else:
-            yaw,pitch = self._get_search_next_yaw_pitch()
+        yaw,pitch = self._get_search_next_yaw_pitch()
         
         return yaw,pitch
     
@@ -362,14 +381,11 @@ class Decision_Maker:
         move_yaw = -delta_x / self.params.screen_width * 100/180 * np.pi
         move_pitch = -delta_y / self.params.screen_height * 100/180 * np.pi
         
-        if self.if_relative:
         
-            next_yaw = self.cur_yaw + move_yaw * self.params.x_axis_sensitivity
-            next_pitch = self.cur_pitch + move_pitch * self.params.y_axis_sensitivity
+
             
-        else:
-            next_yaw = move_yaw * self.params.x_axis_sensitivity
-            next_pitch = move_pitch * self.params.y_axis_sensitivity
+        next_yaw = move_yaw * self.params.x_axis_sensitivity
+        next_pitch = move_pitch * self.params.y_axis_sensitivity
         
         return next_yaw,next_pitch
         
@@ -382,11 +398,10 @@ class Decision_Maker:
         return last_update_target
     
     def _choose_target(self, last_update_target_list:list):
+        
         if len(last_update_target_list) == 0:
             self.target.if_update = False
         else:
-            
-            
             if self.params.choose_mode == 0:
                 self.target = max(last_update_target_list,key=lambda x:x.continuous_detected_num)
             elif self.params.choose_mode == 1:
@@ -408,8 +423,8 @@ class Decision_Maker:
     def _get_next_yaw_pitch_by_stay_or_search(self):
         
         if self.target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
-            self.next_yaw = 0.0 if self.if_relative else self.cur_yaw
-            self.next_pitch = 0.0 if self.if_relative else self.cur_pitch
+            self.next_yaw =  self.cur_yaw
+            self.next_pitch =  self.cur_pitch
             lr1.warn(f"Stay cause blink {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
         
         else: 
@@ -425,15 +440,15 @@ class Decision_Maker:
                                                     self.cur_yaw,
                                                     self.cur_pitch)
         if if_success:
-            self.next_yaw = fire_yaw if not self.if_relative else fire_yaw - self.cur_yaw
-            self.next_pitch = fire_pitch if not self.if_relative else fire_pitch - self.cur_pitch
+            self.next_yaw = fire_yaw
+            self.next_pitch = fire_pitch
             lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
             if self.mode == 'Dbg':
                 lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, fy = {fire_yaw:.3f}, fp = {fire_pitch:.3f}, ny = {self.next_yaw:.3f}, np = {self.next_pitch:.3f}, x = {self.target.tvec[0]:.3f}, y = {self.target.tvec[1]:.3f}, z = {self.target.tvec[2]:.3f}")
             
         else:
-            self.next_yaw = 0.0 if self.if_relative else self.cur_yaw
-            self.next_pitch = 0.0 if self.if_relative else self.cur_pitch
+            self.next_yaw = self.cur_yaw
+            self.next_pitch =  self.cur_pitch
             lr1.warn(f"Stay cause fail to solve , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
     
     def _get_next_yaw_pitch_by_pid(self,yaw_pid_target:float = 0.0,pitch_pid_target:float = 0.0):
@@ -444,12 +459,8 @@ class Decision_Maker:
         pid_rel_yaw = -self.yaw_pid_controller.get_output(yaw_pid_target,relative_yaw)
         relative_pitch = -np.arctan(img_y /581.3) # 581.3 = 384/2/np.tan(0.319),384 is 
         pid_rel_pit = self.pitch_pid_controller.get_output(pitch_pid_target,relative_pitch) 
-        if not self.if_relative:
-            self.next_yaw = self.cur_yaw + pid_rel_yaw
-            self.next_pitch = self.cur_pitch + pid_rel_pit
-        else:
-            self.next_yaw = pid_rel_yaw
-            self.next_pitch = pid_rel_pit
+        self.next_yaw = self.cur_yaw + pid_rel_yaw
+        self.next_pitch = self.cur_pitch + pid_rel_pit
             
         lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
         if self.mode == 'Dbg':  
@@ -457,22 +468,15 @@ class Decision_Maker:
     
     
     def _if_target_locked(self):
-        if self.params.fire_mode == 1:
+        if self.params.fire_mode == 1 or self.params.fire_mode == 2:
             if self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track\
             and self.target.if_update \
-            and abs(self.target.tvec[0]) < self.params.min_img_x_for_locked:
-                return True
-            
-        elif self.params.fire_mode == 2:
-            if self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track\
-            and self.__find_update_target_num() >= 3\
-            and self.__find_continuous_track_armor_num() >= 3\
-            and abs(self.target_list[0].tvec[0] - self.target_list[1].tvec[0]) < self.params.min_img_x_diff_for_predict\
-            and abs(self.target_list[1].tvec[0] - self.target_list[2].tvec[0]) < self.params.min_img_x_diff_for_predict:
+            and abs(self.target.tvec[0]) < self.params.min_img_x_for_locked\
+            and self.__find_update_target_num() >= self.params.min_continuous_detected_num_for_lock\
+            and self.__find_continuous_track_armor_num() >= self.params.min_continuous_detected_num_for_lock:
                 return True
         else:
             return False
-    
 
     def __find_update_target_num(self)->int:
         for i, target in enumerate(self.target_list):
@@ -490,38 +494,6 @@ class Decision_Maker:
                 return i + 1
         return len(self.target_list)
     
-    
-    def _predict(self):
-        """Unsatisfactory , need to be improved
-        """
-        armor_continuous_num = self.__find_continuous_track_armor_num()
-        update_target_num = self.__find_update_target_num()
-        
-        if armor_continuous_num >= self.params.armor_continuous_num_for_predict\
-        and update_target_num >= self.params.armor_continuous_num_for_predict:
-            if self.params.predict_period > 0:
-                predict_time = self.params.predict_period + self.params.ele_latence
-            else:
-                predict_time = self.target_list[0].tvec[1] / self.ballistic_predictor.params.bullet_speed + self.params.ele_latence
-            
-            t01 = self.target_list[0].time - self.target_list[1].time
-            t12 = self.target_list[1].time - self.target_list[2].time
-            yaw_v01 = (self.next_yaw_history_list[0] - self.next_yaw_history_list[1]) / t01 if t01 > 0 else 0
-            yaw_v12 = (self.next_yaw_history_list[1] - self.next_yaw_history_list[2]) / t12 if t12 > 0 else 0
-            yaw_a = (yaw_v12 - yaw_v01) / (t12 + t01) if t12 + t01 > 0 else 0
-            self.next_yaw = self.next_yaw_history_list[0] + yaw_v01 * predict_time + 0.5 * yaw_a * predict_time ** 2
-            
-            pit_v01 = (self.next_pitch_history_list[0] - self.next_pitch_history_list[1]) / t01 if t01 > 0 else 0
-            pit_v12 = (self.next_pitch_history_list[1] - self.next_pitch_history_list[2]) / t12 if t12 > 0 else 0
-            pit_a = (pit_v12 - pit_v01) / (t12 + t01) if t12 + t01 > 0 else 0
-            self.next_pitch = self.next_pitch_history_list[0] + pit_v01 * predict_time + 0.5 * pit_a * predict_time ** 2
-            if self.mode == 'Dbg':
-                lr1.debug(f"Predict {self.target.name} {self.target.id} , predict_time: {predict_time:.3f}, yaw_v01: {yaw_v01:.3f},yaw_a: {yaw_a:.3f}, pit_v01: {pit_v01:.3f},  pit_a: {pit_a:.3f}")
-        
-        else:
-            if self.mode == 'Dbg':
-                lr1.debug(f"Predict fail {self.target.name} {self.target.id} , armor_continuous_num: {armor_continuous_num}, update_target_num: {update_target_num}")
-                
                 
     def force_enable_mouse_control(self,
                                    data_path:Union[str,None]=None):
@@ -538,4 +510,6 @@ class Decision_Maker:
         
         self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
         self.mouse_pos_prior = (0,0)
+    
+    
     

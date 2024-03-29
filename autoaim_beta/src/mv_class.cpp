@@ -62,7 +62,6 @@ Mindvision_Camera::Mindvision_Camera(  const Mode camera_mode,
     this->init(if_use_last_params);
 
 
-
 }
 Mindvision_Camera::~Mindvision_Camera()
 {
@@ -110,8 +109,6 @@ IF_SUCCESS Mindvision_Camera::init(bool if_use_last_params)
 
     spdlog::info("CAMERA : init camera id 0 success!");
     return IF_SUCCESS::SUCCESS;
-    
-    
 }
 
 IF_SUCCESS Mindvision_Camera::load_params_from_folder(const std::string& folder_path,const std::string& armor_color)

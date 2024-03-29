@@ -566,7 +566,6 @@ class Tradition_Detector:
         t6 = time.perf_counter()
         
         
-        lr1.debug(f"Fuck : findcontours_time : {t2-t1:.4f}, filter1_time : {t3-t2:.4f}, get_big_rec_time : {t4-t3:.4f}, expand_rec_time : {t5-t4:.4f}, filter2_time : {t6-t5:.4f}")
         
             
         return big_rec_list

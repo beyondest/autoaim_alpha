@@ -5,13 +5,15 @@ from rclpy.node import Node
 from .decision_maker.ballistic_predictor import *
 from .decision_maker.decision_maker import *
 
-yaw_left = -np.pi
-yaw_right = np.pi
-yaw_step = 0.01
-pitch_down = -0.3491    # -20
-pitch_up = 1.2227       # +70
-pitch_step = 0.01
-
+DOING_NOTHING = 0
+SEARCH_AND_FIRE = 1
+AUTO_BOUNCE_BACK = 2
+GO_RIGHT = 3
+GO_LEFT = 4
+GO_STRAIGHT = 5
+GO_BACK = 6
+TRACK_FRIEND = 7
+TRACK_ENEMY = 8
 
 
 class Node_Decision_Maker(Node,Custom_Context_Obj):
@@ -20,18 +22,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                  name):
         super().__init__(name)
         self.action_mode_to_callback = {0:self.make_decision_callback,
-                                1:self.repeat_recv_from_ele_callback,
-                                2:self.test_yaw_callback,
-                                3:self.test_pitch_callback,
-                                4:self.doing_nothing_callback,
-                                5:self.test_fire_callback}
+                                       1:self.test_fire_callback}
         
         self.action_mode_to_note = {0:"Make decision mode",
-                                1:"Repeat recv from ele",
-                                2:"Test yaw",
-                                3:"Test pitch",
-                                4:"Doing nothing",
-                                5:"Test fire"}
+                                    1:"Test fire , auto track"}
+        self.event_flat_to_callback = {DOING_NOTHING:self.decision_maker.doing_nothing,
+                                       SEARCH_AND_FIRE:self.decision_maker.search_and_fire,
+                                       AUTO_BOUNCE_BACK:self.decision_maker.auto_bounce_back}
         
         self.pub_ele_sys_com = self.create_publisher(topic_electric_sys_com['type'],
                                                 topic_electric_sys_com['name'],
@@ -51,8 +48,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              yaw_pid_path,
                                              pitch_pid_path,
                                              self.ballistic_predictor,
-                                             enemy_car_list,
-                                             if_relative=if_relative)
+                                             enemy_car_list)
         
         
         
@@ -73,6 +69,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.rel_yaw = 0.0
         self.rel_pitch = 0.0
         self.fire_times = 0
+        
+        self.event_flag_index = 0
+        self.cur_event = event_flag_list[self.event_flag_index]
+        self.pre_event = DOING_NOTHING
+        
         self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
                                                       topic_electric_sys_state['name'],
                                                       self.recv_from_ele_sys_callback,
@@ -83,20 +84,28 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                         self.sub_armor_pos_list_callback,
                                                         topic_armor_pos_list['qos_profile'])
         
-        
-        self.sub_pid_config = self.create_subscription(topic_pid_config['type'],
-                                                    topic_pid_config['name'],
-                                                    self.sub_pid_config_callback,
-                                                    topic_pid_config['qos_profile'])
-        
-        self.pub_debug_fire = self.create_publisher(topic_debug_fire['type'],
-                                                topic_debug_fire['name'],
-                                                topic_debug_fire['qos_profile'])
-        
-        self.sub_gimbal_action = self.create_subscription(topic_gimbal_action['type'],
-                                                    topic_gimbal_action['name'],
-                                                    self.sub_gimbal_action_callback,
-                                                    topic_gimbal_action['qos_profile'])
+        if self.decision_maker.params.auto_bounce_back_period > 0:
+            self.auto_bounce_back_timer = self.create_timer(self.decision_maker.params.auto_bounce_back_period, 
+                                                            self.auto_bounce_callback)
+            self.get_logger().warn(f"Auto bounce back period {self.decision_maker.params.auto_bounce_back_period} s")
+            
+        else:
+            self.get_logger().warn(f"Disable auto bounce back")
+            
+        if mode == 'Dbg':
+            self.sub_pid_config = self.create_subscription(topic_pid_config['type'],
+                                                        topic_pid_config['name'],
+                                                        self.sub_pid_config_callback,
+                                                        topic_pid_config['qos_profile'])
+            
+            self.pub_debug_fire = self.create_publisher(topic_debug_fire['type'],
+                                                    topic_debug_fire['name'],
+                                                    topic_debug_fire['qos_profile'])
+            
+            self.sub_gimbal_action = self.create_subscription(topic_gimbal_action['type'],
+                                                        topic_gimbal_action['name'],
+                                                        self.sub_gimbal_action_callback,
+                                                        topic_gimbal_action['qos_profile'])
         
     def recv_from_ele_sys_callback(self, msg:ElectricsysState):
         
@@ -131,111 +140,60 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.action_mode_to_callback[gimbal_action_mode]()
 
-
+        com_msg = ElectricsysCom()
+        com_msg.target_abs_pitch = self.decision_maker.next_pitch
+        com_msg.target_abs_yaw = self.decision_maker.next_yaw
+        com_msg.sof = 'A'
+        com_msg.reserved_slot = self.decision_maker.reserved_slot
+        com_msg.fire_times = self.decision_maker.fire_times
+        self.pub_ele_sys_com.publish(com_msg)
     
     
     
     def make_decision_callback(self):
         if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            self.get_logger().warn(f"Not connect to electric system, cannot search and fire")
+            self.decision_maker.doing_nothing()
             return
         
         
-        com_msg = ElectricsysCom()
         t1 = time.time()
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
+
+        if_action_finished = self.event_flat_to_callback[self.cur_event]()
+        if if_action_finished:
+            if self.cur_event == AUTO_BOUNCE_BACK:
+                self.cur_event = self.pre_event
+            else:
+                self.pre_event = event_flag_list[self.event_flag_index]
+                if self.event_flag_index == len(event_flag_list)-1:
+                    self.event_flag_index = self.event_flag_index
+                else:
+                    self.event_flag_index += 1
+                self.cur_event = event_flag_list[self.event_flag_index]
+        else:
+            self.cur_event = self.cur_event    
         t2 = time.time()
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
-            
-            
-        com_msg.target_abs_pitch = next_pitch
-        com_msg.target_abs_yaw = next_yaw
-        com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
-        com_msg.fire_times = fire_times
-        
-        self.pub_ele_sys_com.publish(com_msg)
-        if node_decision_maker_mode == 'Dbg':
-            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f}")
+            self.get_logger().debug(f"Make decision : event_flag: {self.cur_event} fire_times {self.decision_maker.fire_times}  target_abs_yaw {self.decision_maker.next_yaw:.3f},target_abs_pitch {self.decision_maker.next_pitch:.3f}, reserved_slot {self.decision_maker.reserved_slot}")
        
-        
-    def test_yaw_callback(self):
-        
+    def auto_bounce_callback(self):
         if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
-            return
+            self.get_logger().warn(f"Not connect to electric system, cannot auto bounce back")
+        else:
+            self.pre_event = self.cur_event
+            self.cur_event = AUTO_BOUNCE_BACK
+            if node_decision_maker_mode == 'Dbg':
+                self.get_logger().debug(f"Auto bounce back")
         
-        com_msg = ElectricsysCom()
-        abs_yaw, abs_pitch = self.decision_maker._search_target()
-        com_msg.target_abs_pitch = 0.0
-        com_msg.target_abs_yaw = abs_yaw
-        com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
-        com_msg.fire_times = 0
-        
-        self.pub_ele_sys_com.publish(com_msg)
-        
-    def test_pitch_callback(self):
-        if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
-            return
-        
-        com_msg = ElectricsysCom()
-        
-        next_yaw, next_pitch = self.decision_maker._search_target()
-        com_msg.target_abs_yaw = 0.0
-        com_msg.target_abs_pitch = next_pitch
-        com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
-        com_msg.fire_times = 0
-        
-        self.pub_ele_sys_com.publish(com_msg)
-    
-    def doing_nothing_callback(self):
-        if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
-            return
-        
-        com_msg = ElectricsysState()
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
-       
-        com_msg.cur_yaw = next_yaw
-        com_msg.cur_pitch = next_pitch
-        
-        self.pub_show.publish(com_msg)
-        if node_decision_maker_mode == 'Dbg':
-            self.get_logger().debug(f"Make decision : target_abs_pitch {com_msg.cur_pitch:.3f} target_abs_yaw {com_msg.cur_yaw:.3f} ")
-       
-    def repeat_recv_from_ele_callback(self):
-        
-        if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
-            return
-        
-        com_msg = ElectricsysCom()
-        
-        self.get_logger().debug(f"Get : {self.decision_maker.cur_pitch}, {type(self.decision_maker.cur_pitch)}")
-        self.get_logger().debug(f"Get : {self.decision_maker.cur_yaw}, {type(self.decision_maker.cur_yaw)}")
-
-        com_msg.target_abs_pitch = self.decision_maker.cur_pitch
-        com_msg.target_abs_yaw = self.decision_maker.cur_yaw
-        com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
-        com_msg.fire_times = 0
-        
-        self.pub_ele_sys_com.publish(com_msg)
-    
     def sub_pid_config_callback(self,msg:PidConfig):
         
         self.decision_maker.yaw_pid_controller.params.kp = msg.yaw_kp
         self.decision_maker.yaw_pid_controller.params.ki = msg.yaw_ki
         self.decision_maker.yaw_pid_controller.params.kd = msg.yaw_kd
-        
         self.decision_maker.pitch_pid_controller.params.kp = msg.pitch_kp
         self.decision_maker.pitch_pid_controller.params.ki = msg.pitch_ki
         self.decision_maker.pitch_pid_controller.params.kd = msg.pitch_kd
-        
         
     def test_fire_callback(self):
         if self.if_connetect_to_ele_sys == False:
@@ -247,22 +205,23 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         t1 = time.time()
-        next_yaw,next_pitch,fire_times = self.decision_maker.make_decision() 
+        self.decision_maker.search_and_fire() 
         t2 = time.time()
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
         
-        com_msg.target_abs_pitch = next_pitch
-        com_msg.target_abs_yaw = next_yaw
+        com_msg.target_abs_pitch = self.decision_maker.next_pitch
+        com_msg.target_abs_yaw = self.decision_maker.next_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 0
+        com_msg.reserved_slot = 11
         com_msg.fire_times = self.fire_times if self.fire_times != -1 else 0
-        debug_fire_msg = DebugFire()
-        debug_fire_msg.img_x = float(self.decision_maker.target.tvec[0])
-        debug_fire_msg.img_y = float(self.decision_maker.target.tvec[2])
-        debug_fire_msg.depth = float(self.decision_maker.target.tvec[1])
-        
-        self.pub_debug_fire.publish(debug_fire_msg)
+
+        if mode == 'Dbg':
+            debug_fire_msg = DebugFire()
+            debug_fire_msg.img_x = float(self.decision_maker.target.tvec[0])
+            debug_fire_msg.img_y = float(self.decision_maker.target.tvec[2])
+            debug_fire_msg.depth = float(self.decision_maker.target.tvec[1])
+            self.pub_debug_fire.publish(debug_fire_msg)
         
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':

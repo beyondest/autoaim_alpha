@@ -8,11 +8,6 @@ pitch_search_left_waves: 4
 pitch_search_right_waves: 5
 
 
-# for relative search
-relative_yaw_move_step: 0.02
-relative_pitch_move_step: 0.01
-yaw_idx_max: 100
-pitch_idx_max: 10
 
 
 
@@ -26,7 +21,7 @@ continuous_lost_num_max_threshold: 15
 # for ballistic
 # WARN: Only fit for 640 * 384 img_show size, img_x is x,img_y is z, by default, img_y locked when img_x is locked 
 min_img_x_for_locked: 40.0 # for fire_mode 1
-min_img_x_diff_for_predict: 20.0 # for fire_mode 2
+min_continuous_detected_num_for_lock: 2
 manual_pitch_compensation: 0.04
 manual_yaw_compensation: -0.01
 
@@ -35,12 +30,12 @@ manual_yaw_compensation: -0.01
 # for recording data
 tvec_history_length: 10  
 record_data_path: null
+target_history_lenght: 5   # must bigger than min_continuous_detected_num_for_lock
 
 # this is for mouse control
 screen_width: 1920
 screen_height: 1080
 if_enable_mouse_control: False
-
     # 0-1, x from left to right = 100degree, y from top to bottom = 100degree
 x_axis_sensitivity: 0.5
 y_axis_sensitivity: 0.5
@@ -49,16 +44,23 @@ y_axis_sensitivity: 0.5
 # general config
 
 if_use_pid_control: True
-
 fire_mode: 1 # 0 track, 1 pitch_compensation, 2 pitch_compensation with gravity compensation
 choose_mode: 1 # 0 precision_first, 1 distance_first, 2 balanced
 
-# for predict
-yaw_pitch_history_length: 20
-armor_continuous_num_for_predict: 3
-predict_period: 0.0     # only work when fire_mode == 2, if > 0, use specified time to predict, if <0 , predict int(period) 1/fps time, if ==0, auto predict rely on depth
-target_history_length: 5
-ele_latence: 0.01 # second
+
+# for event,  should adjust with fps
+auto_bounce_back_period: 5 # seconds
+doing_nothing_continue_frames: 40
+search_and_fire_continue_frames: 40
+auto_bounce_back_continue_frames: 40 
+go_right_continue_frames: 40
+go_left_continue_frames: 40
+go_straight_continue_frames: 40
+go_back_continue_frames: 40
+
+
+
+
 
 
 

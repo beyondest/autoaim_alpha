@@ -1,1 +1,0 @@
-params.cur_yaw

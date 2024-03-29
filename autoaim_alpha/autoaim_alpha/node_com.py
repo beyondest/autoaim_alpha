@@ -72,8 +72,7 @@ class Node_Com(Node,Custom_Context_Obj):
         cur_pitch = cur_pitch / 180 * np.pi
         if if_error:
             if self.port.ser is not None:
-                if not if_relative:
-                    self.get_logger().error(f"Com receive occur error")
+                self.get_logger().error(f"Com receive error")
             else:
                 pass 
                 #self.get_logger().error(f"Com port {self.port.params.port_abs_path} cannot open")

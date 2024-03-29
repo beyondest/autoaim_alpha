@@ -310,10 +310,10 @@ class action_data(data_list):
     
     def __init__(self,
                  SOF:str = 'A',
-                 fire_times:int=2,
-                 abs_pitch:float=20.0, #  degree
-                 abs_yaw:float=90.0,  # degree
-                 reserved_slot:float=0) -> None:
+                 fire_times:int=0,
+                 abs_pitch:float=0.0, #  degree
+                 abs_yaw:float=0.0,  # degree
+                 reserved_slot:int=11) -> None:
         
         super().__init__()
         
@@ -366,9 +366,9 @@ class pos_data(data_list):
     def __init__(self,
                  SOF:str = 'P',
                  fire_times:int = 0,
-                 present_pitch:float = -10.0,
-                 present_yaw:float = 90.0,
-                 reserved_slot:int = 0
+                 present_pitch:float = 0.0,
+                 present_yaw:float = 0.0,
+                 reserved_slot:int = 11
                  ) -> None:
         super().__init__()
         

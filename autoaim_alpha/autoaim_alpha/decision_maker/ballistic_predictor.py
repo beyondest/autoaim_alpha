@@ -107,8 +107,6 @@ class Ballistic_Predictor:
         if self.mode == 'Dbg':
             lr1.info(f"Ballistic_Predictor :  min_depth: {self.min_depth:.3f} ,h1: {self.h1:.3f}, h2: {self.h2:.3f}, h3: {self.h3:.3f}, h2_m_h1_2_m_h3_2: {self.h2_m_h1_2_m_h3_2:.3f}, h2_m_h1_2: {self.h2_m_h1_2:.3f}, h3_h2_m_h1: {self.h3_h2_m_h1:.3f}, h3_2: {self.h3_2:.3f}")
         
-             
-        
     def save_params_to_yaml(self,yaml_path:str):
         self.params.camera_init_theta = None
         self.params.muzzle_init_theta = None
@@ -189,9 +187,11 @@ class Ballistic_Predictor:
             if target_height_above_gound > gun_pivot_height_above_ground, then theta_2 > theta_1, otherwise theta_2 < theta_1
         
         Returns:
-            theta_2 - theta_1
+            theta_1 - theta_2 (WHEN target lower than gun_pivot, if need lower head, then cause theta_1 - theta_2 > 0, will lower head a bit less)
         """
-        if depth <= 0:
+        if depth <= self.min_depth:
+            if self.mode == 'Dbg':
+                lr1.warn(f"Ballistic_Predictor : depth <= min_depth, return 0.0, depth: {depth:.3f}, min_depth: {self.min_depth:.3f}")
             return 0.0
         
         x1 = depth
@@ -214,13 +214,13 @@ class Ballistic_Predictor:
             lr1.error(f"Ballistic_Predictor : get pitch diff error,  cos_theta_1_1 > 1, x1: {x1:.3f}, a: {a:.3f}, b: {b:.3f}, c: {c:.3f}, delta: {delta:.3f}, cos_theta_1_1: {cos_theta_1_1:.3f}")
         
         #cos_theta_1_2 = (-b - np.sqrt(delta)) / (2 * a)
-        
         theta_1 = np.arccos(cos_theta_1_1)
         # cos_theta_1_2 = (-b - np.sqrt(delta)) / (2 * a) must be negative, so ignore it
         if self.mode == 'Dbg':
             lr1.debug(f"Ballistic_Predictor : x1: {x1:.3f},theta_2 - theta_1: {theta_2 - theta_1:.3f}, theta_2: {theta_2:.3f}, a: {a:.3f}, b: {b:.3f}, delta: {delta:.3f}, cos_theta_1_1: {cos_theta_1_1:.3f}, theta_1: {theta_1:.3f}")
         
-        return theta_2 - theta_1
+        
+        return theta_1 - theta_2
     
     
     def cal_max_shooting_dis_by_gradient(self)->float:
@@ -330,7 +330,6 @@ class Ballistic_Predictor:
                 t = bullet_drop_on_ground_time
             
         """
-        
         actual_angle = self.params.muzzle_init_theta + pitch
         tvec_init = np.array([np.cos(actual_angle) * self.params.muzzle_radius,
                               np.sin(actual_angle) * self.params.muzzle_radius])
@@ -465,7 +464,6 @@ class Ballistic_Predictor:
                 
             count += 1    
             
-            
             if abs(fx) < self.params.newton_error_tolerance:
                 if INRANGE(x, self.params.pitch_range):
                     if_success = True
@@ -489,10 +487,6 @@ class Ballistic_Predictor:
                     else:
                         lr1.warn(f"Ballistic_Predictor : newton failed, iter too many times, final error {fx}")
                         break
-                
-            
-                    
-                
             
             #print(f"x_new: {x_new} , x: {x} , fx: {fx} , dfx: {dfx}")
             
@@ -502,6 +496,26 @@ class Ballistic_Predictor:
             lr1.debug(f"Ballistic_Predictor : newton iterations: {count}")
         
         return [x_new, flight_time, if_success]
+    
+    def get_gravity_compensation(self,depth:float):
+        """Should add to pitch_pid_target; must > 0
+        Args:
+            depth (float): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        if depth < self.min_depth:
+            return 0.0
+        t = depth / self.params.bullet_speed
+        g = self.params.g
+        gravity_theta = 0.5 * g * t / self.params.bullet_speed
+        
+        return gravity_theta
+    
+    
+    
+    
             
         
     
