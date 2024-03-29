@@ -54,7 +54,7 @@ class Node_Com(Node,Custom_Context_Obj):
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"SOF A from Decision maker : abs_pitch {msg.target_abs_pitch:.3f}, abs_yaw {msg.target_abs_yaw:.3f}")
             
-            self.port.send_msg(msg.sof)
+            self.port.send_msg()
         else:
             self.get_logger().error(f"Unknown sof {msg.sof}")
         
