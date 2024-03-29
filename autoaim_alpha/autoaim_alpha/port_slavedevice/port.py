@@ -56,19 +56,14 @@ class Port:
             lr1.critical(f"Error message: {e}")
         
         
-    def send_msg(self,sof:str = 'A'):
+    def send_msg(self):
         if self.ser is not None:
-            if sof == 'A':
                 
-                msg = self.action_data.convert_action_data_to_bytes(if_part_crc=False)
-                send_data(self.ser,msg)
-                
-            elif sof == 'S':
-                
-                msg = self.syn_data.convert_syn_data_to_bytes(if_part_crc=False)
-                send_data(self.ser,msg)
+            msg = self.action_data.convert_action_data_to_bytes()
+            send_data(self.ser,msg)
+            
             if self.mode == 'Dbg':
-                lr1.debug(f"Send {sof} {msg} yaw_10000: {self.action_data.abs_yaw_10000}, target_second: {self.action_data.target_second}")
+                lr1.debug(f"Send  {msg} tar_abs_yaw: {self.action_data.abs_yaw} tar_abs_pitch: {self.action_data.abs_pitch}")
             
         
     def recv_feedback(self)->tuple:
@@ -78,29 +73,23 @@ class Port:
             if_error:bool
             cur_yaw:float
             cur_pitch:float
-            cur_time_minute:int
-            cur_time_second:int
-            cur_time_second_frac:float
         """
         
         if self.ser is not None:
             
             msg = self.ser.read_all()
-            if_error = self.pos_data.convert_pos_bytes_to_data(msg,if_part_crc=False)
+            if_error = self.pos_data.convert_pos_bytes_to_data(msg)
             
             cur_yaw = self.pos_data.present_yaw
             cur_pitch = self.pos_data.present_pitch
-            cur_time_minute = self.pos_data.stm_minute
-            cur_time_second = self.pos_data.stm_second
-            cur_time_second_frac = self.pos_data.stm_second_frac 
-            if self.mode == 'Dbg':
-                lr1.debug(f"Recv {msg} yaw_10000: {cur_yaw} stm_second: {cur_time_second}")
             
-            return if_error,cur_yaw,cur_pitch,cur_time_minute,cur_time_second,cur_time_second_frac
+            if self.mode == 'Dbg':
+                lr1.debug(f"Recv {msg} cur_yaw: {cur_yaw} cur_pitch: {cur_pitch}")
+            
+            return if_error,cur_yaw,cur_pitch
         
         else:
-            
-            return True,0,0,0,0,0.0
+            return True,0.0,0.0
         
     def port_open(self):
         if self.ser is not None:

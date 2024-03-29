@@ -172,14 +172,12 @@ class Decision_Maker:
     def update_our_side_info(self,
                              cur_yaw:float,
                              cur_pitch:float,
-                             ele_unix_time:float,
                              remaining_health:Union[float,None] = None,
                              remaining_ammo:Union[float,None] = None,
                              fire_mode:Union[int,None] = None)->None:
         
         self.cur_yaw = cur_yaw
         self.cur_pitch = cur_pitch
-        self.electric_system_unix_time = ele_unix_time
         
         if remaining_health is not None:
             self.remaining_health = remaining_health
@@ -245,12 +243,14 @@ class Decision_Maker:
         if self.params.fire_mode == 2:
             self._predict()
         
-        if self.if_relative:
+        
+        
+        '''if self.if_relative:
             self.next_yaw = CIRCLE(self.next_yaw, [-np.pi, np.pi])
             self.next_pitch = CIRCLE(self.next_pitch, [-np.pi, np.pi])
         else:
             self.next_yaw = CLAMP(self.next_yaw, [-np.pi, np.pi])
-            self.next_pitch = CLAMP(self.next_pitch, [-np.pi, np.pi])
+            self.next_pitch = CLAMP(self.next_pitch, [-np.pi, np.pi])'''
         
         if self.params.record_data_path is not None:
             SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)

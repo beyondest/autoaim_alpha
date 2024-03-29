@@ -50,7 +50,6 @@ class Node_Detector(Node,Custom_Context_Obj):
         self.target_abs_yaw = 0.0
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
-        self.ele_time = 0.0
         self.cv_bridge = CvBridge()
         self.armor_detector = Armor_Detector(
                                             armor_color=armor_color,
@@ -154,7 +153,6 @@ class Node_Detector(Node,Custom_Context_Obj):
         
         self.cur_pitch = msg.cur_pitch
         self.cur_yaw = msg.cur_yaw
-        self.ele_time = msg.unix_time
     def _start(self):
         if if_show_img_local:
             try:

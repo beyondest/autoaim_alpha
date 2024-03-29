@@ -102,13 +102,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         if self.if_connetect_to_ele_sys == False:
             self.if_connetect_to_ele_sys = True
-            self.decision_maker.electric_system_zero_unix_time = msg.unix_time
-            self.get_logger().info(f"Connect to electric system, zero_unix_time {msg.unix_time}, cur_time {time.time()}")
+            self.decision_maker.electric_system_zero_unix_time = time.time()
+            self.get_logger().info(f"Connect to electric system, zero_unix_time {self.decision_maker.electric_system_zero_unix_time} ")
             
         self.decision_maker.update_our_side_info(
                                                  cur_yaw=msg.cur_yaw,
                                                  cur_pitch=msg.cur_pitch,
-                                                 ele_unix_time=msg.unix_time,
                                                  remaining_health=None,
                                                  remaining_ammo=None)
         
@@ -150,7 +149,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
             
             
-        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch
         com_msg.target_abs_yaw = next_yaw
         com_msg.sof = 'A'
@@ -159,7 +157,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
-            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f}")
        
         
     def test_yaw_callback(self):
@@ -170,7 +168,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         abs_yaw, abs_pitch = self.decision_maker._search_target()
-        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = 0.0
         com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'
@@ -186,7 +183,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         next_yaw, next_pitch = self.decision_maker._search_target()
         com_msg.target_abs_yaw = 0.0
         com_msg.target_abs_pitch = next_pitch
@@ -206,11 +202,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
        
         com_msg.cur_yaw = next_yaw
         com_msg.cur_pitch = next_pitch
-        com_msg.unix_time = time.time()
         
         self.pub_show.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
-            self.get_logger().debug(f"Make decision : target_abs_pitch {com_msg.cur_pitch:.3f} target_abs_yaw {com_msg.cur_yaw:.3f} reach_unix_time {com_msg.unix_time:.3f}")
+            self.get_logger().debug(f"Make decision : target_abs_pitch {com_msg.cur_pitch:.3f} target_abs_yaw {com_msg.cur_yaw:.3f} ")
        
     def repeat_recv_from_ele_callback(self):
         
@@ -220,11 +215,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         
-        self.get_logger().debug(f"Get : {self.decision_maker.electric_system_unix_time}, {type(self.decision_maker.electric_system_unix_time)}")
         self.get_logger().debug(f"Get : {self.decision_maker.cur_pitch}, {type(self.decision_maker.cur_pitch)}")
         self.get_logger().debug(f"Get : {self.decision_maker.cur_yaw}, {type(self.decision_maker.cur_yaw)}")
 
-        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = self.decision_maker.cur_pitch
         com_msg.target_abs_yaw = self.decision_maker.cur_yaw
         com_msg.sof = 'A'
@@ -259,7 +252,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
         
-        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = next_pitch
         com_msg.target_abs_yaw = next_yaw
         com_msg.sof = 'A'
@@ -274,7 +266,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
-            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f} reach_unix_time {com_msg.reach_unix_time:.3f}")
+            self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f}")
 
 
     def sub_gimbal_action_callback(self, msg:GimbalAction):

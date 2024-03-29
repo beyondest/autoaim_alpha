@@ -281,7 +281,6 @@ class syn_data(data_list):
         out = b''
         crc_v =b''
         null_bytes = b'1234567'
-        
         for index,each in enumerate(self.list):
             out += convert_to_bytes((each,fmt_list[index]))
             
@@ -312,84 +311,53 @@ class action_data(data_list):
     def __init__(self,
                  SOF:str = 'A',
                  fire_times:int=2,
-                 abs_pitch_10000:int=+1745, # -1745 = -10 degree
-                 abs_yaw_10000:int=-15708,  # 15708 = 90 degree
-                 target_minute:int=0,
-                 target_second:int=0,
-                 target_second_frac_10000:int=0,
-                 reserved_slot:int=0) -> None:
+                 abs_pitch:float=20.0, #  degree
+                 abs_yaw:float=90.0,  # degree
+                 reserved_slot:float=0) -> None:
         
         super().__init__()
         
-        self.label_list = ['SOF','ftimes','tarpitch','taryaw','tarmin','tarsec','tarsecfrac','svolrpm']
+        self.label_list = ['SOF','ftimes','tarpitch','taryaw','reserved_slot']
         self.SOF = SOF
         self.fire_times = fire_times
-        self.abs_pitch_10000 = abs_pitch_10000
-        self.abs_yaw_10000 = abs_yaw_10000
-        self.target_minute = target_minute
-        self.target_second = target_second
-        self.target_second_frac_10000 = target_second_frac_10000
+        self.abs_pitch = abs_pitch
+        self.abs_yaw = abs_yaw
         self.reserved_slot = reserved_slot
+        self.crc_v = 0
         self.list = [self.SOF,
                      self.fire_times,
-                     self.abs_pitch_10000,
-                     self.abs_yaw_10000,
-                     self.target_minute,
-                     self.target_second,
-                     self.target_second_frac_10000,
+                     self.abs_pitch,
+                     self.abs_yaw,
                      self.reserved_slot]
         self.len = len(self.list)
         
-    def convert_action_data_to_bytes(self,if_crc:bool = True, if_revin_crc:bool = True , if_part_crc:bool = True)->bytes:
+        
+        
+    def convert_action_data_to_bytes(self )->bytes:
         """Calculate crc here if needed
         NO.0 (SOF:char , '<c')                             |     ('A')                      |byte0      bytes 1     total 1
         NO.1 (fire_times:int , '<b')                       |     (-1<=x<=100)               |byte1      bytes 1     total 2 (-1:not control;0:control not fire) 
-        NO.2 (target_pitch.4*10000:int , '<h')             |     (abs(x)<=15708)            |byte2-3    bytes 2     total 4
-        NO.3 (target_yaw.4*10000:int , '<h')               |     (abs(x)<=31416)            |byte4-5    bytes 2     total 6
-        NO.4 (reach_target_time_minute:int , '<B')         |     (0<=x<60)                  |byte6      bytes 1     total 7
-        NO.5 (reach_target_time_second:int , '<B')         |     (0<=x<=60)                 |byte7      bytes 1     total 8
-        NO.6 (reach_target_time_second_frac.4*10000 , '<H')|     (0<=x<=10000)              |byte8-9    bytes 2     total 10 
-        NO.78(reserved_slot:int, '<h')(only for debug)| (-30000<=x<=30000 if vol)  |byte10-11  bytes 2     total 12
-        NO.9(crc_value:int , '<I')   (auto add to end)     |     (return of cal_crc func)   |byte12-15  bytes 4     total 16
-        
-        PART_CRC: byte2-5
-        ALL: 10 elements ,list has 7 elements
+        NO.2 (target_pitch: float , '<h')                  |                                |byte2-5    bytes 4     total 6
+        NO.3 (target_yaw: float , '<h')                    |                                |byte6-9    bytes 4     total 10
+        NO.4 (reserved_slot:int, '<h')                     |                                |byte10-11  bytes 2     total 12
+        NO.5 (crc_value:int , '<I')   (auto add to end)    |     (return of cal_crc func)   |byte12-15  bytes 4     total 16
+        ALL: 5 elements 
         """
-        self.list = [self.SOF,                       #0
-                     self.fire_times,                #1
-                     self.abs_pitch_10000,           #2
-                     self.abs_yaw_10000,             #3
-                     self.target_minute,             #4
-                     self.target_second,             #5
-                     self.target_second_frac_10000,  #6
-                     self.reserved_slot]             #7
+        self.list = [self.SOF,
+                self.fire_times,
+                self.abs_pitch,
+                self.abs_yaw,
+                self.reserved_slot]
+
         
-        fmt_list = ['<c','<b','<h','<h','<B','<B','<H','<h']
+        fmt_list = ['<c','<b','<f','<f','<h']
         out = b''
-        crc_v =b''
-        
         for index,each in enumerate(self.list):
             out += convert_to_bytes((each,fmt_list[index]))
-        
-        if if_crc:
-            if if_revin_crc:
-                if if_part_crc:
-                    for_crc_cal = out[2:6]
-                    for_crc_cal = for_crc_cal[::-1]                    
-                    crc_v = cal_crc(for_crc_cal)
-                else:
-                    for_crc_cal = self.flip_4bytes_atime(out)
-                    crc_v = cal_crc(for_crc_cal)
-            else:
-                raise TypeError('this function not support yet')
-            self.crc_v = crc_v
-            
-            crc_v = convert_to_bytes((crc_v,'<I'))
-            
-        else:
-            crc_v = b''
-              
-        out+= crc_v
+        for_crc_cal = self.flip_4bytes_atime(out)
+        self.crc_v  = cal_crc(for_crc_cal)
+        crc_b = convert_to_bytes((self.crc_v,'<I'))
+        out+= crc_b
         return out  
 
 
@@ -397,55 +365,41 @@ class pos_data(data_list):
     
     def __init__(self,
                  SOF:str = 'P',
-                 stm_minute:int = 20,
-                 stm_second:int = 30,
-                 stm_second_frac:float = 0.1234,
-                 present_pitch:float = -0.1745,
-                 present_yaw:float = -0.1745,
-                 present_debug_value:int = -1
+                 present_pitch:float = -10.0,
+                 present_yaw:float = 90.0,
+                 reserved_slot:int = 0
                  ) -> None:
         super().__init__()
         
-        self.label_list = ['SOF','stmin','stsec','stsecfrac','prepit','preyaw','predbgval']
+        self.label_list = ['SOF','prepit','preyaw','predbgval']
         self.SOF =SOF
-        self.stm_minute = stm_minute
-        self.stm_second = stm_second
-        self.stm_second_frac = stm_second_frac
         self.present_pitch = present_pitch
         self.present_yaw = present_yaw
-        self.present_debug_value = present_debug_value
+        self.reserved_slot = reserved_slot
         self.error =False
-        self.crc_get =0
+        self.crc_v =0
+        self.crc_get = 0
         self.list = [self.SOF,
-                     self.stm_minute,
-                     self.stm_second,
-                     self.stm_second_frac,
                      self.present_pitch,
                      self.present_yaw,
-                     self.present_debug_value]
+                     self.reserved_slot]
         self.len = len(self.list)
         
         
 
-    def convert_pos_bytes_to_data(self,ser_read:bytes,if_crc:bool = True,if_crc_rev:bool = True,if_part_crc:bool = True)->bool:
-        """Convert what STM32 send, Save data to self.list
-        NO.0 (SOF:char , '<c')                             |     ('P')                      |byte0      bytes 1     total 1
-        NO.1 (present_time_minute:int , '<B')              |     (0<=x<60)                  |byte1      bytes 1     total 2   
-        NO.2 (present_time_second:int , '<B')              |     (0<=x<60)                  |byte2      bytes 1     total 3
-        NO.3 (present_time_second_frac.4*10000:int, '<H')  |     (0<=x<=10000)              |byte3-4    bytes 2     total 5
-        NO.4 (present_pitch.4*10000:int , '<h')            |     (abs(x)<=15708)            |byte5-6    bytes 2     total 7
-        NO.5 (present_yaw.4*10000:int , '<h')              |     (abs(x)<=31416)            |byte7-8    bytes 2     total 9
-        NO.6 (present_debug_value:rpm or torque I,'<h')    |                                |byte9-10   bytes 2     total 11
-        NO.7 (nullbyte: char='1','<c')                     |                                |byte11     bytes 1     total 12
-        NO.8 (crc_value:int , '<I')                        |     (return of cal_crc func)   |byte12-15  bytes 4     total 16
-        PART_CRC: byte 5-8
-        ALL: 9 elements , list has 7 elements
-        Return:
-            if_error
+    def convert_pos_bytes_to_data(self,ser_read:bytes)->bool:
+        """Calculate crc here if needed
+        NO.0 (SOF:char , '<c')                             |     ('A')                      |byte0      bytes 1     total 1
+        NO.1 (fire_times:int , '<b')                       |     (-1<=x<=100)               |byte1      bytes 1     total 2 
+        NO.2 (present_pitch: float , '<h')                 |                                |byte2-5    bytes 4     total 6
+        NO.3 (present_yaw: float , '<h')                   |                                |byte6-9    bytes 4     total 10
+        NO.4 (reserved_slot:int, '<h')                     |                                |byte10-11  bytes 2     total 12
+        NO.5 (crc_value:int , '<I')   (auto add to end)    |     (return of cal_crc func)   |byte12-15  bytes 4     total 16
+        ALL: 6 elements
         """
-        self.fmt_list = ['<c','<B','<B','<H','<h','<h','<h','<c','<I']
-        self.range_list = [(0,1),(1,2),(2,3),(3,5),(5,7),(7,9),(9,11),(11,12),(12,16)]
-        self.frame_type_nums = 9
+        self.fmt_list = ['<c','<b','<f','<f','<h','<I']
+        self.range_list = [(0,1),(1,2),(2,6),(6,10),(10,12),(12,16)]
+        self.frame_type_nums = 6
         out = []
         error = False
         if ser_read == b'' or ser_read is None:
@@ -455,9 +409,7 @@ class pos_data(data_list):
         
         for i in range(self.frame_type_nums):
             out.append(struct.unpack(self.fmt_list[i],
-                                    ser_read[self.range_list[i][0]:self.range_list[i][1]]
-                                    )[0]
-                    )
+                                    ser_read[self.range_list[i][0]:self.range_list[i][1]])[0])
             
         try:
             out[0] = out[0].decode('utf-8')
@@ -467,46 +419,27 @@ class pos_data(data_list):
             
        
         if out[0] == self.SOF:
-            if if_crc:
-                if if_crc_rev:
-                    if if_part_crc:
-                        for_crc_cal = ser_read[5:9]
-                        for_crc_cal = for_crc_cal[::-1]
-                        crc_v = cal_crc(for_crc_cal)
-                        error = not (crc_v == out[8])
-                    else:
-                        for_crc_cal = ser_read[0:12]
-                        for_crc_cal = self.flip_4bytes_atime(for_crc_cal)
-                        crc_v = cal_crc(for_crc_cal)
-                        error = not (crc_v == out[8])
-                else:
-                    raise NotImplementedError("This function is not support yet")
-            else:
-                crc_v = 0  
-                error = False 
+
+            for_crc_cal = ser_read[0:12]
+            for_crc_cal = self.flip_4bytes_atime(for_crc_cal)
+            self.crc_v = cal_crc(for_crc_cal)
+            self.crc_get = out[4]
+            error = not (self.crc_v == self.crc_get)
+
         else:
             error = True
-        
 
         self.error =error
-        self.crc_v = crc_v
-        self.crc_get = out[8]
         
         self.SOF = out[0]
-        self.stm_minute = out[1]
-        self.stm_second = out[2]
-        self.stm_second_frac = round(out[3]/10000,4)
-        self.present_pitch = round(out[4]/10000,4)
-        self.present_yaw = round(out[5]/10000,4)
-        self.present_debug_value = out[6]
-        
+        self.present_pitch = out[1]
+        self.present_yaw = out[2]
+        self.reserved_slot = out[3]
         self.list = [self.SOF,
-                     self.stm_minute,
-                     self.stm_second,
-                     self.stm_second_frac,
-                     self.present_pitch,
-                     self.present_yaw,
-                     self.present_debug_value]
+                    self.present_pitch,
+                    self.present_yaw,
+                    self.reserved_slot]
+
         
         return error
 
@@ -518,12 +451,12 @@ if __name__ =="__main__":
     
     
     a = action_data()
-    if 0:
-        for yaw in np.arange(-31416,31416,2000):
+    if 1:
+        for yaw in np.arange(-180,180,10):
             
-            a.abs_yaw_10000 = int(yaw)
+            a.abs_pitch = yaw
             
-            r = a.convert_action_data_to_bytes(if_part_crc=False)
+            r = a.convert_action_data_to_bytes()
 
             s = ''
             for i in r:
@@ -536,11 +469,11 @@ if __name__ =="__main__":
             print(s)
         
     if 0:
-        for pitch in np.arange(-3491,8727,1000):
+        for pitch in np.arange(-20,50,10):
             
-            a.abs_pitch_10000 = int(pitch)
+            a.abs_pitch = pitch
             
-            r = a.convert_action_data_to_bytes(if_part_crc=False)
+            r = a.convert_action_data_to_bytes()
 
             s = ''
             for i in r:
@@ -551,14 +484,15 @@ if __name__ =="__main__":
                 s+= add_ + ' '
                 
             print(s)
-            
-    p = pos_data()
-    hex_string ='50 00 0C 0B 02 F3 FF A0 6A 00 00 00 A1 82 91 C2'
-    b = bytes.fromhex(hex_string)
-    print(b)
-    result = p.convert_pos_bytes_to_data(b,if_part_crc=False)
-    print(result)
-    p.show()
+    
+    if 0:        
+        p = pos_data()
+        hex_string ='50 02 00 00 2a 43 00 00 b4 42 00 00 22 08 8d fd'
+        b = bytes.fromhex(hex_string)
+        print(b)
+        result = p.convert_pos_bytes_to_data(b)
+        print(result)
+        p.show()
     
     
         

@@ -14,7 +14,7 @@ gimbal_action_mode: 0
 if_relative: False
 
 if_ignore_elesys: False
-if_show_img_local: True
+if_show_img_local: False
 if_show_img_remote: False
 # enemy armor color: blue or red
 armor_color : blue
