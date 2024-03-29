@@ -221,8 +221,6 @@ class Ballistic_Predictor:
             lr1.debug(f"Ballistic_Predictor : x1: {x1:.3f},theta_2 - theta_1: {theta_2 - theta_1:.3f}, theta_2: {theta_2:.3f}, a: {a:.3f}, b: {b:.3f}, delta: {delta:.3f}, cos_theta_1_1: {cos_theta_1_1:.3f}, theta_1: {theta_1:.3f}")
         
         return theta_2 - theta_1
-        
-        
     
     
     def cal_max_shooting_dis_by_gradient(self)->float:

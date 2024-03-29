@@ -365,14 +365,16 @@ class pos_data(data_list):
     
     def __init__(self,
                  SOF:str = 'P',
+                 fire_times:int = 0,
                  present_pitch:float = -10.0,
                  present_yaw:float = 90.0,
                  reserved_slot:int = 0
                  ) -> None:
         super().__init__()
         
-        self.label_list = ['SOF','prepit','preyaw','predbgval']
+        self.label_list = ['SOF','fire_times','prepit','preyaw','reserved_slot']
         self.SOF =SOF
+        self.fire_times = fire_times
         self.present_pitch = present_pitch
         self.present_yaw = present_yaw
         self.reserved_slot = reserved_slot
@@ -380,11 +382,11 @@ class pos_data(data_list):
         self.crc_v =0
         self.crc_get = 0
         self.list = [self.SOF,
+                     self.fire_times,
                      self.present_pitch,
                      self.present_yaw,
                      self.reserved_slot]
         self.len = len(self.list)
-        
         
 
     def convert_pos_bytes_to_data(self,ser_read:bytes)->bool:
@@ -401,11 +403,10 @@ class pos_data(data_list):
         self.range_list = [(0,1),(1,2),(2,6),(6,10),(10,12),(12,16)]
         self.frame_type_nums = 6
         out = []
-        error = False
         if ser_read == b'' or ser_read is None:
-            error = True
+            self.error = True
             print(f"com error: recv is nullbyte")
-            return error
+            return self.error
         
         for i in range(self.frame_type_nums):
             out.append(struct.unpack(self.fmt_list[i],
@@ -415,35 +416,35 @@ class pos_data(data_list):
             out[0] = out[0].decode('utf-8')
         except Exception as e:
             print(f'decode first byte failed: e:{e}, out[0]:{out[0]}')
-            
-            
+            self.error = True
+            return self.error
        
         if out[0] == self.SOF:
 
             for_crc_cal = ser_read[0:12]
             for_crc_cal = self.flip_4bytes_atime(for_crc_cal)
             self.crc_v = cal_crc(for_crc_cal)
-            self.crc_get = out[4]
-            error = not (self.crc_v == self.crc_get)
+            self.crc_get = out[5]
+            self.error = not (self.crc_v == self.crc_get)
 
         else:
-            error = True
+            self.error = True
 
-        self.error =error
+        if not self.error:
+            self.SOF = out[0]
+            self.fire_times = out[1]
+            self.present_pitch = out[2]
+            self.present_yaw = out[3]
+            self.reserved_slot = out[4]
+            self.list = [self.SOF,
+                        self.fire_times,
+                        self.present_pitch,
+                        self.present_yaw,
+                        self.reserved_slot]
         
-        self.SOF = out[0]
-        self.present_pitch = out[1]
-        self.present_yaw = out[2]
-        self.reserved_slot = out[3]
-        self.list = [self.SOF,
-                    self.present_pitch,
-                    self.present_yaw,
-                    self.reserved_slot]
 
-        
-        return error
+        return self.error
 
-    
 
 #first get reversed of data, then use crc-32-mpeg will get right crc same as stm32 
 import numpy as np
@@ -451,7 +452,7 @@ if __name__ =="__main__":
     
     
     a = action_data()
-    if 1:
+    if 0:
         for yaw in np.arange(-180,180,10):
             
             a.abs_pitch = yaw
@@ -485,14 +486,17 @@ if __name__ =="__main__":
                 
             print(s)
     
-    if 0:        
+    if 1:        
         p = pos_data()
-        hex_string ='50 02 00 00 2a 43 00 00 b4 42 00 00 22 08 8d fd'
+        hex_string ='50 02 00 00 20 43 00 00 b4 42 00 00 3e c0 7e 2e '
         b = bytes.fromhex(hex_string)
         print(b)
         result = p.convert_pos_bytes_to_data(b)
         print(result)
         p.show()
+        
+        
+        
     
     
         

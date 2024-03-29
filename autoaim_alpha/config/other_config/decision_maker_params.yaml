@@ -50,7 +50,7 @@ y_axis_sensitivity: 0.5
 
 if_use_pid_control: True
 
-fire_mode: 1 # 0 track, 1 pitch_compensation, 2 predict and pitch_compensation
+fire_mode: 1 # 0 track, 1 pitch_compensation, 2 pitch_compensation with gravity compensation
 choose_mode: 1 # 0 precision_first, 1 distance_first, 2 balanced
 
 # for predict

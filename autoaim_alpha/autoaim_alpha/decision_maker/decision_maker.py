@@ -48,9 +48,9 @@ class Decision_Maker_Params(Params):
         self.if_use_pid_control = True
         self.fire_mode = 0
         """fire mode:
-            0: only track target, not shooting, no pitch compensation, no predict
-            1: track target and shooting, apply pitch compensation, no predict
-            2: track target and shooting, apply pitch compensation, predict
+            0: only track target, not shooting, no pitch compensation
+            1: track target and shooting, apply pitch compensation
+            2: track target and shooting, apply pitch compensation with gravity compensation
         """
         self.choose_mode = 0
         """choose mode:
