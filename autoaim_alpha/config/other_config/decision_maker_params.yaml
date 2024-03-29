@@ -9,8 +9,8 @@ pitch_search_right_waves: 5
 
 
 # for relative search
-relative_yaw_move_step: 0.05
-relative_pitch_move_step: 0.03
+relative_yaw_move_step: 0.02
+relative_pitch_move_step: 0.01
 yaw_idx_max: 100
 pitch_idx_max: 10
 
@@ -26,7 +26,7 @@ continuous_lost_num_max_threshold: 15
 # for ballistic
 # WARN: Only fit for 640 * 384 img_show size, img_x is x,img_y is z, by default, img_y locked when img_x is locked 
 min_img_x_for_locked: 40.0 # for fire_mode 1
-min_img_x_diff_for_predict: 10.0 # for fire_mode 2
+min_img_x_diff_for_predict: 20.0 # for fire_mode 2
 manual_pitch_compensation: 0.04
 manual_yaw_compensation: -0.01
 
