@@ -78,6 +78,9 @@ class Port:
         if self.ser is not None:
             
             msg = self.ser.read_all()
+            if msg == b'':
+                lr1.warn(f"Recv empty msg")
+                return False,0.0,0.0
             if_error = self.pos_data.convert_pos_bytes_to_data(msg)
             
             cur_yaw = self.pos_data.present_yaw
