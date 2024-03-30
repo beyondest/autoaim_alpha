@@ -10,10 +10,9 @@ SEARCH_AND_FIRE = 1
 AUTO_BOUNCE_BACK = 2
 GO_RIGHT = 3
 GO_LEFT = 4
-GO_STRAIGHT = 5
-GO_BACK = 6
-TRACK_FRIEND = 7
-TRACK_ENEMY = 8
+GO_FORWARD = 5
+GO_BACKWARD = 6
+
 
 
 class Node_Decision_Maker(Node,Custom_Context_Obj):
@@ -26,9 +25,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         self.action_mode_to_note = {0:"Make decision mode",
                                     1:"Test fire , auto track"}
-        self.event_flat_to_callback = {DOING_NOTHING:self.decision_maker.doing_nothing,
-                                       SEARCH_AND_FIRE:self.decision_maker.search_and_fire,
-                                       AUTO_BOUNCE_BACK:self.decision_maker.auto_bounce_back}
+
         
         self.pub_ele_sys_com = self.create_publisher(topic_electric_sys_com['type'],
                                                 topic_electric_sys_com['name'],
@@ -50,8 +47,14 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              self.ballistic_predictor,
                                              enemy_car_list)
         
-        
-        
+        self.event_flat_to_callback = { DOING_NOTHING:self.decision_maker.doing_nothing,
+                                        SEARCH_AND_FIRE:self.decision_maker.search_and_fire,
+                                        AUTO_BOUNCE_BACK:self.decision_maker.auto_bounce_back,
+                                        GO_RIGHT:self.decision_maker.go_right,
+                                        GO_LEFT:self.decision_maker.go_left,
+                                        GO_FORWARD:self.decision_maker.go_forward,
+                                        GO_BACKWARD:self.decision_maker.go_backward}
+                
         self.get_logger().warn(f"Use gimbal_action_mode {self.action_mode_to_note[gimbal_action_mode]}")
         
         if if_ignore_elesys:
@@ -155,8 +158,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.get_logger().warn(f"Not connect to electric system, cannot search and fire")
             self.decision_maker.doing_nothing()
             return
-        
-        
         t1 = time.time()
 
         if_action_finished = self.event_flat_to_callback[self.cur_event]()
@@ -172,6 +173,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                 self.cur_event = event_flag_list[self.event_flag_index]
         else:
             self.cur_event = self.cur_event    
+            
         t2 = time.time()
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
@@ -181,10 +183,14 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot auto bounce back")
         else:
-            self.pre_event = self.cur_event
-            self.cur_event = AUTO_BOUNCE_BACK
-            if node_decision_maker_mode == 'Dbg':
-                self.get_logger().debug(f"Auto bounce back")
+            if self.cur_event == SEARCH_AND_FIRE or self.cur_event == DOING_NOTHING:
+                self.pre_event = self.cur_event
+                self.cur_event = AUTO_BOUNCE_BACK
+                if node_decision_maker_mode == 'Dbg':
+                    self.get_logger().debug(f"Auto bounce back")
+            else:
+                if node_decision_maker_mode == 'Dbg':
+                    self.get_logger().debug(f"Cannot auto bounce back, current event {self.cur_event}")
         
     def sub_pid_config_callback(self,msg:PidConfig):
         

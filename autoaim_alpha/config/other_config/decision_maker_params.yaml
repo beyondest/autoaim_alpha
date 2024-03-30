@@ -8,11 +8,6 @@ pitch_search_left_waves: 4
 pitch_search_right_waves: 5
 
 
-
-
-
-
-
 # for track and lock
 continuous_detected_num_for_track: 1
 continuous_lost_num_max_threshold: 15
@@ -49,14 +44,17 @@ choose_mode: 1 # 0 precision_first, 1 distance_first, 2 balanced
 
 
 # for event,  should adjust with fps
-auto_bounce_back_period: 5 # seconds
+auto_bounce_back_period: 5 # seconds, if < 0, disable auto bounce back
+direction_accept_error: 0.03 # radian , around 1.5 degree 
+
+
 doing_nothing_continue_frames: 40
 search_and_fire_continue_frames: 40
 auto_bounce_back_continue_frames: 40 
-go_right_continue_frames: 40
-go_left_continue_frames: 40
-go_straight_continue_frames: 40
-go_back_continue_frames: 40
+go_right_continue_frames: 40        # turn to -90 degree and then go straight, not concludes turn direction time
+go_left_continue_frames: 40         # turn to 90  degree and then go straight, not concludes turn direction time
+go_forward_continue_frames: 40     # turn to 0   degree and then go straight, not concludes turn direction time
+go_backward_continue_frames: 40         # turn to 180 degree and then go straight, not concludes turn direction time
 
 
 

@@ -64,14 +64,16 @@ class Decision_Maker_Params(Params):
         
         # for event
         self.auto_bounce_back_period = 5 #if < 0, disable auto bounce back
+        self.direction_accept_error = 0.03
+        
         
         self.doing_nothing_continue_frames = 40
         self.search_and_fire_continue_frames = 40
         self.auto_bounce_back_continue_frames = 40
         self.go_right_continue_frames = 40
         self.go_left_continue_frames = 40
-        self.go_straight_continue_frames = 40
-        self.go_back_continue_frames = 40
+        self.go_forward_continue_frames = 40
+        self.go_backward_continue_frames = 40
         
         
         
@@ -305,6 +307,132 @@ class Decision_Maker:
             return True
     
     
+    def go_right(self):
+        if self.action_count == -1:
+            self.action_count = self.params.go_right_continue_frames
+            if self.mode == 'Dbg':
+                lr1.debug("Start Go Right")
+            return False
+        elif self.action_count > 0:
+            if abs(self.cur_yaw - (-1.5708)) > self.params.direction_accept_error:
+                self.next_yaw = -1.5708
+                self.next_pitch = 0.0
+                self.fire_times = 0
+                self.reserved_slot = 11
+                if self.mode == 'Dbg':
+                    lr1.debug("Turn Right")
+                return False
+            else:
+                self.action_count -= 1
+                self.next_yaw = self.cur_yaw
+                self.next_pitch = 0.0
+                self.fire_times = 0
+                self.reserved_slot = 12
+                if self.mode == 'Dbg':
+                    lr1.debug("Go Right")
+                return False
+            
+        elif self.action_count == 0:
+            self.action_count = -1
+            if self.mode == 'Dbg':
+                lr1.debug("Go Right Finished")
+            return True
+    def go_left(self):
+        if self.action_count == -1:
+            self.action_count = self.params.go_left_continue_frames
+            if self.mode == 'Dbg':
+                lr1.debug("Start Go Left")
+            return False
+        elif self.action_count > 0:
+            if abs(self.cur_yaw - 1.5708) > self.params.direction_accept_error:
+                self.next_yaw = 1.5708
+                self.next_pitch = 0.0
+                self.fire_times = 0
+                self.reserved_slot = 11
+                if self.mode == 'Dbg':
+                    lr1.debug("Turn Left")
+                return False
+            else:
+                self.action_count -= 1
+                self.next_yaw = self.cur_yaw
+                self.next_pitch = 0.0
+                self.fire_times = 0
+                self.reserved_slot = 12
+                if self.mode == 'Dbg':
+                    lr1.debug("Go Left")
+                return False
+            
+        elif self.action_count == 0:
+            self.action_count = -1
+            if self.mode == 'Dbg':
+                lr1.debug("Go Left Finished")
+            return True
+    
+    def go_forward(self):
+        if self.action_count == -1:
+            self.action_count = self.params.go_forward_continue_frames
+            if self.mode == 'Dbg':
+                lr1.debug("Start Go Forward")
+            return False
+        elif self.action_count > 0:
+            if abs(self.cur_yaw - 0.0) > self.params.direction_accept_error:
+                self.next_pitch = 0.0
+                self.next_yaw = 0.0
+                self.fire_times = 0
+                self.reserved_slot = 11
+                if self.mode == 'Dbg':
+                    lr1.debug("Turn to 0.0")
+                return False
+            else:
+                self.action_count -= 1
+                self.next_pitch = 0.0
+                self.next_yaw = self.cur_yaw
+                self.fire_times = 0
+                self.reserved_slot = 12
+                if self.mode == 'Dbg':
+                    lr1.debug("Go Forward")
+                return False
+            
+        elif self.action_count == 0:
+            self.action_count = -1
+            if self.mode == 'Dbg':
+                lr1.debug("Go Forward Finished")
+            return True
+    
+    def go_backward(self):
+        
+        if self.action_count == -1:
+            self.action_count = self.params.go_backward_continue_frames
+            if self.mode == 'Dbg':
+                lr1.debug("Start Go Backward")
+            return False
+        elif self.action_count > 0:
+            if abs(self.next_yaw - 0.0) > self.params.direction_accept_error:
+                self.next_pitch = 0.0
+                self.next_yaw = 0.0
+                self.fire_times = 0
+                self.reserved_slot = 11
+                if self.mode == 'Dbg':
+                    lr1.debug("Turn to 0.0")
+                return False
+            else:
+                self.action_count -= 1
+                self.next_pitch = 0.0
+                self.next_yaw = self.cur_yaw
+                self.fire_times = 0
+                self.reserved_slot = 10
+                if self.mode == 'Dbg':
+                    lr1.debug("Go Backward")
+                return False
+            
+        elif self.action_count == 0:
+            self.action_count = -1
+            if self.mode == 'Dbg':
+                lr1.debug("Go Backward Finished")
+            return True
+        
+        
+        
     def _search_target(self):
         """
 
@@ -380,10 +508,6 @@ class Decision_Maker:
         
         move_yaw = -delta_x / self.params.screen_width * 100/180 * np.pi
         move_pitch = -delta_y / self.params.screen_height * 100/180 * np.pi
-        
-        
-
-            
         next_yaw = move_yaw * self.params.x_axis_sensitivity
         next_pitch = move_pitch * self.params.y_axis_sensitivity
         
