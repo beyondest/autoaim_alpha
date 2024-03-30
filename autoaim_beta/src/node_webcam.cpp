@@ -54,6 +54,7 @@ public:
         std::string mode_ = general_config["mode"].as<std::string>();
         if (mode_ == "Dbg")
             mode = Mode::Dbg;
+        INIT_GLOBAL_LOGGER("/home/rcclub/.ros/log/custom_log", spdlog::level::debug,spdlog::level::warn,false);
         auto armor_color = general_config["armor_color"].as<std::string>();
         RCLCPP_WARN(this->get_logger(), "ENEMY_CAR_COLOR: %s", armor_color.c_str());
         this->if_yolov5 = general_config["if_yolov5"].as<bool>();
@@ -112,6 +113,7 @@ public:
         qos.durability_volatile();
         this->pub_img_for_visualize_ = this->create_publisher<sensor_msgs::msg::Image>("img_for_visualize", qos); // must same as in __init__.py topic_img_for_visualize
         RCLCPP_INFO(this->get_logger(), "Node_Webcam Start");
+
     }
     ~Node_Webcam()
     {
@@ -171,7 +173,7 @@ private:
         auto d_rsts = (*net_detector)(*img_show);
         (*pnp_solver)(d_rsts);
         if (d_rsts.size() == 0)
-            RCLCPP_INFO(this->get_logger(), "No Target Found");
+            if (mode == Mode::Dbg) RCLCPP_INFO(this->get_logger(), "No Target Found");
         for (auto &rst : d_rsts)
         {
             msg_each.armor_name = rst.result;
@@ -180,17 +182,16 @@ private:
             msg_each.pose.pose.position.y = rst.tvec[1];
             msg_each.pose.pose.position.z = rst.tvec[2];
             msg.detect_result.push_back(msg_each);
-            RCLCPP_INFO(this->get_logger(), "Find Target : %s, conf: %.2f, x: %.3f, y: %.3f, z: %.3f", rst.result.c_str(), rst.conf, rst.tvec[0], rst.tvec[1], rst.tvec[2]);
+            if (mode == Mode::Dbg) RCLCPP_INFO(this->get_logger(), "Find Target : %s, conf: %.2f, x: %.3f, y: %.3f, z: %.3f", rst.result.c_str(), rst.conf, rst.tvec[0], rst.tvec[1], rst.tvec[2]);
         }
-        if (mode == Mode::Dbg)
+        if (mode == Mode::Dbg && (if_show_img_local || if_show_img_remote))
             visualize_results(*img_show, d_rsts);
         this->pub_detect_result_->publish(msg);
         auto cur_t = std::chrono::high_resolution_clock::now();
         auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(cur_t - pre_t).count();
         this->fps = 1000 / dur;
         pre_t = cur_t;
-        if (mode == Mode::Dbg)
-            RCLCPP_INFO(this->get_logger(), "FPS: %d", this->fps);
+        RCLCPP_INFO(this->get_logger(), "FPS: %d", this->fps);
         if (if_show_img_local)
         {
             cv::imshow("local_img", *img_show);
