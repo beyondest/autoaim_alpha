@@ -337,6 +337,7 @@ class Decision_Maker:
             if self.mode == 'Dbg':
                 lr1.debug("Go Right Finished")
             return True
+        
     def go_left(self):
         if self.action_count == -1:
             self.action_count = self.params.go_left_continue_frames
