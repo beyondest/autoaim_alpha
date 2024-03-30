@@ -16,6 +16,8 @@ if __name__ == '__main__':
             times -= 1
         except Exception as e:
             print("port error:",e)
+    print("DONE")
     
-        
+    
+            
     
