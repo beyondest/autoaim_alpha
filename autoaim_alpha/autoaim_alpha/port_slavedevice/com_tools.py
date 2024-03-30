@@ -452,13 +452,15 @@ if __name__ =="__main__":
     
     
     a = action_data()
-    if 0:
+    if 1:
         for yaw in np.arange(-180,180,10):
             
-            a.abs_pitch = yaw
-            
+            a.abs_yaw = yaw
+            a.abs_pitch = 0.0
+            a.fire_times = 0
+            a.reserved_slot = 11
             r = a.convert_action_data_to_bytes()
-
+            
             s = ''
             for i in r:
                 
@@ -486,7 +488,7 @@ if __name__ =="__main__":
                 
             print(s)
     
-    if 1:        
+    if 0:        
         p = pos_data()
         hex_string ='50 02 00 00 20 43 00 00 b4 42 00 00 3e c0 7e 2e '
         b = bytes.fromhex(hex_string)

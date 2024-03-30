@@ -1,6 +1,6 @@
 
 # mode: Dbg, Rel 
-mode : Dbg
+mode : Rel
 
 # event_flag:
 # DOING_NOTHING = 0
@@ -15,6 +15,10 @@ mode : Dbg
 # Will circle the last event forever
 event_flag_list:  
 - 0
+- 4
+- 4
+- 3
+- 3
 - 1
 # gimbal_action_mode:
 # 0: not test gimbal, make decision only
