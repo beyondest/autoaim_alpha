@@ -113,7 +113,7 @@ class Decision_Maker:
         self.next_yaw = 0.0
         self.next_pitch = 0.0
         self.fire_times = 0
-        self.reserved_slot = 11 # tens digit is 1 means not bounce back, 2 means bounce back; digit is 1 means stay, 2 means go forward towards gimbal direction, 0 means go backward 
+        self.reserved_slot = 10 # tens digit is 1 means not bounce back, 2 means bounce back; digit is 0 means stay, 2 means go forward towards gimbal direction, 1 means go backward 
         
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
@@ -250,7 +250,7 @@ class Decision_Maker:
                     if self.params.fire_mode != 0:
                         lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
             
-            self.reserved_slot = 11
+            self.reserved_slot = 10
             if self.params.record_data_path is not None:
                 SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
                 self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
@@ -274,7 +274,7 @@ class Decision_Maker:
             self.next_pitch = self.cur_pitch
             self.next_yaw = self.cur_yaw
             self.fire_times = 0
-            self.reserved_slot = 21
+            self.reserved_slot = 20
             if self.mode == 'Dbg':
                 lr1.debug("Auto Bounce Back")
             return False
@@ -296,7 +296,7 @@ class Decision_Maker:
             self.next_pitch = self.cur_pitch
             self.next_yaw = self.cur_yaw
             self.fire_times = 0
-            self.reserved_slot = 11
+            self.reserved_slot = 10
             if self.mode == 'Dbg':
                 lr1.debug("Doing Nothing")
             return False
@@ -318,7 +318,7 @@ class Decision_Maker:
                 self.next_yaw = -1.5708
                 self.next_pitch = 0.0
                 self.fire_times = 0
-                self.reserved_slot = 11
+                self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn Right")
                 return False
@@ -348,7 +348,7 @@ class Decision_Maker:
                 self.next_yaw = 1.5708
                 self.next_pitch = 0.0
                 self.fire_times = 0
-                self.reserved_slot = 11
+                self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn Left")
                 return False
@@ -379,7 +379,7 @@ class Decision_Maker:
                 self.next_pitch = 0.0
                 self.next_yaw = 0.0
                 self.fire_times = 0
-                self.reserved_slot = 11
+                self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn to 0.0")
                 return False
@@ -411,7 +411,7 @@ class Decision_Maker:
                 self.next_pitch = 0.0
                 self.next_yaw = 0.0
                 self.fire_times = 0
-                self.reserved_slot = 11
+                self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn to 0.0")
                 return False
@@ -420,7 +420,7 @@ class Decision_Maker:
                 self.next_pitch = 0.0
                 self.next_yaw = self.cur_yaw
                 self.fire_times = 0
-                self.reserved_slot = 10
+                self.reserved_slot = 11
                 if self.mode == 'Dbg':
                     lr1.debug("Go Backward")
                 return False
@@ -430,9 +430,6 @@ class Decision_Maker:
             if self.mode == 'Dbg':
                 lr1.debug("Go Backward Finished")
             return True
-        
-        
-        
     def _search_target(self):
         """
 

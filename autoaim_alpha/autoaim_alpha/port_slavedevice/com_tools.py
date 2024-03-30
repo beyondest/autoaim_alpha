@@ -313,7 +313,7 @@ class action_data(data_list):
                  fire_times:int=0,
                  abs_pitch:float=0.0, #  degree
                  abs_yaw:float=0.0,  # degree
-                 reserved_slot:int=11) -> None:
+                 reserved_slot:int=10) -> None:
         
         super().__init__()
         
@@ -368,7 +368,7 @@ class pos_data(data_list):
                  fire_times:int = 0,
                  present_pitch:float = 0.0,
                  present_yaw:float = 0.0,
-                 reserved_slot:int = 11
+                 reserved_slot:int = 10
                  ) -> None:
         super().__init__()
         
@@ -458,7 +458,7 @@ if __name__ =="__main__":
             a.abs_yaw = yaw
             a.abs_pitch = 0.0
             a.fire_times = 0
-            a.reserved_slot = 11
+            a.reserved_slot = 20
             r = a.convert_action_data_to_bytes()
             
             s = ''

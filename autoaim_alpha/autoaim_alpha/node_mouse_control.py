@@ -139,7 +139,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = self.decision_maker.next_pitch
         com_msg.target_abs_yaw = self.decision_maker.next_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 11
+        com_msg.reserved_slot = 10
         com_msg.fire_times = self.decision_maker.fire_times
         
         self.pub_ele_sys_com.publish(com_msg)
@@ -159,7 +159,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = abs_pitch
         com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 11
+        com_msg.reserved_slot = 10
         com_msg.fire_times = 0
         self.yaw_test_idx += 1
         if self.yaw_test_idx >= len(yaw_test_data):
@@ -178,7 +178,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = pitch_test_data[self.pitch_test_idx]
         com_msg.target_abs_yaw = 0.0
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 11
+        com_msg.reserved_slot = 10
         com_msg.fire_times = 0
         self.pitch_test_idx += 1
         if self.pitch_test_idx >= len(pitch_test_data):
@@ -217,7 +217,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = self.decision_maker.cur_pitch
         com_msg.target_abs_yaw = self.decision_maker.cur_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 11
+        com_msg.reserved_slot = 10
         com_msg.fire_times = 0
         
         self.pub_ele_sys_com.publish(com_msg)

@@ -220,7 +220,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.target_abs_pitch = self.decision_maker.next_pitch
         com_msg.target_abs_yaw = self.decision_maker.next_yaw
         com_msg.sof = 'A'
-        com_msg.reserved_slot = 11
+        com_msg.reserved_slot = 10
         com_msg.fire_times = self.fire_times if self.fire_times != -1 else 0
 
         if mode == 'Dbg':
