@@ -186,6 +186,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             if self.cur_event == SEARCH_AND_FIRE or self.cur_event == DOING_NOTHING:
                 self.pre_event = self.cur_event
                 self.cur_event = AUTO_BOUNCE_BACK
+                self.decision_maker.action_count = -1
                 if node_decision_maker_mode == 'Dbg':
                     self.get_logger().debug(f"Auto bounce back")
             else:
