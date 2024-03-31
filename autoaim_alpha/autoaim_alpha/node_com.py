@@ -67,7 +67,7 @@ class Node_Com(Node,Custom_Context_Obj):
     
     def timer_recv_msg_callback(self):
         
-        if_error, cur_yaw, cur_pitch = self.port.recv_feedback()
+        if_error, cur_yaw, cur_pitch, reserved_slot = self.port.recv_feedback()
         cur_yaw = cur_yaw / 180 * np.pi
         cur_pitch = cur_pitch / 180 * np.pi
         if if_error:
@@ -84,12 +84,14 @@ class Node_Com(Node,Custom_Context_Obj):
             
                 msg.cur_pitch = cur_pitch
                 msg.cur_yaw = cur_yaw
+                msg.sentry_health = reserved_slot
                 self.ele_sys_state_pub.publish(msg)
                 
             else:
                 msg = ElectricsysState()
                 msg.cur_pitch = cur_pitch
                 msg.cur_yaw = cur_yaw
+                msg.sentry_health = reserved_slot
                 self.ele_sys_state_pub.publish(msg)
             
             

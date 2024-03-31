@@ -29,7 +29,7 @@
             "command": "bash",
             "args": [
                 "-c",
-                "cd ${workspaceFolder}/autoaim_beta/build && ninja -j$(nproc)"
+                "cd ${workspaceFolder}/autoaim_beta/src/test/build && ninja -j$(nproc)"
             ],
             "group": "build",
             "problemMatcher": "$gcc",
@@ -50,7 +50,7 @@
             "command": "bash",
             "args": [
                 "-c",
-                "cd ${workspaceFolder}/autoaim_beta/build &&cmake -GNinja .."
+                "cd ${workspaceFolder}/autoaim_beta/src/test/build &&cmake -GNinja .."
             ],
             "group": "build",
             "problemMatcher": "$gcc",

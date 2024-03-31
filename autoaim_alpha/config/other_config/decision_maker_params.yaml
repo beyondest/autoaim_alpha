@@ -48,13 +48,69 @@ auto_bounce_back_period: 5 # seconds, if < 0, disable auto bounce back
 direction_accept_error: 0.03 # radian , around 1.5 degree 
 
 
-doing_nothing_continue_frames: 40
-search_and_fire_continue_frames: 40
-auto_bounce_back_continue_frames: 40 
-go_right_continue_frames: 40        # turn to -90 degree and then go straight, not concludes turn direction time
-go_left_continue_frames: 40         # turn to 90  degree and then go straight, not concludes turn direction time
-go_forward_continue_frames: 40     # turn to 0   degree and then go straight, not concludes turn direction time
-go_backward_continue_frames: 40         # turn to 180 degree and then go straight, not concludes turn direction time
+doing_nothing_continue_frames: 50
+search_and_fire_continue_frames: 50
+auto_bounce_back_continue_frames: 10 
+go_right_continue_frames: 25        # turn to -90 degree and then go straight, not concludes turn direction time
+
+
+# from start to very left: 250(guess, left side is 4.5m) 
+# from right_pos to very left: 310(guess, after go right then go forward then go backward)
+go_left_continue_frames: 200        # turn to 90  degree and then go straight, not concludes turn direction time
+go_forward_continue_frames: 50     # turn to 0   degree and then go straight, not concludes turn direction time
+# from very left to supply area: 175(guess, after go left 250, down side to supply is 2.8m)
+go_backward_continue_frames: 125     # turn to 180 degree and then go straight, not concludes turn direction time, from very left to buji
+
+
+
+# event_flag:
+# DOING_NOTHING = 0
+# SEARCH_AND_FIRE = 1
+# AUTO_BOUNCE_BACK = 2, do not use this flag, enable auto_bounce_back instead
+# GO_RIGHT = 3
+# GO_LEFT = 4
+# GO_FORWARD = 5
+# GO_BACKWARD = 6
+
+# strategy 1, go left to protect 
+strategy_1_event_flag_to_arg_list:
+- - 0
+  - 50 
+- - 4
+  - 200 # 250 for real, 200 for dbg
+- - 1
+  - -1
+- - 6
+  - 125 # 175 for real , 125 for dbg
+- - 5
+  - 100 # 150 for real, 100 for dbg
+- - 3
+  - 50 # 75 for real, 50 for dbg
+
+
+strategy_2_event_flag_to_arg_list:
+- - 0
+  - 50
+- - 3
+  - 50 # 75 for real, 50 for dbg
+- - 5
+  - 50 # 75 for real, 50 for dbg
+- - 1
+  - -1
+- - 6
+  - 60 # 85 for real, 60 for dbg
+- - 4
+  - 250 # 325 for real, 250 for dbg
+- - 6
+  - 125 # 175 for real, 125 for dbg
+- - 5 
+  - 100 # same as strategy_1
+- - 3
+  - 50 # same as strategy_1
+
+
+
+
 
 
 

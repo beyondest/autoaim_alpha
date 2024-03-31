@@ -3,15 +3,15 @@ cmake_minimum_required(VERSION 3.10)
 
 set(ROOT_DIR /home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta)
 
-set(EXECUTABLE_OUTPUT_PATH ${ROOT_DIR}/build/exe)
+set(EXECUTABLE_OUTPUT_PATH ${ROOT_DIR}/src/test/build/exe)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ROOT_DIR}/lib)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #set(USE_EIGEN ON)
 
 
-project(autoaim_beta CXX)
+project(test CXX)
 
 find_package(OpenCV REQUIRED)
 find_package(spdlog REQUIRED)
@@ -77,8 +77,8 @@ target_link_libraries(gg_test ${OpenCV_LIBS}
                                      ${spdlog_LIBRARIES})
 
 
-
-
+add_executable(astra_test        ${ROOT_DIR}/src/test/astra_test.cpp)
+target_link_libraries(astra_test ${OpenCV_LIBS})
 
 
 

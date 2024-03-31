@@ -120,7 +120,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.decision_maker.update_our_side_info(
                                                  cur_yaw=msg.cur_yaw,
                                                  cur_pitch=msg.cur_pitch,
-                                                 remaining_health=None,
+                                                 remaining_health=msg.sentry_health,
                                                  remaining_ammo=None)
         
     def sub_armor_pos_list_callback(self, msg:ArmorPosList):

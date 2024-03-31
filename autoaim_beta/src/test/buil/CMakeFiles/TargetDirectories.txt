@@ -1,3 +1,0 @@
-/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/test/buil/CMakeFiles/rebuild_cache.dir
-/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/test/buil/CMakeFiles/gg_test.dir
-/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/test/buil/CMakeFiles/edit_cache.dir

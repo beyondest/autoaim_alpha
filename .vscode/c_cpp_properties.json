@@ -9,7 +9,7 @@
         "${workspaceFolder}/**",
         "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/install/autoaim_interface/include/**",
         "/opt/ros/dashing/include/**",
-        "/usr/include/**"
+        "/usr/local/include/**"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

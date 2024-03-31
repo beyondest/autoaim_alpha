@@ -76,6 +76,8 @@ class Decision_Maker_Params(Params):
         self.go_backward_continue_frames = 40
         
         
+        self.strategy_1_event_flag_to_arg_list =
+        
         
 
 class Decision_Maker:
@@ -117,8 +119,8 @@ class Decision_Maker:
         
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
-        self.remaining_health = 0.0
-        self.remaining_ammo = 200
+        self.remaining_health = 600
+        self.remaining_ammo = 750
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
         self.pitch_compensation = 0.0

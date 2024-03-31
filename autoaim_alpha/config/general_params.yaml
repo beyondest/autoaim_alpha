@@ -1,24 +1,14 @@
 
 # mode: Dbg, Rel 
-mode : Rel
+mode : Dbg
 
-# event_flag:
-# DOING_NOTHING = 0
-# SEARCH_AND_FIRE = 1
-# AUTO_BOUNCE_BACK = 2, do not use this flag, enable auto_bounce_back instead
-# GO_RIGHT = 3
-# GO_LEFT = 4
-# GO_FORWARD = 5
-# GO_BACKWARD = 6
 
 
 # Will circle the last event forever
 event_flag_list:  
 - 0
 - 4
-- 4
-- 3
-- 3
+- 6
 - 1
 # gimbal_action_mode:
 # 0: not test gimbal, make decision only
