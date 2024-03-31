@@ -63,34 +63,35 @@ sentry_go_supply_health_threshold: 595 # 200 for Real, 595 for Debug
 # strategy 1, go left to protect 
 strategy_1_event_flag_to_arg_list:
 - - 1
-  - 500                              # Search until race start, may pre start by sentry health
+  - 1500                              # Search until race start, may pre start by sentry health
 - - 4
   - 200 # 250 for real, 200 for dbg   # Go left 
 - - 5
   - 50 # 100 for real, 50 for dbg     # Go forward 
 - - 1
-  - -1                              # Search and fire until health is below 300
+  - 1500                              # Search and fire until health is below 300, 999 for real, 1500 for dbg
 - - 6
   - 125 # 175 for real , 125 for dbg # Go backward to wall 
 - - 4
   - 50 # 100 for real, 50 for dbg    # Go left to wall
 - - 1   
-  - -1                               # Search and fire until health is 600
+  - 1500                               # Search and fire until health is 600, 3000 for real, 1500 for dbg
 - - 5
   - 100 # 150 for real, 100 for dbg   # Go forward
 - - 3
   - 50 # 75 for real, 50 for dbg     # Go right 
-
+- - 1
+  - 999                               # Search and fire until race end, may pre end by sentry health
 
 strategy_2_event_flag_to_arg_list:
 - - 1
-  - 500                              # Search until race start, may pre start by sentry health      
+  - 1500                              # Search until race start, may pre start by sentry health      
 - - 3
   - 50 # 75 for real, 50 for dbg     # Go right 
 - - 5
   - 50 # 75 for real, 50 for dbg     # Go forward 
 - - 1
-  - -1                              # Search and fire until health is below 300
+  - 1500                             # Search and fire until health is below 300
 - - 6
   - 60 # 85 for real, 60 for dbg     # Go backward 
 - - 4
@@ -98,12 +99,13 @@ strategy_2_event_flag_to_arg_list:
 - - 6
   - 125 # 175 for real, 125 for dbg   # Go backward to wall 
 - - 1
-  - -1                              # Search and fire until health is 600
+  - 1500                             # Search and fire until health is 600
 - - 5 
   - 100 # same as strategy_1           # Go forward 
 - - 3
   - 50 # same as strategy_1           # Go right 
-
+- - 1
+  - 999                             # Search and fire until race end, may pre end by sentry health
 
 
 
