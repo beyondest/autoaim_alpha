@@ -46,22 +46,10 @@ choose_mode: 1 # 0 precision_first, 1 distance_first, 2 balanced
 # for event,  should adjust with fps
 auto_bounce_back_period: 5 # seconds, if < 0, disable auto bounce back
 direction_accept_error: 0.03 # radian , around 1.5 degree 
-
-
-doing_nothing_continue_frames: 50
-search_and_fire_continue_frames: 50
 auto_bounce_back_continue_frames: 10 
-go_right_continue_frames: 25        # turn to -90 degree and then go straight, not concludes turn direction time
 
 
-# from start to very left: 250(guess, left side is 4.5m) 
-# from right_pos to very left: 310(guess, after go right then go forward then go backward)
-go_left_continue_frames: 200        # turn to 90  degree and then go straight, not concludes turn direction time
-go_forward_continue_frames: 50     # turn to 0   degree and then go straight, not concludes turn direction time
-# from very left to supply area: 175(guess, after go left 250, down side to supply is 2.8m)
-go_backward_continue_frames: 125     # turn to 180 degree and then go straight, not concludes turn direction time, from very left to buji
-
-
+sentry_go_supply_health_threshold: 595 # 200 for Real, 595 for Debug
 
 # event_flag:
 # DOING_NOTHING = 0
@@ -74,39 +62,47 @@ go_backward_continue_frames: 125     # turn to 180 degree and then go straight, 
 
 # strategy 1, go left to protect 
 strategy_1_event_flag_to_arg_list:
-- - 0
-  - 50 
-- - 4
-  - 200 # 250 for real, 200 for dbg
 - - 1
-  - -1
-- - 6
-  - 125 # 175 for real , 125 for dbg
+  - 500                              # Search until race start, may pre start by sentry health
+- - 4
+  - 200 # 250 for real, 200 for dbg   # Go left 
 - - 5
-  - 100 # 150 for real, 100 for dbg
+  - 50 # 100 for real, 50 for dbg     # Go forward 
+- - 1
+  - -1                              # Search and fire until health is below 300
+- - 6
+  - 125 # 175 for real , 125 for dbg # Go backward to wall 
+- - 4
+  - 50 # 100 for real, 50 for dbg    # Go left to wall
+- - 1   
+  - -1                               # Search and fire until health is 600
+- - 5
+  - 100 # 150 for real, 100 for dbg   # Go forward
 - - 3
-  - 50 # 75 for real, 50 for dbg
+  - 50 # 75 for real, 50 for dbg     # Go right 
 
 
 strategy_2_event_flag_to_arg_list:
-- - 0
-  - 50
-- - 3
-  - 50 # 75 for real, 50 for dbg
-- - 5
-  - 50 # 75 for real, 50 for dbg
 - - 1
-  - -1
-- - 6
-  - 60 # 85 for real, 60 for dbg
-- - 4
-  - 250 # 325 for real, 250 for dbg
-- - 6
-  - 125 # 175 for real, 125 for dbg
-- - 5 
-  - 100 # same as strategy_1
+  - 500                              # Search until race start, may pre start by sentry health      
 - - 3
-  - 50 # same as strategy_1
+  - 50 # 75 for real, 50 for dbg     # Go right 
+- - 5
+  - 50 # 75 for real, 50 for dbg     # Go forward 
+- - 1
+  - -1                              # Search and fire until health is below 300
+- - 6
+  - 60 # 85 for real, 60 for dbg     # Go backward 
+- - 4
+  - 250 # 325 for real, 250 for dbg   # Go left to wall 
+- - 6
+  - 125 # 175 for real, 125 for dbg   # Go backward to wall 
+- - 1
+  - -1                              # Search and fire until health is 600
+- - 5 
+  - 100 # same as strategy_1           # Go forward 
+- - 3
+  - 50 # same as strategy_1           # Go right 
 
 
 

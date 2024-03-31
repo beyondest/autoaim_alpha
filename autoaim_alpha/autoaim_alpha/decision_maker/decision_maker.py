@@ -20,8 +20,6 @@ class Decision_Maker_Params(Params):
         self.pitch_search_right_waves = 6
         
         
-        
-        
         # for track and lock
         self.continuous_detected_num_for_track = 2
         self.continuous_lost_num_max_threshold = 4
@@ -65,18 +63,12 @@ class Decision_Maker_Params(Params):
         # for event
         self.auto_bounce_back_period = 5 #if < 0, disable auto bounce back
         self.direction_accept_error = 0.03
-        
-        
-        self.doing_nothing_continue_frames = 40
-        self.search_and_fire_continue_frames = 40
         self.auto_bounce_back_continue_frames = 40
-        self.go_right_continue_frames = 40
-        self.go_left_continue_frames = 40
-        self.go_forward_continue_frames = 40
-        self.go_backward_continue_frames = 40
+        self.sentry_go_supply_health_threshold = 250
         
         
-        self.strategy_1_event_flag_to_arg_list =
+        self.strategy_1_event_flag_to_arg_list = []
+        self.strategy_2_event_flag_to_arg_list = []
         
         
 
@@ -119,8 +111,10 @@ class Decision_Maker:
         
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
-        self.remaining_health = 600
+        self.remaining_health = 0
         self.remaining_ammo = 750
+        self.sentry_state = 0
+        self.pre_sentry_state = 0
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
         self.pitch_compensation = 0.0
@@ -180,8 +174,17 @@ class Decision_Maker:
         self.cur_yaw = cur_yaw
         self.cur_pitch = cur_pitch
         
-        if remaining_health is not None:
-            self.remaining_health = remaining_health
+        if self.remaining_health == 0 and remaining_health == 0:
+            self.sentry_state = 0 # race not start yet
+        elif self.remaining_health == 0 and remaining_health >= 600:
+            self.sentry_state = 1 # race start
+        elif self.remaining_health > 0 and remaining_health < self.params.sentry_go_supply_health_threshold:
+            self.sentry_state = 2 # go supply
+        elif self.sentry_state == 2 and remaining_health >= 600:
+            self.sentry_state = 3 # supply finished
+            
+            
+        self.remaining_health = remaining_health
         if remaining_ammo is not None:
             self.remaining_ammo = remaining_ammo
         if fire_mode is not None:
@@ -192,24 +195,27 @@ class Decision_Maker:
         self.params.save_params_to_yaml(yaml_path)
     
     
-    def search_and_fire(self)->bool:
+    def search_and_fire(self,arg)->bool:
         """
         Args:
             target_armor_params (Armor_Params): _description_
         Returns:
             if action finished, return True, else return False
         """
+            
         if self.action_count == -1:
-            self.action_count = self.params.search_and_fire_continue_frames
+            self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Search and Fire")
             return False
         
         elif self.action_count > 0:
-            self.action_count -= 1
+            if self.action_count == 999:
+                pass
+            else:
+                self.action_count -= 1
             last_update_target_list = self._find_last_update_target()
             self._choose_target(last_update_target_list)
-            
             if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
                 if not self.params.if_use_pid_control:
                     # abs pitch, apply pitch compensation automatically
@@ -230,13 +236,11 @@ class Decision_Maker:
                         self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff +gravity_compensation + self.params.manual_pitch_compensation
                         self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
                                                         pitch_pid_target=self.pitch_compensation)
-                        
             else:
                 self._get_next_yaw_pitch_by_stay_or_search()
             if self.params.if_enable_mouse_control:
                 self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
             
-
             SHIFT_LIST_AND_ASSIG_VALUE(self.target_list,self.target)
             
             if_locked = self._if_target_locked()
@@ -256,7 +260,9 @@ class Decision_Maker:
             if self.params.record_data_path is not None:
                 SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
                 self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
-            return False
+            if self.mode == 'Dbg':
+                lr1.debug("Doing Search and Fire")
+            return self._check_if_sentry_state_changed()
         
         elif self.action_count == 0:
             self.action_count = -1
@@ -265,9 +271,9 @@ class Decision_Maker:
             return True
 
 
-    def auto_bounce_back(self):
+    def auto_bounce_back(self,arg):
         if self.action_count == -1:
-            self.action_count = self.params.auto_bounce_back_continue_frames
+            self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Auto Bounce Back")
             return False
@@ -278,7 +284,7 @@ class Decision_Maker:
             self.fire_times = 0
             self.reserved_slot = 20
             if self.mode == 'Dbg':
-                lr1.debug("Auto Bounce Back")
+                lr1.debug("Doing Auto Bounce Back")
             return False
         elif self.action_count == 0:
             self.action_count = -1
@@ -287,9 +293,9 @@ class Decision_Maker:
             return True
             
         
-    def doing_nothing(self):
+    def doing_nothing(self,arg):
         if self.action_count == -1:
-            self.action_count = self.params.doing_nothing_continue_frames
+            self.action_count = arg 
             if self.mode == 'Dbg':
                 lr1.debug("Start Doing Nothing")
             return False
@@ -300,7 +306,7 @@ class Decision_Maker:
             self.fire_times = 0
             self.reserved_slot = 10
             if self.mode == 'Dbg':
-                lr1.debug("Doing Nothing")
+                lr1.debug("Doing Doing Nothing")
             return False
         elif self.action_count == 0:
             self.action_count = -1
@@ -309,9 +315,9 @@ class Decision_Maker:
             return True
     
     
-    def go_right(self):
+    def go_right(self,arg):
         if self.action_count == -1:
-            self.action_count = self.params.go_right_continue_frames
+            self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Right")
             return False
@@ -340,9 +346,9 @@ class Decision_Maker:
                 lr1.debug("Go Right Finished")
             return True
         
-    def go_left(self):
+    def go_left(self,arg):
         if self.action_count == -1:
-            self.action_count = self.params.go_left_continue_frames
+            self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Left")
             return False
@@ -371,9 +377,9 @@ class Decision_Maker:
                 lr1.debug("Go Left Finished")
             return True
     
-    def go_forward(self):
+    def go_forward(self,arg):
         if self.action_count == -1:
-            self.action_count = self.params.go_forward_continue_frames
+            self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Forward")
             return False
@@ -402,10 +408,10 @@ class Decision_Maker:
                 lr1.debug("Go Forward Finished")
             return True
     
-    def go_backward(self):
+    def go_backward(self,arg):
         
         if self.action_count == -1:
-            self.action_count = self.params.go_backward_continue_frames
+            self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Backward")
             return False
@@ -435,12 +441,10 @@ class Decision_Maker:
             return True
     def _search_target(self):
         """
-
         Returns:
             yaw, pitch
         """
         yaw,pitch = self._get_search_next_yaw_pitch()
-        
         return yaw,pitch
     
     def _init_yaw_pitch_search_data(self):
@@ -636,4 +640,14 @@ class Decision_Maker:
         self.mouse_pos_prior = (0,0)
     
     
-    
+    def _check_if_sentry_state_changed(self)->bool:
+        if self.sentry_state == self.pre_sentry_state + 1:
+            self.pre_sentry_state = self.sentry_state
+            if self.mode == 'Dbg':
+                lr1.debug(f"Sentry state changed to {self.sentry_state}")
+            return True
+        else:
+            return False
+        
+        
+            

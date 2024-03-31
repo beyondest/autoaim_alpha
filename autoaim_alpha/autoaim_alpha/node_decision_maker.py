@@ -46,7 +46,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              pitch_pid_path,
                                              self.ballistic_predictor,
                                              enemy_car_list)
-        
+        if strategy == 1:
+            self.event_flag_to_arg_list = self.decision_maker.params.strategy_1_event_flag_to_arg_list
+            self.get_logger().warn(f"Use strategy 1, GO LEFT")
+        else:
+            self.event_flag_to_arg_list = self.decision_maker.params.strategy_2_event_flag_to_arg_list
+            self.get_logger().warn(f"Use strategy 2, GO RIGHT")
+            
         self.event_flat_to_callback = { DOING_NOTHING:self.decision_maker.doing_nothing,
                                         SEARCH_AND_FIRE:self.decision_maker.search_and_fire,
                                         AUTO_BOUNCE_BACK:self.decision_maker.auto_bounce_back,
@@ -68,14 +74,14 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
             
-            
         self.rel_yaw = 0.0
         self.rel_pitch = 0.0
         self.fire_times = 0
         
-        self.event_flag_index = 0
-        self.cur_event = event_flag_list[self.event_flag_index]
+        self.event_index = 0
+        self.cur_event = self.event_flag_to_arg_list[self.event_index][0]
         self.pre_event = DOING_NOTHING
+        self.cur_event_arg = self.event_flag_to_arg_list[self.event_index][1]
         
         self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
                                                       topic_electric_sys_state['name'],
@@ -142,7 +148,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                     )
             
         self.action_mode_to_callback[gimbal_action_mode]()
-
         com_msg = ElectricsysCom()
         com_msg.target_abs_pitch = self.decision_maker.next_pitch
         com_msg.target_abs_yaw = self.decision_maker.next_yaw
@@ -151,8 +156,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         com_msg.fire_times = self.decision_maker.fire_times
         self.pub_ele_sys_com.publish(com_msg)
     
-    
-    
     def make_decision_callback(self):
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to electric system, cannot search and fire")
@@ -160,24 +163,26 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             return
         t1 = time.time()
 
-        if_action_finished = self.event_flat_to_callback[self.cur_event]()
+        if_action_finished = self.event_flat_to_callback[self.cur_event](self.cur_event_arg)
         if if_action_finished:
             if self.cur_event == AUTO_BOUNCE_BACK:
                 self.cur_event = self.pre_event
             else:
-                self.pre_event = event_flag_list[self.event_flag_index]
-                if self.event_flag_index == len(event_flag_list)-1:
-                    self.event_flag_index = self.event_flag_index
+                self.pre_event = self.cur_event
+                if self.event_index == len(self.event_flag_to_arg_list)-1:
+                    self.event_index = self.event_index
                 else:
-                    self.event_flag_index += 1
-                self.cur_event = event_flag_list[self.event_flag_index]
+                    self.event_index += 1
+                self.cur_event = self.event_flag_to_arg_list[self.event_index][0]
+                self.cur_event_arg = self.event_flag_to_arg_list[self.event_index][1]
         else:
-            self.cur_event = self.cur_event    
+            self.cur_event = self.cur_event
+            self.cur_event_arg = self.cur_event_arg    
             
         t2 = time.time()
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
-            self.get_logger().debug(f"Make decision : event_flag: {self.cur_event} fire_times {self.decision_maker.fire_times}  target_abs_yaw {self.decision_maker.next_yaw:.3f},target_abs_pitch {self.decision_maker.next_pitch:.3f}, reserved_slot {self.decision_maker.reserved_slot}")
+            self.get_logger().debug(f"Make decision : event_flag: {self.cur_event} , event arg: {self.event_flag_to_arg_list[self.event_index][1]} fire_times {self.decision_maker.fire_times}  target_abs_yaw {self.decision_maker.next_yaw:.3f},target_abs_pitch {self.decision_maker.next_pitch:.3f}, reserved_slot {self.decision_maker.reserved_slot}")
        
     def auto_bounce_callback(self):
         if self.if_connetect_to_ele_sys == False:
@@ -186,6 +191,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             if self.cur_event == SEARCH_AND_FIRE or self.cur_event == DOING_NOTHING:
                 self.pre_event = self.cur_event
                 self.cur_event = AUTO_BOUNCE_BACK
+                self.cur_event_arg = self.decision_maker.params.auto_bounce_back_continue_frames
                 self.decision_maker.action_count = -1
                 if node_decision_maker_mode == 'Dbg':
                     self.get_logger().debug(f"Auto bounce back")
