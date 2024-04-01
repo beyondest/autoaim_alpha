@@ -49,9 +49,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if strategy == 1:
             self.event_flag_to_arg_list = self.decision_maker.params.strategy_1_event_flag_to_arg_list
             self.get_logger().warn(f"Use strategy 1, GO LEFT")
-        else:
+        elif strategy == 2:
             self.event_flag_to_arg_list = self.decision_maker.params.strategy_2_event_flag_to_arg_list
             self.get_logger().warn(f"Use strategy 2, GO RIGHT")
+        elif strategy == 0:
+            self.event_flag_to_arg_list = self.decision_maker.params.strategy_0_event_flag_to_arg_list
+            self.get_logger().warn(f"Use strategy 0, KEEP_SEARCHING_ALL_TIME")
             
         self.event_flat_to_callback = { DOING_NOTHING:self.decision_maker.doing_nothing,
                                         SEARCH_AND_FIRE:self.decision_maker.search_and_fire,
