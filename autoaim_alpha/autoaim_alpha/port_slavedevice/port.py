@@ -80,7 +80,7 @@ class Port:
             msg = self.ser.read_all()
             if msg == b'':
                 lr1.debug(f"Recv empty msg")
-                return True,0.0,0.0,0,0
+                return True,0.0,0.0,0.0
             if_error = self.pos_data.convert_pos_bytes_to_data(msg)
             
             cur_yaw = self.pos_data.present_yaw
@@ -92,7 +92,7 @@ class Port:
             return if_error,cur_yaw,cur_pitch,reserved_slog
         
         else:
-            return True,0.0,0.0,0,0
+            return True,0.0,0.0,0.0
         
     def port_open(self):
         if self.ser is not None:
