@@ -442,7 +442,7 @@ Net_Detector::Net_Detector(Mode mode,
                  params(armor_color_)
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
-    if (if_auto_recognize_friend_) this->our_color = "0";
+    if (if_auto_recognize_friend_) this->our_color = '0';
     if (if_yolov5) 
     {
         this->yolo_engine = new TRTModule(net_config_folder+"/opt4.onnx");

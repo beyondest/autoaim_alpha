@@ -104,7 +104,7 @@ public:
             RCLCPP_WARN(this->get_logger(), "USE YOLOV5 METHOD");
         if (this->camera_type == "mv") mv->open();
         else gg->open();
-        this->net_detector = new Net_Detector(mode, net_config_folder, if_yolov5, enemy_car_info_list,armor_color);
+        this->net_detector = new Net_Detector(mode, net_config_folder, if_yolov5, enemy_car_info_list,armor_color,if_auto_recognize_friend);
         this->pnp_solver = new PNP_Solver(mode, pnp_config_params_path, img_show_wid, img_show_hei);
         this->timer_ = this->create_wall_timer(std::chrono::milliseconds(node_webcam_ms), std::bind(&Node_Webcam::timer_callback, this));
         this->pub_detect_result_ = this->create_publisher<autoaim_interface::msg::DetectResult>("detect_result", 5); // must same as in __init__.py topic_detect_result
