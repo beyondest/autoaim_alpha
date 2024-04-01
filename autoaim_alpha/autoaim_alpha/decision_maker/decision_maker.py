@@ -66,10 +66,9 @@ class Decision_Maker_Params(Params):
         self.auto_bounce_back_continue_frames = 40
         self.sentry_go_supply_health_threshold = 250
         
-        
+        self.strategy_0_event_flag_to_arg_list = []
         self.strategy_1_event_flag_to_arg_list = []
         self.strategy_2_event_flag_to_arg_list = []
-        
         
 
 class Decision_Maker:

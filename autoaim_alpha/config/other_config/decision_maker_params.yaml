@@ -61,6 +61,9 @@ sentry_go_supply_health_threshold: 595 # 200 for Real, 595 for Debug
 # GO_BACKWARD = 6
 
 # strategy 1, go left to protect 
+strategy_0_event_flag_to_arg_list:
+- - 1
+  - 999
 strategy_1_event_flag_to_arg_list:
 - - 1
   - 1500                              # Search until race start, may pre start by sentry health
