@@ -458,7 +458,7 @@ class Decision_Maker:
         elif self.action_count > 0:
             if self.bro_target:
                 if self.bro_target.if_update:
-                    if self.bro_target.name.split('_')[0] == 'friend':
+                    if self.bro_target.confidence == 0.1234:
                         self.bro_found = True
                         lr1.warn(f"Bro Found Friend {self.bro_target.name}")
             if self.i_found and self.bro_found:
@@ -470,7 +470,7 @@ class Decision_Maker:
                 last_update_target_list = self._find_last_update_target()
                 if len(last_update_target_list) != 0:
                     for target in last_update_target_list:
-                        if target.name.split('_')[0] == 'friend':
+                        if target.confidence == 0.1234:
                             self.i_found = True
                             self.next_yaw = self.params.search_friend_yaw
                             self.next_pitch = np.pi/2
