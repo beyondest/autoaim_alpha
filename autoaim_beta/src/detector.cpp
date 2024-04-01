@@ -507,7 +507,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
 #else
         order_points(big_rec);
 #endif
-        if (this->update_our_color_if_first_detected(armor_name_string)) result.confidence = 0.1234;
+        if (this->update_our_color_if_first_detected(armor_name_string)) armor_name_string = "friend_3" + armor_name_string;
         big_rec = extendRectangle(big_rec,0,0.3);
         std::vector<float> tvec = {0, 0, 0};
         std::vector<float> rvec = {0, 0, 0};
