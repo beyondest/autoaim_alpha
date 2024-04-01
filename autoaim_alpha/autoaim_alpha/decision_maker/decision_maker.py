@@ -456,10 +456,11 @@ class Decision_Maker:
                 lr1.debug("Start Search Friend")
             return False
         elif self.action_count > 0:
-            if self.bro_target.if_update:
-                if self.bro_target.name.split('_')[0] == 'friend':
-                    self.bro_found = True
-                    lr1.warn(f"Bro Found Friend {self.bro_target.name}")
+            if self.bro_target:
+                if self.bro_target.if_update:
+                    if self.bro_target.name.split('_')[0] == 'friend':
+                        self.bro_found = True
+                        lr1.warn(f"Bro Found Friend {self.bro_target.name}")
             if self.i_found and self.bro_found:
                 self.action_count = -1
                 if self.mode == 'Dbg':
