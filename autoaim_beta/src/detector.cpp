@@ -553,7 +553,7 @@ bool Net_Detector::update_our_color_if_first_detected(const std::string& class_n
         std::vector<Enemy_Car_Info> new_enemy_car_list;
         for (auto& enemy_car : enemy_car_list) if (enemy_car.armor_name[0] != this->our_color) new_enemy_car_list.push_back(enemy_car);
         this->enemy_car_list = new_enemy_car_list;
-        if (this->mode == 'Dbg') std::cout<< "Our color is "<<this->our_color<<std::endl;
+        if (this->mode == Mode::Dbg) std::cout<< "Our color is "<<this->our_color<<std::endl;
         return true;
     }
     else return false;
