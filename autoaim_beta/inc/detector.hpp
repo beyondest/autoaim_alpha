@@ -32,7 +32,6 @@ public:
     std::vector<int> yuv_range = {152,255};
     int bin_thresh = 5;
     std::string armor_color ;
-
     Tradition_Detector_Params(std::string armor_color_):armor_color(armor_color_){};
     ~Tradition_Detector_Params(){};
     bool load_params_from_yaml(const std::string& file_path);
@@ -76,7 +75,6 @@ class Net_Detector_Params : public Params
 {
 
 public:
-    std::vector<Enemy_Car_Info> enemy_car_list;
     float conf_thres = 0.5;
     float iou_thres = 0.5;
     int max_det = 20;
@@ -86,7 +84,7 @@ public:
     std::string armor_color = "blue";
     bool load_params_from_yaml(const std::string& file_path);
     void print_show_params();
-    Net_Detector_Params(std::vector<Enemy_Car_Info> enemy_car_list_, std::string armor_color_):enemy_car_list(enemy_car_list_),armor_color(armor_color_){};
+    Net_Detector_Params(std::string armor_color_):armor_color(armor_color_){};
     ~Net_Detector_Params(){};
 
 };
@@ -100,8 +98,12 @@ private:
     TRT_Engine* engine = nullptr;
     TRTModule* yolo_engine = nullptr;
     int class_num = 0;
+    // deprecated
     std::string armor_color;
+    mutable std::vector<Enemy_Car_Info> enemy_car_list;
+    mutable char our_color = '2';
     Net_Detector_Params params;
+    
 
 public:
     Net_Detector(Mode mode,
@@ -116,6 +118,7 @@ public:
     std::vector<detect_result_t> operator()(const std::vector<cv::Mat>& bin_rois,const std::vector<std::vector<cv::Point2f>>& big_recs) const;
     std::vector<detect_result_t> operator()(const cv::Mat& img_bgr) const;
     bool if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& big_rec) const;
+    bool update_our_color_if_first_detected(const std::string& class_name) const;
 
 };
 

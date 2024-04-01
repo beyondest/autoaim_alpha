@@ -13,7 +13,7 @@ camera_config_folder = '../autoaim_alpha/config/camera_config'
 tradition_config_folder = '../autoaim_alpha/config/tradition_config'
 net_config_folder = '../autoaim_alpha/config/net_config'
 depth_estimator_config_yaml_path = '../autoaim_alpha/config/other_config/pnp_params.yaml'
-enemy_car_list = [{'armor_name':'3x','armor_distance':[0.5,0.5],'armor_nums':1}]
+enemy_car_list = [{'armor_name':'3x','armor_nums':1}]
 
 fps = 0
 

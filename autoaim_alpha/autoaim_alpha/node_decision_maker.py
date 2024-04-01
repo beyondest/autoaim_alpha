@@ -12,7 +12,7 @@ GO_RIGHT = 3
 GO_LEFT = 4
 GO_FORWARD = 5
 GO_BACKWARD = 6
-
+SEARCH_FRIEND = 7
 
 
 class Node_Decision_Maker(Node,Custom_Context_Obj):
@@ -45,7 +45,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              yaw_pid_path,
                                              pitch_pid_path,
                                              self.ballistic_predictor,
-                                             enemy_car_list)
+                                             enemy_car_list,
+                                             if_ignore_brother)
         if strategy == 1:
             self.event_flag_to_arg_list = self.decision_maker.params.strategy_1_event_flag_to_arg_list
             self.get_logger().warn(f"Use strategy 1, GO LEFT")
@@ -62,7 +63,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                         GO_RIGHT:self.decision_maker.go_right,
                                         GO_LEFT:self.decision_maker.go_left,
                                         GO_FORWARD:self.decision_maker.go_forward,
-                                        GO_BACKWARD:self.decision_maker.go_backward}
+                                        GO_BACKWARD:self.decision_maker.go_backward,
+                                        SEARCH_FRIEND:self.decision_maker.search_friend}
                 
         self.get_logger().warn(f"Use gimbal_action_mode {self.action_mode_to_note[gimbal_action_mode]}")
         
@@ -126,11 +128,9 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.decision_maker.electric_system_zero_unix_time = time.time()
             self.get_logger().info(f"Connect to electric system, zero_unix_time {self.decision_maker.electric_system_zero_unix_time} ")
             
-        self.decision_maker.update_our_side_info(
+        self.decision_maker.update_small_gimbal_info(
                                                  cur_yaw=msg.cur_yaw,
-                                                 cur_pitch=msg.cur_pitch,
-                                                 remaining_health=msg.sentry_health,
-                                                 remaining_ammo=None)
+                                                 cur_pitch=msg.cur_pitch)
         
     def sub_armor_pos_list_callback(self, msg:ArmorPosList):
         for armor_pos in msg.armor_pos_list:

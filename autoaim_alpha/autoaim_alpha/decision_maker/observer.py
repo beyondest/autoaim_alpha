@@ -31,7 +31,6 @@ class Armor_Params(Params):
 
 class Car_Params(Params):
     def __init__(self,
-                 armor_distance:list,
                  armor_name:str,
                  history_depth:int=10,
                  armor_nums:int=4,
@@ -47,7 +46,6 @@ class Car_Params(Params):
             1: back
 
         Args:
-            armor_distance_in_x_axis (float): _description_
             armor_name (str, optional): _description_. Defaults to '3x'.
             history_depth (int, optional): _description_. Defaults to 10.
             armor_nums (int, optional): _description_. Defaults to 4.
@@ -55,7 +53,6 @@ class Car_Params(Params):
         
         super().__init__()
         
-        self.armor_distance = armor_distance
         
         self.armor_name = armor_name
         self.history_depth = history_depth
@@ -92,8 +89,7 @@ class Observer_Params(Params):
                 raise ValueError("armor_name already exists in car_params")
                 
                 
-            dic = {i['armor_name']:Car_Params(i['armor_distance'],
-                                              i['armor_name'],
+            dic = {i['armor_name']:Car_Params(i['armor_name'],
                                               self.history_depth,
                                               i['armor_nums'])}
             

@@ -2,8 +2,8 @@
 # mode: Dbg, Rel 
 mode : Dbg
 
-# 1 or 2, 1 go left, 2 go right
-strategy: 1
+# 1 or 2, 1 go left, 2 go right,, 0 stay forever
+strategy: 0
 
 # gimbal_action_mode:
 # 0: not test gimbal, make decision only
@@ -12,6 +12,7 @@ strategy: 1
 gimbal_action_mode: 0
 
 if_ignore_elesys: False
+if_ignore_brother: True
 if_show_img_local: False
 if_show_img_remote: False
 # enemy armor color: blue or red
@@ -23,20 +24,21 @@ if_yolov5: True
 # WARNING : armor_name depends on if_yolov5 !!!
 
 enemy_car_list : 
-- armor_distance:
-  - 0.5
-  - 0.5
-  armor_name: "03"
+- armor_name: "00"
   armor_nums: 2
-- armor_distance:
-  - 0.5
-  - 0.5
-  armor_name: "04"
+- armor_name: "01"
   armor_nums: 2
-- armor_distance:
-  - 0.5
-  - 0.5
-  armor_name: "01"
+- armor_name: "03"
+  armor_nums: 2
+- armor_name: "04"
+  armor_nums: 2
+- armor_name: "10"
+  armor_nums: 2
+- armor_name: "11"
+  armor_nums: 2
+- armor_name: "13"
+  armor_nums: 2
+- armor_name: "14"
   armor_nums: 2
 
 # armor_distance : the distance between 2 opposite armors, unit: m

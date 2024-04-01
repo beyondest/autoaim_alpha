@@ -88,7 +88,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.if_connetect_to_ele_sys = True
             self.get_logger().info(f"Connect to electric system, cur_time {time.time()}")
             
-        self.decision_maker.update_our_side_info(
+        self.decision_maker.update_small_gimbal_info(
                                                  cur_yaw=msg.cur_yaw,
                                                  cur_pitch=msg.cur_pitch,
                                                  remaining_health=None,

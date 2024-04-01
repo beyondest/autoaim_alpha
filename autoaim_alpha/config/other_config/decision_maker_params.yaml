@@ -1,11 +1,21 @@
 # for abs search
-yaw_left_degree: -30.0
-yaw_right_degree: 30.0
-pitch_down_degree: -10.0
-pitch_up_degree: 5.0
-yaw_search_step: 0.02
-pitch_search_left_waves: 4
-pitch_search_right_waves: 5
+big_gimbal_major_yaw: 0.0 # rad
+pitch_min: -10.0 # deg
+pitch_max: 5.0  # deg
+yaw_search_step: 0.02 # rad
+pitch_search_step: 0.02 # rad
+
+# In the frame of zero yaw big gimbal 
+
+# 45.0 for Sentry Small Gimbal Right
+# 180.0 for Sentry Small Gimbal Left
+# 0 for Sentry Big Gimbal and White Car
+yaw_mechanical_positive_limit_switch: 45.0  # deg
+# -180.0 for Sentry Small Gimbal Right
+# -45.0 for Sentry Big Gimbal Left
+# 0 for Sentry Big Gimbal and White Car
+yaw_mechanical_negative_limit_switch: -180.0 # deg
+
 
 
 # for track and lock
@@ -47,9 +57,10 @@ choose_mode: 1 # 0 precision_first, 1 distance_first, 2 balanced
 auto_bounce_back_period: 5 # seconds, if < 0, disable auto bounce back
 direction_accept_error: 0.03 # radian , around 1.5 degree 
 auto_bounce_back_continue_frames: 10 
-
-
 sentry_go_supply_health_threshold: 595 # 200 for Real, 595 for Debug
+search_friend_yaw: 1.5708 # rad , 1.5708 for Real , 0 for Debug
+search_friend_pitch: -0.1745 # rad
+
 
 # event_flag:
 # DOING_NOTHING = 0
@@ -59,12 +70,17 @@ sentry_go_supply_health_threshold: 595 # 200 for Real, 595 for Debug
 # GO_LEFT = 4
 # GO_FORWARD = 5
 # GO_BACKWARD = 6
+# SEARCH_FRIEND = 7
 
 # strategy 1, go left to protect 
 strategy_0_event_flag_to_arg_list:
+- - 7
+  - 999
 - - 1
   - 999
 strategy_1_event_flag_to_arg_list:
+- - 7
+  - 999
 - - 1
   - 1500                              # Search until race start, may pre start by sentry health
 - - 4
@@ -87,6 +103,8 @@ strategy_1_event_flag_to_arg_list:
   - 999                               # Search and fire until race end, may pre end by sentry health
 
 strategy_2_event_flag_to_arg_list:
+- - 7
+  - 999
 - - 1
   - 1500                              # Search until race start, may pre start by sentry health      
 - - 3

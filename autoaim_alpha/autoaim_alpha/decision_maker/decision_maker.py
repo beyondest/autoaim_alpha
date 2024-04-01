@@ -11,13 +11,15 @@ class Decision_Maker_Params(Params):
         super().__init__()
         
         # for abs search
-        self.yaw_left_degree = -100
-        self.yaw_right_degree = 100
-        self.pitch_down_degree = -10
-        self.pitch_up_degree = 15
+        self.big_gimbal_major_yaw = 0.0
+        self.pitch_min = -10
+        self.pitch_max = 15
         self.yaw_search_step = 0.01
-        self.pitch_search_left_waves = 5
-        self.pitch_search_right_waves = 6
+        self.pitch_search_step = 0.01
+        
+        # for yaw_limit
+        self.yaw_mechanical_positive_limit_switch = 999
+        self.yaw_mechanical_negative_limit_switch = -999
         
         
         # for track and lock
@@ -56,15 +58,15 @@ class Decision_Maker_Params(Params):
         self.min_continuous_detected_num_for_lock = 2
         self.manual_pitch_compensation = 0.0
         self.manual_yaw_compensation = 0.0
-        
         # for predict
         self.target_history_lenght = 20
-        
         # for event
         self.auto_bounce_back_period = 5 #if < 0, disable auto bounce back
         self.direction_accept_error = 0.03
         self.auto_bounce_back_continue_frames = 40
         self.sentry_go_supply_health_threshold = 250
+        self.search_friend_yaw = 0.0
+        self.search_friend_pitch = 0.0
         
         self.strategy_0_event_flag_to_arg_list = []
         self.strategy_1_event_flag_to_arg_list = []
@@ -78,7 +80,8 @@ class Decision_Maker:
                  yaw_pid_controller_params_yaml_path:Union[str,None] = None,
                  pitch_pid_controller_params_yaml_path:Union[str,None] = None,
                  ballistic_predictor:Union[Ballistic_Predictor,None] = None,
-                 enemy_car_list:list = None
+                 enemy_car_list:list = None,
+                 if_ignore_brother:bool = True
                  ) -> None:
         CHECK_INPUT_VALID(mode,"Dbg",'Rel')
         if enemy_car_list is None:
@@ -90,12 +93,12 @@ class Decision_Maker:
         self.yaw_pid_controller = PID_Controller()
         self.pitch_pid_controller = PID_Controller()
         
-        
         self.yaw_pid_controller.load_params_from_yaml(yaw_pid_controller_params_yaml_path)
         self.pitch_pid_controller.load_params_from_yaml(pitch_pid_controller_params_yaml_path)
         self.enemy_car_list = enemy_car_list
         if decision_maker_params_yaml_path is not None:
             self.params.load_params_from_yaml(decision_maker_params_yaml_path)
+        self._trans_params_degree_to_radian()
         if self.params.if_use_pid_control == False:
             lr1.warning("PID control is disabled, fire mode ignored, apply pitch compensation forced")
         
@@ -107,18 +110,22 @@ class Decision_Maker:
         self.next_pitch = 0.0
         self.fire_times = 0
         self.reserved_slot = 10 # tens digit is 1 means not bounce back, 2 means bounce back; digit is 0 means stay, 2 means go forward towards gimbal direction, 1 means go backward 
+        self.pitch_compensation = 0.0
+        
         
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
+        self.cur_big_gimbal_yaw = 0.0
         self.remaining_health = 0
         self.remaining_ammo = 750
         self.sentry_state = 0
         self.pre_sentry_state = 0
         self.electric_system_zero_unix_time = None
         self.electric_system_unix_time = time.time()
-        self.pitch_compensation = 0.0
         
-        self._init_yaw_pitch_search_data()
+        self.bro_target = None
+        self.i_found = False 
+        self.bro_found = True if if_ignore_brother else False
         
         # if -1, means first enter action func, then set to continue frame count, if == 0, means action finished, if > 0, means not finished
         self.action_count = -1
@@ -139,6 +146,15 @@ class Decision_Maker:
         if self.params.if_enable_mouse_control:
             self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
             self.mouse_pos_prior = (0,0)
+        
+        self.yaw_search_add = True
+        self.pitch_search_add = True
+        
+    def _trans_params_degree_to_radian(self):
+        self.params.yaw_mechanical_negative_limit_switch = self.params.yaw_mechanical_negative_limit_switch/180*np.pi
+        self.params.yaw_mechanical_positive_limit_switch = self.params.yaw_mechanical_positive_limit_switch/180*np.pi
+        self.params.pitch_max = self.params.pitch_max/180*np.pi
+        self.params.pitch_min = self.params.pitch_min/180*np.pi
         
     def update_enemy_side_info(self,
                       armor_name:str,
@@ -163,16 +179,19 @@ class Decision_Maker:
                 armor_params.if_update = if_update
                 
                 
-    def update_our_side_info(self,
+    def update_small_gimbal_info(self,
                              cur_yaw:float,
-                             cur_pitch:float,
-                             remaining_health:Union[float,None] = None,
-                             remaining_ammo:Union[float,None] = None,
-                             fire_mode:Union[int,None] = None)->None:
+                             cur_pitch:float
+                             )->None:
         
         self.cur_yaw = cur_yaw
         self.cur_pitch = cur_pitch
         
+    def update_big_gimbal_info(self,
+                               cur_big_gimbal_yaw:float,
+                               remaining_health:int):
+        
+        self.cur_big_gimbal_yaw = cur_big_gimbal_yaw
         if self.remaining_health == 0 and remaining_health == 0:
             self.sentry_state = 0 # race not start yet
         elif self.remaining_health == 0 and remaining_health >= 600:
@@ -181,14 +200,8 @@ class Decision_Maker:
             self.sentry_state = 2 # go supply
         elif self.sentry_state == 2 and remaining_health >= 600:
             self.sentry_state = 3 # supply finished
-            
-            
         self.remaining_health = remaining_health
-        if remaining_ammo is not None:
-            self.remaining_ammo = remaining_ammo
-        if fire_mode is not None:
-            self.params.fire_mode = fire_mode    
-
+        
 
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
@@ -219,11 +232,9 @@ class Decision_Maker:
                 if not self.params.if_use_pid_control:
                     # abs pitch, apply pitch compensation automatically
                     self._get_next_yaw_pitch_by_ballistic()
-                            
                 else:
                     if self.params.fire_mode == 0:
                         self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=0.0)
-                        
                     elif self.params.fire_mode == 1:
                         gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
                         self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff + self.params.manual_pitch_compensation
@@ -268,7 +279,6 @@ class Decision_Maker:
             if self.mode == 'Dbg':
                 lr1.debug("Search and Fire Finished")
             return True
-
 
     def auto_bounce_back(self,arg):
         if self.action_count == -1:
@@ -438,71 +448,75 @@ class Decision_Maker:
             if self.mode == 'Dbg':
                 lr1.debug("Go Backward Finished")
             return True
+        
+    def search_friend(self,arg):
+        if self.action_count == -1:
+            self.action_count = 999
+            if self.mode == 'Dbg':
+                lr1.debug("Start Search Friend")
+            return False
+        elif self.action_count > 0:
+            if self.bro_target.if_update:
+                if self.bro_target.name.split('_')[0] == 'friend':
+                    self.bro_found = True
+                    lr1.warn(f"Bro Found Friend {self.bro_target.name}")
+            if self.i_found and self.bro_found:
+                self.action_count = -1
+                if self.mode == 'Dbg':
+                    lr1.debug("Search Friend Finished")
+                return True
+            else:
+                last_update_target_list = self._find_last_update_target()
+                if len(last_update_target_list) != 0:
+                    for target in last_update_target_list:
+                        if target.name.split('_')[0] == 'friend':
+                            self.i_found = True
+                            self.next_yaw = self.params.search_friend_yaw
+                            self.next_pitch = np.pi/2
+                            lr1.warn(f"I Found Friend {target.name}")
+                            break
+                else:
+                    self.next_yaw = self.params.search_friend_yaw
+                    self.next_pitch = self.params.search_friend_pitch
+                self.fire_times = 0
+                self.reserved_slot = 10
+                return False
+        else:
+            self.action_count = -1
+            if self.mode == 'Dbg':
+                lr1.debug("Search Friend Finished")
+            return True
+        
     def _search_target(self):
         """
         Returns:
             yaw, pitch
         """
-        yaw,pitch = self._get_search_next_yaw_pitch()
-        return yaw,pitch
-    
-    def _init_yaw_pitch_search_data(self):
-        self.search_index = 0
-        # mode 0 : not in search mode, mode 1 : search from right to left, mode 2 : search from left to right 
-        self.search_mode = 1
-        self.yaw_left = self.params.yaw_left_degree/180 * np.pi
-        self.yaw_right = self.params.yaw_right_degree/180 * np.pi
-        self.pitch_down = self.params.pitch_down_degree/180 * np.pi
-        self.pitch_up = self.params.pitch_up_degree/180 * np.pi
-        self.yaw_search_step = self.params.yaw_search_step
-        
-        self.yaw_search_data = np.round(np.arange(self.yaw_left,self.yaw_right,self.yaw_search_step),3)
-        
-        self.pitch_search_left = -self.params.pitch_search_left_waves * np.pi
-        self.pitch_search_right = self.params.pitch_search_right_waves * np.pi
-        # 1 wave down, 1 wave up, 1 wave down, 1 wave up, 1 wave down
-        
-        self.pitch_search_step = ((self.pitch_search_right - self.pitch_search_left)/len(self.yaw_search_data))
-        self.pitch_search_data =np.round(np.sin(np.arange(self.pitch_search_left, self.pitch_search_right, self.pitch_search_step)),3) 
-        for i, pitch in enumerate(self.pitch_search_data):
-            if pitch < 0:
-                self.pitch_search_data[i] = -pitch * self.pitch_down
-            else:
-                self.pitch_search_data[i] = pitch * self.pitch_up
-                
-                
-    def _get_search_next_yaw_pitch(self):
-        if self.search_mode:
-            next_yaw = self.yaw_search_data[self.search_index]
-            next_pitch = self.pitch_search_data[self.search_index]
-            
-            if self.search_mode == 1:
-                self.search_index += 1
-            else:
-                self.search_index -= 1
-        
+        if self.yaw_search_add:
+            next_yaw = self.cur_yaw + self.params.yaw_search_step
+            if self.params.yaw_mechanical_positive_limit_switch != 0:
+                if next_yaw > self.cur_big_gimbal_yaw + self.params.yaw_mechanical_positive_limit_switch:
+                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_positive_limit_switch
+                    self.yaw_search_add = False
         else:
-            self.search_mode = 1
-            self.search_index = int((self.cur_yaw - self.yaw_left)/self.yaw_search_step)
-            if self.search_index >= len(self.yaw_search_data):
-                self.search_index = len(self.yaw_search_data) - 1
-            elif self.search_index < 0:
-                self.search_index = 0
-            next_yaw = self.yaw_search_data[self.search_index]
-            next_pitch = self.pitch_search_data[self.search_index]
-        
-        if self.search_index >= len(self.yaw_search_data):
+            next_yaw = self.cur_yaw - self.params.yaw_search_step
+            if self.params.yaw_mechanical_negative_limit_switch != 0:
+                if next_yaw < self.cur_big_gimbal_yaw + self.params.yaw_mechanical_negative_limit_switch:
+                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_negative_limit_switch
+                    self.yaw_search_add = True
+        if self.pitch_search_add:
+            next_pitch = self.cur_pitch + self.params.pitch_search_step
+            if next_pitch > self.params.pitch_max:
+                next_pitch = self.params.pitch_max
+                self.pitch_search_add = False
+        else:
+            next_pitch = self.cur_pitch - self.params.pitch_search_step
+            if next_pitch < self.params.pitch_min:
+                next_pitch = self.params.pitch_min
+                self.pitch_search_add = True
                 
-            self.search_mode = 2
-            self.search_index = len(self.yaw_search_data) - 1
-            
-        elif self.search_index < 0:
-            self.search_mode = 1 
-            self.search_index = 0
-            
         return next_yaw,next_pitch
-
-
+                
         
     def __trans_mouse_pos_to_next_yaw_pitch(self,cur_mouse_pos:tuple):
         delta_x = cur_mouse_pos[0] - self.mouse_pos_prior[0]
@@ -644,6 +658,7 @@ class Decision_Maker:
             self.pre_sentry_state = self.sentry_state
             if self.mode == 'Dbg':
                 lr1.debug(f"Sentry state changed to {self.sentry_state}")
+            self.action_count = -1
             return True
         else:
             return False

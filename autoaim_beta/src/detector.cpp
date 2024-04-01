@@ -424,10 +424,7 @@ void Net_Detector_Params::print_show_params()
     spdlog::info(" conf_thres: {}, agnostic: {}, iou_thres: {}, max_det: {} , white_num_thresh: {}",
                   this->conf_thres, this->agnostic, this->iou_thres, this->max_det,this->white_num_thresh);
     spdlog::info(" yuv_range: {}, {}", this->yuv_range[0], this->yuv_range[1]);
-    for (auto& enemy_car : this->enemy_car_list)
-    {
-        spdlog::info(" enemy_car_info: armor_name: {}, armor_nums: {}", enemy_car.armor_name, enemy_car.armor_nums);
-    }
+
 }
 
 //***************************************************Net Detector****************************************************
@@ -440,7 +437,8 @@ Net_Detector::Net_Detector(Mode mode,
                  mode(mode),
                  if_yolov5(if_yolov5),
                  armor_color(armor_color_),
-                 params(enemy_car_list_,armor_color_)
+                 enemy_car_list(enemy_car_list_),
+                 params(armor_color_)
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
     if (if_yolov5) 
@@ -475,7 +473,7 @@ std::vector<detect_result_t> Net_Detector::operator()(const std::vector<cv::Mat>
         conf = softmax(output_buffer, i, this->class_num, max_idx);
         class_name = this->class_info[std::to_string(max_idx - i)].as<std::string>();
         bool if_in_target_list = false;
-        for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == class_name) if_in_target_list = true;                
+        for (auto& enemy_car : this->enemy_car_list)if (enemy_car.armor_name == class_name) if_in_target_list = true;                
         if (conf > this->params.conf_thres && if_in_target_list)
         {
             std::vector<float> tvec = {0, 0, 0};
@@ -502,14 +500,14 @@ std::vector<detect_result_t> Net_Detector::operator()(const cv::Mat& img_bgr) co
         if (result.confidence < this->params.conf_thres) continue;
         std::vector<cv::Point2f> big_rec;
         for (auto& point : result.pts) big_rec.push_back(cv::Point2f(point.x,point.y));
-        
-        for (auto& enemy_car : this->params.enemy_car_list)if (enemy_car.armor_name == armor_name_string) {if_in_target_list = true;break;}
+        for (auto& enemy_car : this->enemy_car_list)if (enemy_car.armor_name == armor_name_string) {if_in_target_list = true;break;}
         if (!if_in_target_list) continue;
 #ifdef APPLY_MANUAL_COLOR_CORRECTION
         if (this->if_is_gray(img_bgr, big_rec)) continue;
 #else
         order_points(big_rec);
 #endif
+        if (this->update_our_color_if_first_detected(armor_name_string)) armor_name_string = "friend" +"_"+ armor_name_string;
         big_rec = extendRectangle(big_rec,0,0.3);
         std::vector<float> tvec = {0, 0, 0};
         std::vector<float> rvec = {0, 0, 0};
@@ -544,6 +542,20 @@ bool Net_Detector::if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& 
     std::cout << "white_pixel_num: " << white_pixel_num << std::endl;
 #endif
     if (white_pixel_num < this->params.white_num_thresh) return true;
+    else return false;
+}
+
+bool Net_Detector::update_our_color_if_first_detected(const std::string& class_name) const
+{
+    if (this->our_color == '2')
+    {
+        this->our_color == class_name[0];
+        std::vector<Enemy_Car_Info> new_enemy_car_list;
+        for (auto& enemy_car : enemy_car_list) if (enemy_car.armor_name[0] != this->our_color) new_enemy_car_list.push_back(enemy_car);
+        this->enemy_car_list = new_enemy_car_list;
+        if (this->mode == 'Dbg') std::cout<< "Our color is "<<this->our_color<<std::endl;
+        return true;
+    }
     else return false;
 }
 
