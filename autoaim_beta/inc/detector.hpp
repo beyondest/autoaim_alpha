@@ -110,7 +110,8 @@ public:
                  const std::string& net_config_folder,
                  bool if_yolov5,
                  std::vector<Enemy_Car_Info> enemy_car_list_,
-                 const std::string& armor_color_);
+                 const std::string& armor_color_,
+                 bool if_auto_recognize_friend_);
     ~Net_Detector(){
         if (if_yolov5) delete yolo_engine;
         else delete engine;

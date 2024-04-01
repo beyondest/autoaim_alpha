@@ -74,13 +74,9 @@ search_friend_pitch: -0.1745 # rad
 
 # strategy 1, go left to protect 
 strategy_0_event_flag_to_arg_list:
-- - 7
-  - 999
 - - 1
   - 999
 strategy_1_event_flag_to_arg_list:
-- - 7
-  - 999
 - - 1
   - 1500                              # Search until race start, may pre start by sentry health
 - - 4

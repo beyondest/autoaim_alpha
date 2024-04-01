@@ -64,6 +64,7 @@ public:
         int node_webcam_ms = general_config["node_webcam_ms"].as<int>();
         this->if_show_img_local = general_config["if_show_img_local"].as<bool>();
         this->if_show_img_remote = general_config["if_show_img_remote"].as<bool>();
+        auto if_auto_recognize_friend = general_config["if_auto_recognize_friend"].as<bool>();
         this->camera_type = general_config["camera_type"].as<std::string>();
         std::vector<Enemy_Car_Info> enemy_car_info_list;
         for (size_t i = 0; i < general_config["enemy_car_list"].size(); i++)

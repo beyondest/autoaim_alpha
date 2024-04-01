@@ -433,7 +433,8 @@ Net_Detector::Net_Detector(Mode mode,
                  const std::string& net_config_folder,
                  bool if_yolov5,
                  std::vector<Enemy_Car_Info> enemy_car_list_,
-                 const std::string& armor_color_):
+                 const std::string& armor_color_,
+                 bool if_auto_recognize_friend_):
                  mode(mode),
                  if_yolov5(if_yolov5),
                  armor_color(armor_color_),
@@ -441,6 +442,7 @@ Net_Detector::Net_Detector(Mode mode,
                  params(armor_color_)
 {
     this->params.load_params_from_yaml(net_config_folder+"/net_params.yaml");
+    if (if_auto_recognize_friend_) this->our_color = "0";
     if (if_yolov5) 
     {
         this->yolo_engine = new TRTModule(net_config_folder+"/opt4.onnx");

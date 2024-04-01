@@ -56,6 +56,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         elif strategy == 0:
             self.event_flag_to_arg_list = self.decision_maker.params.strategy_0_event_flag_to_arg_list
             self.get_logger().warn(f"Use strategy 0, KEEP_SEARCHING_ALL_TIME")
+        if if_auto_recognize_friend:
+            self.event_flag_to_arg_list.insert(0, [SEARCH_FRIEND, 999])
+            self.get_logger().warn(f"Auto recognize friend")
+        else:
+            self.get_logger().warn(f"Disable auto recognize friend, Indiscriminate Attack")
             
         self.event_flat_to_callback = { DOING_NOTHING:self.decision_maker.doing_nothing,
                                         SEARCH_AND_FIRE:self.decision_maker.search_and_fire,
