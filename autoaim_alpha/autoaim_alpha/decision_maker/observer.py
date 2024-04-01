@@ -131,7 +131,8 @@ class Observer:
                 'armor_name':str,
                 'tvec':np.ndarray, (3,)
                 'rvec':np.ndarray, (3,)
-                'time':float
+                'time':float,
+                'conf':float
         """
         self._assign_armor_idx(all_targets_list)
         target_name_list = [i['armor_name'] for i in all_targets_list]
@@ -142,11 +143,13 @@ class Observer:
                     tvec = all_targets_list[target_index]['tvec']
                     rvec = all_targets_list[target_index]['rvec']
                     t = all_targets_list[target_index]['time']
+                    conf = all_targets_list[target_index]['conf']
                     self.update_by_detection(car_params.armor_name,
                                             armor_id,
                                             tvec,
                                             rvec,
                                             t ,
+                                            conf,
                                             True
                                             )
                 else:
@@ -155,6 +158,7 @@ class Observer:
                                             np.zeros(3),
                                             np.array([0.0,0.0,1.0]),
                                             0.0,
+                                            conf,
                                             False
                                             )
                 
@@ -164,6 +168,7 @@ class Observer:
                             tvec:np.ndarray,
                             rvec:np.ndarray,
                             t:float,
+                            conf:float,
                             if_update:bool):
         
         if if_update:
@@ -176,7 +181,7 @@ class Observer:
             new_armor_params.tvec = tvec
             new_armor_params.rvec = rvec
             new_armor_params.time = t
-            new_armor_params.confidence = 1.0
+            new_armor_params.confidence = conf
             new_armor_params.if_update = True
             new_armor_params.continuous_detected_num = continuous_detected_num
             new_armor_params.continuous_lost_num = continuous_lost_num

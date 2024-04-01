@@ -59,7 +59,8 @@ class Node_Observer(Node,Custom_Context_Obj):
                            each_detect_result.pose.pose.orientation.z)'''
             #rvec = q.get_axis() * q.angle
             rvec = np.array([0.0,0.0,1.0])
-            all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':0.0})
+            conf = each_detect_result.confidence
+            all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':0.0,'conf':conf})
 
         self.observer.update_by_detection_list(all_target_list)
         armor_params_detect_list = self.observer.get_armor_latest_state()
