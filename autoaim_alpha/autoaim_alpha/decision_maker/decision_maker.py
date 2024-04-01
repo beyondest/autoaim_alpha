@@ -166,9 +166,10 @@ class Decision_Maker:
                       continuous_detected_num:int = 0,
                       continuous_lost_num:int = 0,
                       if_update:bool = False)->None:
-        
-        for armor_params in self.armor_state_list:
+        if not self.i_found and armor_name.split('_')[0] == 'friend':
+            self.i_found = True
             
+        for armor_params in self.armor_state_list:
             if armor_params.name == armor_name and armor_params.id == armor_id:
                 armor_params.tvec = armor_tvec
                 armor_params.rvec = armor_rvec
@@ -177,6 +178,7 @@ class Decision_Maker:
                 armor_params.continuous_detected_num = continuous_detected_num
                 armor_params.continuous_lost_num = continuous_lost_num
                 armor_params.if_update = if_update
+        
                 
                 
     def update_small_gimbal_info(self,

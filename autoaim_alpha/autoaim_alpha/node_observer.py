@@ -47,6 +47,7 @@ class Node_Observer(Node,Custom_Context_Obj):
         
     def detect_sub_callback(self, msg:DetectResult):
         all_target_list = []
+        friend_params = None
         for each_detect_result in msg.detect_result:
             
             armor_name = each_detect_result.armor_name
@@ -60,11 +61,14 @@ class Node_Observer(Node,Custom_Context_Obj):
             #rvec = q.get_axis() * q.angle
             rvec = np.array([0.0,0.0,1.0])
             conf = each_detect_result.confidence
+            if armor_name.split('_')[0] == 'friend':
+                friend_params = Armor_Params(armor_name,0)
+                continue
             all_target_list.append({'armor_name':armor_name,'tvec':tvec,'rvec':rvec,'time':0.0,'conf':conf})
 
         self.observer.update_by_detection_list(all_target_list)
         armor_params_detect_list = self.observer.get_armor_latest_state()
-        
+        armor_params_detect_list.append(friend_params) if friend_params is not None else None
         msg2 = ArmorPosList()
         for armor_params in armor_params_detect_list:
             armor_pos = ArmorPos()
