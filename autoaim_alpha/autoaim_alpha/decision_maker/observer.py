@@ -158,7 +158,7 @@ class Observer:
                                             np.zeros(3),
                                             np.array([0.0,0.0,1.0]),
                                             0.0,
-                                            conf,
+                                            0.0,
                                             False
                                             )
                 
