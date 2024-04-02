@@ -147,6 +147,10 @@ class Can_Port:
                 if self.mode == 'Dbg':
                     lr1.debug(f"Recv {msg} ,if_error: {if_error}  find_enemy_yaw: {self.bro_data_recv.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_recv.cur_big_gimbal_yaw}")
                 return if_error, self.bro_data_recv.find_enemy_yaw, self.bro_data_recv.cur_big_gimbal_yaw
+            else: 
+                if self.mode == 'Dbg':
+                    lr1.debug(f"Can Recv None")
+                return True, 0.0, 0.0
         else:
             return True, 0.0, 0.0
         
