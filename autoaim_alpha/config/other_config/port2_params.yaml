@@ -1,4 +1,4 @@
 baudrate: 115200
 bitesize: 8
 communication_delay: 0.05
-port_abs_path: /dev/ttyTHS1
+port_abs_path: can0

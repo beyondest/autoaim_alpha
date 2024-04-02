@@ -12,7 +12,7 @@ try:
         current_time = time.strftime("%H:%M:%S", time.localtime())
 
         # 构造消息
-        message_data = f"hello {current_time}"
+        message_data = f"hello"
         message = can.Message(arbitration_id=0x123, data=message_data.encode(), is_extended_id=False)
         # 发送消息
         bus.send(message)
