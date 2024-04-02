@@ -46,7 +46,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                              pitch_pid_path,
                                              self.ballistic_predictor,
                                              enemy_car_list,
-                                             if_ignore_brother)
+                                             if_ignore_brother,
+                                             if_main_head)
         if strategy == 1:
             self.event_flag_to_arg_list = self.decision_maker.params.strategy_1_event_flag_to_arg_list
             self.get_logger().warn(f"Use strategy 1, GO LEFT")
@@ -77,7 +78,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.decision_maker.electric_system_zero_unix_time = time.time()
             self.get_logger().warn(f"Ignore electric system, init zero_unix_time {self.decision_maker.electric_system_zero_unix_time}")
             self.if_connetect_to_ele_sys = True
-            
         else:
             self.if_connetect_to_ele_sys = False
         
@@ -92,17 +92,25 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.cur_event = self.event_flag_to_arg_list[self.event_index][0]
         self.pre_event = DOING_NOTHING
         self.cur_event_arg = self.event_flag_to_arg_list[self.event_index][1]
-        
-        self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
-                                                      topic_electric_sys_state['name'],
-                                                      self.recv_from_ele_sys_callback,
-                                                      topic_electric_sys_state['qos_profile'])
-        
+
         self.sub_armor_pos_list = self.create_subscription(topic_armor_pos_list['type'],
                                                         topic_armor_pos_list['name'],
                                                         self.sub_armor_pos_list_callback,
                                                         topic_armor_pos_list['qos_profile'])
-        
+        self.sub_ele_sys_state = self.create_subscription(topic_electric_sys_state['type'],
+                                                      topic_electric_sys_state['name'],
+                                                      self.recv_from_small_gimbal_callback,
+                                                      topic_electric_sys_state['qos_profile'])
+        self.sub_bro_info = self.create_subscription(topic_bro_info['type'],
+                                                    topic_bro_info['name'],
+                                                    self.sub_bro_info_callback,
+                                                    topic_bro_info['qos_profile'])
+        if if_main_head:
+            self.sub_big_gimbal_info = self.create_subscription(topic_elebig_gimbal['type'],
+                                                        topic_elebig_gimbal['name'],
+                                                        self.sub_big_gimbal_state_callback,
+                                                        topic_elebig_gimbal['qos_profile'])
+            
         if self.decision_maker.params.auto_bounce_back_period > 0:
             self.auto_bounce_back_timer = self.create_timer(self.decision_maker.params.auto_bounce_back_period, 
                                                             self.auto_bounce_callback)
@@ -110,6 +118,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         else:
             self.get_logger().warn(f"Disable auto bounce back")
+            
+            
             
         if mode == 'Dbg':
             self.sub_pid_config = self.create_subscription(topic_pid_config['type'],
@@ -126,12 +136,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                                                         self.sub_gimbal_action_callback,
                                                         topic_gimbal_action['qos_profile'])
         
-    def recv_from_ele_sys_callback(self, msg:ElectricsysState):
+    def recv_from_small_gimbal_callback(self, msg:ElectricsysState):
         
         if self.if_connetect_to_ele_sys == False:
             self.if_connetect_to_ele_sys = True
             self.decision_maker.electric_system_zero_unix_time = time.time()
-            self.get_logger().info(f"Connect to electric system, zero_unix_time {self.decision_maker.electric_system_zero_unix_time} ")
+            self.get_logger().info(f"Connect to small gimbal, zero_unix_time {self.decision_maker.electric_system_zero_unix_time} ")
             
         self.decision_maker.update_small_gimbal_info(
                                                  cur_yaw=msg.cur_yaw,
@@ -157,20 +167,29 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
         self.action_mode_to_callback[gimbal_action_mode]()
         com_msg = ElectricsysCom()
+        com_msg.sof = 'A'
         com_msg.target_abs_pitch = self.decision_maker.next_pitch
         com_msg.target_abs_yaw = self.decision_maker.next_yaw
-        com_msg.sof = 'A'
-        com_msg.reserved_slot = self.decision_maker.reserved_slot
         com_msg.fire_times = self.decision_maker.fire_times
+        com_msg.big_gimbal_yaw = self.decision_maker.next_big_gimbal_yaw
+        com_msg.reserved_slot = self.decision_maker.reserved_slot
         self.pub_ele_sys_com.publish(com_msg)
+            
     
+    def sub_bro_info_callback(self, msg:BroInfo):
+        self.decision_maker.update_brother_info(msg.find_enemy_yaw,
+                                                msg.cur_big_gimbal_yaw)
+                
+    def sub_big_gimbal_state_callback(self, msg:EleBigGimbalState):
+        self.decision_maker.update_big_gimbal_info(msg.cur_big_gimbal_yaw,
+                                                   msg.sentry_health)
+        
     def make_decision_callback(self):
         if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot search and fire")
+            self.get_logger().warn(f"Not connect to small gimbal, cannot search and fire")
             self.decision_maker.doing_nothing()
             return
         t1 = time.time()
-
         if_action_finished = self.event_flat_to_callback[self.cur_event](self.cur_event_arg)
         if if_action_finished:
             if self.cur_event == AUTO_BOUNCE_BACK:
@@ -190,7 +209,7 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         t2 = time.time()
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : time cost {t2-t1:.3f}")
-            self.get_logger().debug(f"Make decision : event_flag: {self.cur_event} , event arg: {self.event_flag_to_arg_list[self.event_index][1]} fire_times {self.decision_maker.fire_times}  target_abs_yaw {self.decision_maker.next_yaw:.3f},target_abs_pitch {self.decision_maker.next_pitch:.3f}, reserved_slot {self.decision_maker.reserved_slot}")
+            self.get_logger().debug(f"Make decision : event_flag: {self.cur_event} , event arg: {self.event_flag_to_arg_list[self.event_index][1]} fire_times {self.decision_maker.fire_times}  target_abs_yaw {self.decision_maker.next_yaw:.3f},target_abs_pitch {self.decision_maker.next_pitch:.3f}, reserved_slot {self.decision_maker.reserved_slot}, next_big_gimbal_yaw: {self.decision_maker.next_big_gimbal_yaw:.3f}")
        
     def auto_bounce_callback(self):
         if self.if_connetect_to_ele_sys == False:
@@ -247,7 +266,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.pub_ele_sys_com.publish(com_msg)
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().debug(f"Make decision : fire_times {com_msg.fire_times}  target_abs_yaw {com_msg.target_abs_yaw:.3f},target_abs_pitch {com_msg.target_abs_pitch:.3f}")
-
 
     def sub_gimbal_action_callback(self, msg:GimbalAction):
         self.fire_times = msg.fire_times

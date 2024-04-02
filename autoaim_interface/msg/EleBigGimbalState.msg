@@ -1,0 +1,2 @@
+float64 cur_big_gimbal_yaw
+int64 sentry_health

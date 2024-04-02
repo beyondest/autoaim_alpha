@@ -155,7 +155,6 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
         com_msg = ElectricsysCom()
         abs_yaw, abs_pitch = self.decision_maker._search_target()
-        com_msg.reach_unix_time = self.decision_maker.electric_system_unix_time
         com_msg.target_abs_pitch = abs_pitch
         com_msg.target_abs_yaw = abs_yaw
         com_msg.sof = 'A'

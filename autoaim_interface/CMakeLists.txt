@@ -36,6 +36,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PidConfig.msg"
   "msg/DebugFire.msg"
   "msg/GimbalAction.msg"
+  "msg/BroInfo.msg"
+  "msg/EleBigGimbalState.msg"
   DEPENDENCIES geometry_msgs
  )
  

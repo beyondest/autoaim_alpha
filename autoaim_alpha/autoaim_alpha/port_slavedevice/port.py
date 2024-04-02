@@ -74,6 +74,7 @@ class Port:
             if_error:bool
             cur_yaw:float
             cur_pitch:float
+            reserved_slot:int
         """
         
         if self.ser is not None:
@@ -86,11 +87,11 @@ class Port:
             
             cur_yaw = self.pos_data.present_yaw
             cur_pitch = self.pos_data.present_pitch
-            reserved_slog = self.pos_data.reserved_slot
+            reserved_slot = self.pos_data.reserved_slot
             if self.mode == 'Dbg':
                 lr1.debug(f"Recv {msg} cur_yaw: {cur_yaw} cur_pitch: {cur_pitch}")
             
-            return if_error,cur_yaw,cur_pitch,reserved_slog
+            return if_error,cur_yaw,cur_pitch,reserved_slot
         
         else:
             return True,0.0,0.0,0.0

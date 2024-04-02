@@ -83,7 +83,8 @@ class Decision_Maker:
                  pitch_pid_controller_params_yaml_path:Union[str,None] = None,
                  ballistic_predictor:Union[Ballistic_Predictor,None] = None,
                  enemy_car_list:list = None,
-                 if_ignore_brother:bool = True
+                 if_ignore_brother:bool = True,
+                 if_main_head:bool = False
                  ) -> None:
         CHECK_INPUT_VALID(mode,"Dbg",'Rel')
         if enemy_car_list is None:
@@ -113,7 +114,7 @@ class Decision_Maker:
         self.fire_times = 0
         self.reserved_slot = 10 # tens digit is 1 means not bounce back, 2 means bounce back; digit is 0 means stay, 2 means go forward towards gimbal direction, 1 means go backward 
         self.pitch_compensation = 0.0
-        
+        self.next_big_gimbal_yaw = 0.0
         
         self.cur_yaw = 0.0
         self.cur_pitch = 0.0
@@ -123,9 +124,12 @@ class Decision_Maker:
         self.sentry_state = 0
         self.pre_sentry_state = 0
         self.electric_system_zero_unix_time = None
-        self.electric_system_unix_time = time.time()
         
-        self.bro_target = None
+
+        self.if_main_head = if_main_head
+        self.if_ignore_brother = if_ignore_brother        
+        self.bro_find_enemy_time= 0.0
+        self.bro_find_enemy_yaw = 0.0
         self.i_found = False 
         self.bro_found = True if if_ignore_brother else False
         
@@ -206,84 +210,99 @@ class Decision_Maker:
         elif self.sentry_state == 2 and remaining_health >= 600:
             self.sentry_state = 3 # supply finished
         self.remaining_health = remaining_health
+    
+    def update_brother_info(self,
+                            find_enemy_yaw:float,
+                            cur_big_gimbal_yaw:float):
+        """Only when < 999, is meaningful data, except when find enemy_yaw > 2000, means bro find friend
+        Args:
+            find_enemy_yaw (float): _description_
+            cur_big_gimbal_yaw (float): _description_
+        """
         
+        if find_enemy_yaw > 2000:
+            self.bro_found = True
+            lr1.warn(f"Brother find friend, set bro_found to True")
+        if not self.if_main_head and cur_big_gimbal_yaw < 999:
+            self.cur_big_gimbal_yaw = cur_big_gimbal_yaw
+        if find_enemy_yaw < 999:
+            self.bro_find_enemy_yaw = find_enemy_yaw
+            self.bro_find_enemy_time = time.time()
 
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
     
     
     def search_and_fire(self,arg)->bool:
-        """
-        Args:
-            target_armor_params (Armor_Params): _description_
+        """Will calculate next_yaw, next_pitch, fire_times, next_big_gimbal_yaw
         Returns:
-            if action finished, return True, else return False
+            if sentry_state changed, return True, else return False
+            
         """
-            
-        if self.action_count == -1:
-            self.action_count = arg
-            if self.mode == 'Dbg':
-                lr1.debug("Start Search and Fire")
-            return False
-        
-        elif self.action_count > 0:
-            if self.action_count == 999:
-                pass
+        last_update_target_list = self._find_last_update_target()
+        self._choose_target(last_update_target_list)
+        if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
+            if not self.params.if_use_pid_control:
+                # abs pitch, apply pitch compensation automatically
+                self._get_next_yaw_pitch_by_ballistic()
             else:
-                self.action_count -= 1
-            last_update_target_list = self._find_last_update_target()
-            self._choose_target(last_update_target_list)
-            if self.target.if_update and self.target.continuous_detected_num >= self.params.continuous_detected_num_for_track:
-                if not self.params.if_use_pid_control:
-                    # abs pitch, apply pitch compensation automatically
-                    self._get_next_yaw_pitch_by_ballistic()
-                else:
-                    if self.params.fire_mode == 0:
-                        self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=0.0)
-                    elif self.params.fire_mode == 1:
-                        gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
-                        self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff + self.params.manual_pitch_compensation
-                        self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
-                                                        pitch_pid_target=self.pitch_compensation)
-                    elif self.params.fire_mode == 2:
-                        gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
-                        gravity_compensation = self.ballistic_predictor.get_gravity_compensation(self.target.tvec[1])
-                        self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff +gravity_compensation + self.params.manual_pitch_compensation
-                        self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
-                                                        pitch_pid_target=self.pitch_compensation)
-            else:
-                self._get_next_yaw_pitch_by_stay_or_search()
-            if self.params.if_enable_mouse_control:
-                self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
-            
-            SHIFT_LIST_AND_ASSIG_VALUE(self.target_list,self.target)
-            
-            if_locked = self._if_target_locked()
-            if if_locked:
-                self.fire_times = 1
-                lr1.warn("Target Locked, FIRE")
-                if self.mode == 'Dbg':
-                    lr1.debug(f"Target Locked, FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+                if self.params.fire_mode == 0:
+                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=0.0,pitch_pid_target=0.0)
+                elif self.params.fire_mode == 1:
+                    gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
+                    self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff + self.params.manual_pitch_compensation
+                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
+                                                    pitch_pid_target=self.pitch_compensation)
                     
-            else:
-                self.fire_times = 0
-                if self.mode == 'Dbg':
-                    if self.params.fire_mode != 0:
-                        lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
-            
-            self.reserved_slot = 10
-            if self.params.record_data_path is not None:
-                SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
-                self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
-            if self.mode == 'Dbg':
-                lr1.debug("Doing Search and Fire")
-            return self._check_if_sentry_state_changed()
+                elif self.params.fire_mode == 2:
+                    gun_aim_minus_camera_aim_pitch_diff = self.ballistic_predictor.get_pitch_diff(self.target.tvec[1])
+                    gravity_compensation = self.ballistic_predictor.get_gravity_compensation(self.target.tvec[1])
+                    self.pitch_compensation = gun_aim_minus_camera_aim_pitch_diff +gravity_compensation + self.params.manual_pitch_compensation
+                    self._get_next_yaw_pitch_by_pid(yaw_pid_target=self.params.manual_yaw_compensation,
+                                                    pitch_pid_target=self.pitch_compensation)
+                    
+        else:
+            self._get_next_yaw_pitch_by_stay_or_search()
+        if self.params.if_enable_mouse_control:
+            self.next_yaw,self.next_pitch = self.__trans_mouse_pos_to_next_yaw_pitch(self.mouse_control.get_mouse_position())
         
-        elif self.action_count == 0:
-            self.action_count = -1
+        SHIFT_LIST_AND_ASSIG_VALUE(self.target_list,self.target)
+        
+        if_locked = self._if_target_locked()
+        if if_locked:
+            self.fire_times = 1
+            lr1.warn("Target Locked, FIRE")
             if self.mode == 'Dbg':
-                lr1.debug("Search and Fire Finished")
-            return True
+                lr1.debug(f"Target Locked, FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+                
+        else:
+            self.fire_times = 0
+            if self.mode == 'Dbg':
+                if self.params.fire_mode != 0:
+                    lr1.debug(f"Target Not Locked, NOT FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
+                    
+        self.reserved_slot = 10
+        if not self.target.if_update:
+            if self.bro_find_enemy_time - time.time() < 0.5 and not self.if_ignore_brother:
+                self.next_big_gimbal_yaw = self.bro_find_enemy_yaw
+            else:
+                self.next_big_gimbal_yaw = self.params.big_gimbal_major_yaw
+        else:
+            if self.target.name[1] == self.params.primary_target:
+                self.next_big_gimbal_yaw = self.next_yaw
+            else:
+                if self.bro_find_enemy_time - time.time() < 0.5 and not self.if_ignore_brother:
+                    self.next_big_gimbal_yaw = self.bro_find_enemy_yaw
+                else:
+                    self.next_big_gimbal_yaw = self.next_yaw
+            
+        
+        if self.params.record_data_path is not None:
+            SHIFT_LIST_AND_ASSIG_VALUE(self.tvec_history_list,self.target.tvec)
+            self.data_recorder.record_data(np.array(self.tvec_history_list).reshape(-1,3),np.array([self.next_yaw,self.next_pitch]))
+        if self.mode == 'Dbg':
+            lr1.debug("Doing Search and Fire")
+        return self._check_if_sentry_state_changed()
 
     def auto_bounce_back(self,arg):
         if self.action_count == -1:
@@ -297,6 +316,7 @@ class Decision_Maker:
             self.next_yaw = self.cur_yaw
             self.fire_times = 0
             self.reserved_slot = 20
+            self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
             if self.mode == 'Dbg':
                 lr1.debug("Doing Auto Bounce Back")
             return False
@@ -305,7 +325,6 @@ class Decision_Maker:
             if self.mode == 'Dbg':
                 lr1.debug("Auto Bounce Back Finished")
             return True
-            
         
     def doing_nothing(self,arg):
         if self.action_count == -1:
@@ -314,11 +333,15 @@ class Decision_Maker:
                 lr1.debug("Start Doing Nothing")
             return False
         elif self.action_count > 0:
-            self.action_count -= 1
+            if self.action_count == 999:
+                pass
+            else:
+                self.action_count -= 1
             self.next_pitch = self.cur_pitch
             self.next_yaw = self.cur_yaw
             self.fire_times = 0
             self.reserved_slot = 10
+            self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
             if self.mode == 'Dbg':
                 lr1.debug("Doing Doing Nothing")
             return False
@@ -330,25 +353,23 @@ class Decision_Maker:
     
     
     def go_right(self,arg):
+        self.search_and_fire()
         if self.action_count == -1:
             self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Right")
             return False
+        
         elif self.action_count > 0:
-            if abs(self.cur_yaw - (-1.5708)) > self.params.direction_accept_error:
-                self.next_yaw = -1.5708
-                self.next_pitch = 0.0
-                self.fire_times = 0
+            if abs(self.cur_big_gimbal_yaw - (-1.5708)) > self.params.direction_accept_error:
+                self.next_big_gimbal_yaw = -1.5708
                 self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn Right")
                 return False
             else:
                 self.action_count -= 1
-                self.next_yaw = self.cur_yaw
-                self.next_pitch = 0.0
-                self.fire_times = 0
+                self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
                 self.reserved_slot = 12
                 if self.mode == 'Dbg':
                     lr1.debug("Go Right")
@@ -361,25 +382,22 @@ class Decision_Maker:
             return True
         
     def go_left(self,arg):
+        self.search_and_fire()
         if self.action_count == -1:
             self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Left")
             return False
         elif self.action_count > 0:
-            if abs(self.cur_yaw - 1.5708) > self.params.direction_accept_error:
-                self.next_yaw = 1.5708
-                self.next_pitch = 0.0
-                self.fire_times = 0
+            if abs(self.cur_big_gimbal_yaw - 1.5708) > self.params.direction_accept_error:
+                self.next_big_gimbal_yaw = 1.5708
                 self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn Left")
                 return False
             else:
                 self.action_count -= 1
-                self.next_yaw = self.cur_yaw
-                self.next_pitch = 0.0
-                self.fire_times = 0
+                self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
                 self.reserved_slot = 12
                 if self.mode == 'Dbg':
                     lr1.debug("Go Left")
@@ -392,25 +410,22 @@ class Decision_Maker:
             return True
     
     def go_forward(self,arg):
+        self.search_and_fire()
         if self.action_count == -1:
             self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Forward")
             return False
         elif self.action_count > 0:
-            if abs(self.cur_yaw - 0.0) > self.params.direction_accept_error:
-                self.next_pitch = 0.0
-                self.next_yaw = 0.0
-                self.fire_times = 0
+            if abs(self.cur_big_gimbal_yaw - 0.0) > self.params.direction_accept_error:
+                self.next_big_gimbal_yaw = 0.0
                 self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn to 0.0")
                 return False
             else:
                 self.action_count -= 1
-                self.next_pitch = 0.0
-                self.next_yaw = self.cur_yaw
-                self.fire_times = 0
+                self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
                 self.reserved_slot = 12
                 if self.mode == 'Dbg':
                     lr1.debug("Go Forward")
@@ -423,26 +438,22 @@ class Decision_Maker:
             return True
     
     def go_backward(self,arg):
-        
+        self.search_and_fire()
         if self.action_count == -1:
             self.action_count = arg
             if self.mode == 'Dbg':
                 lr1.debug("Start Go Backward")
             return False
         elif self.action_count > 0:
-            if abs(self.next_yaw - 0.0) > self.params.direction_accept_error:
-                self.next_pitch = 0.0
-                self.next_yaw = 0.0
-                self.fire_times = 0
+            if abs(self.next_big_gimbal_yaw - 0.0) > self.params.direction_accept_error:
+                self.next_big_gimbal_yaw = 0.0
                 self.reserved_slot = 10
                 if self.mode == 'Dbg':
                     lr1.debug("Turn to 0.0")
                 return False
             else:
                 self.action_count -= 1
-                self.next_pitch = 0.0
-                self.next_yaw = self.cur_yaw
-                self.fire_times = 0
+                self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
                 self.reserved_slot = 11
                 if self.mode == 'Dbg':
                     lr1.debug("Go Backward")
@@ -461,10 +472,6 @@ class Decision_Maker:
                 lr1.debug("Start Search Friend")
             return False
         elif self.action_count > 0:
-            if self.bro_target:
-                if self.bro_target.name.split('_')[0] == 'friend':
-                    self.bro_found = True
-                    lr1.warn(f"Bro Found Friend {self.bro_target.name}")
             if self.i_found and self.bro_found:
                 self.action_count = -1
                 if self.mode == 'Dbg':
@@ -476,15 +483,17 @@ class Decision_Maker:
                     for target in last_update_target_list:
                         if target.name.split('_')[0] == 'friend':
                             self.i_found = True
-                            self.next_yaw = self.params.search_friend_yaw
+                            self.next_yaw = 2001.0
                             self.next_pitch = np.pi/2
                             lr1.warn(f"I Found Friend {target.name}")
                             break
                 else:
                     self.next_yaw = self.params.search_friend_yaw
                     self.next_pitch = self.params.search_friend_pitch
+                    
                 self.fire_times = 0
                 self.reserved_slot = 10
+                self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
                 return False
         else:
             self.action_count = -1
