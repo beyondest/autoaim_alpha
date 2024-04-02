@@ -188,6 +188,7 @@ class Decision_Maker:
         
         self.cur_yaw = cur_yaw
         self.cur_pitch = cur_pitch
+    
         
     def update_big_gimbal_info(self,
                                cur_big_gimbal_yaw:float,
@@ -499,23 +500,23 @@ class Decision_Maker:
             next_yaw = self.cur_yaw + self.params.yaw_search_step
             if self.params.yaw_mechanical_positive_limit_switch != 0:
                 if next_yaw > self.cur_big_gimbal_yaw + self.params.yaw_mechanical_positive_limit_switch:
-                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_positive_limit_switch
+                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_positive_limit_switch - self.params.yaw_search_step
                     self.yaw_search_add = False
         else:
             next_yaw = self.cur_yaw - self.params.yaw_search_step
             if self.params.yaw_mechanical_negative_limit_switch != 0:
                 if next_yaw < self.cur_big_gimbal_yaw + self.params.yaw_mechanical_negative_limit_switch:
-                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_negative_limit_switch
+                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_negative_limit_switch + self.params.yaw_search_step
                     self.yaw_search_add = True
         if self.pitch_search_add:
             next_pitch = self.cur_pitch + self.params.pitch_search_step
             if next_pitch > self.params.pitch_max:
-                next_pitch = self.params.pitch_max
+                next_pitch = self.params.pitch_max - self.params.pitch_search_step
                 self.pitch_search_add = False
         else:
             next_pitch = self.cur_pitch - self.params.pitch_search_step
             if next_pitch < self.params.pitch_min:
-                next_pitch = self.params.pitch_min
+                next_pitch = self.params.pitch_min + self.params.pitch_search_step
                 self.pitch_search_add = True
                 
         return next_yaw,next_pitch

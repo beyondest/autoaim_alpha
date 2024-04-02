@@ -120,7 +120,6 @@ public:
     std::vector<detect_result_t> operator()(const cv::Mat& img_bgr) const;
     bool if_is_gray(const cv::Mat& img_bgr, std::vector<cv::Point2f>& big_rec) const;
     bool update_our_color_if_first_detected(const std::string& class_name) const;
-
 };
 
 

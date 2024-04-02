@@ -13,7 +13,7 @@ gimbal_action_mode: 0
 
 if_ignore_elesys: False
 if_ignore_brother: True
-if_auto_recognize_friend: False  # Must be True in 3v3, False in 1v1, and must add 7 to decision maker params if True
+if_auto_recognize_friend: True  # Must be True in 3v3, False in 1v1, and must add 7 to decision maker params if True
 if_show_img_local: False
 if_show_img_remote: False
 # enemy armor color: blue or red

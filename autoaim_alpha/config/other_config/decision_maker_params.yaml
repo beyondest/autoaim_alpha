@@ -1,20 +1,20 @@
 # for abs search
 big_gimbal_major_yaw: 0.0 # rad
-pitch_min: -10.0 # deg
+pitch_min: -20.0 # deg
 pitch_max: 5.0  # deg
-yaw_search_step: 0.03 # rad
-pitch_search_step: 0.05 # rad
+yaw_search_step: 0.2 # rad
+pitch_search_step: 0.2 # rad
 
 # In the frame of zero yaw big gimbal 
 
 # 45.0 for Sentry Small Gimbal Right
 # 180.0 for Sentry Small Gimbal Left
 # 0 for Sentry Big Gimbal and White Car
-yaw_mechanical_positive_limit_switch: 45.0  # deg
+yaw_mechanical_positive_limit_switch: 45 # deg
 # -180.0 for Sentry Small Gimbal Right
 # -45.0 for Sentry Big Gimbal Left
 # 0 for Sentry Big Gimbal and White Car
-yaw_mechanical_negative_limit_switch: -180.0 # deg
+yaw_mechanical_negative_limit_switch: -180 # deg
 
 
 
@@ -27,7 +27,7 @@ continuous_lost_num_max_threshold: 15
 # WARN: Only fit for 640 * 384 img_show size, img_x is x,img_y is z, by default, img_y locked when img_x is locked 
 min_img_x_for_locked: 40.0 # for fire_mode 1
 min_continuous_detected_num_for_lock: 2
-manual_pitch_compensation: 0.04
+manual_pitch_compensation: 0.0 # 0.04
 manual_yaw_compensation: -0.01
 
 
@@ -58,7 +58,7 @@ auto_bounce_back_period: 5 # seconds, if < 0, disable auto bounce back
 direction_accept_error: 0.03 # radian , around 1.5 degree 
 auto_bounce_back_continue_frames: 10 
 sentry_go_supply_health_threshold: 595 # 200 for Real, 595 for Debug
-search_friend_yaw: 1.5708 # rad , 1.5708 for Real , 0 for Debug
+search_friend_yaw: -0.05 # rad , 1.5708 for Real , 0 for Debug
 search_friend_pitch: -0.1745 # rad
 
 
