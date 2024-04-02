@@ -62,7 +62,7 @@ class Node_Com(Node,Custom_Context_Obj):
             self.last_sub_topic_time = time.time()
             self.port.action_data.fire_times = msg.fire_times
             # Call Brother I Found Friend
-            if not if_ignore_brother:
+            if not if_ignore_brother and not self.if_first_recv_from_bro:
                 if msg.target_abs_yaw > 2000:
                     self.bro_port.bro_data_send.find_enemy_yaw = msg.target_abs_yaw
                     self.bro_port.bro_data_send.cur_big_gimbal_yaw = 1000.0
@@ -78,7 +78,7 @@ class Node_Com(Node,Custom_Context_Obj):
             self.port.send_msg()
             
             # Call Brother Where Enemy is
-            if not if_ignore_brother:
+            if not if_ignore_brother and not self.if_first_recv_from_bro:
                 if msg.fire_times != 0:
                     self.bro_port.bro_data_send.find_enemy_yaw = msg.target_abs_yaw
                 else:
