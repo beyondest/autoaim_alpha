@@ -119,7 +119,7 @@ class Can_Port:
         self.bro_data_send = bro_data()
         self.bro_data_recv = bro_data()
         try:
-            self.can = can.interface.Bus(bustype='socketcan',channel=self.params.port_abs_path,bitrate=self.params.baudrate)
+            self.can = can.interface.Bus(bustype='socketcan',channel=self.params.port_abs_path)
         except Exception as e:
             self.can = None
             lr1.critical(f"Failed to open can port {self.params.port_abs_path}")
@@ -131,15 +131,12 @@ class Can_Port:
             can_msg = can.Message(arbitration_id=0x123, data=msg, extended_id=False)
             self.can.send(can_msg)
             if self.mode == 'Dbg':
-                lr1.debug(f"Send  {msg} find_enemy_yaw: {self.bro_data_send.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_send.cur_big_gimbal_yaw}, find_enemy_name: {self.bro_data_send.find_enemy_name}")
-    
+                lr1.debug(f"Send  {msg} find_enemy_yaw: {self.bro_data_send.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_send.cur_big_gimbal_yaw}")
     
     def recv_feedback(self)->tuple:
         """
-
         Returns:
-            find_enemy_name: int, if -1, error msg or brother find nothing
-            find_enemy_yaw: float
+            find_enemy_yaw: float, if > 999, means no enemy found
             cur_big_gimbal_yaw: float
         """
         if self.can is not None:
@@ -148,10 +145,9 @@ class Can_Port:
                 msg = can_msg.data
                 if_error = self.bro_data_recv.convert_bro_bytes_to_data(msg)
                 if self.mode == 'Dbg':
-                    lr1.debug(f"Recv {msg} ,if_error: {if_error} find_enemy_name: {self.bro_data_recv.find_enemy_name} find_enemy_yaw: {self.bro_data_recv.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_recv.cur_big_gimbal_yaw}")
-                    
-                return if_error,self.bro_data_recv.find_enemy_name,self.bro_data_recv.find_enemy_yaw,self.bro_data_recv.cur_big_gimbal_yaw
+                    lr1.debug(f"Recv {msg} ,if_error: {if_error}  find_enemy_yaw: {self.bro_data_recv.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_recv.cur_big_gimbal_yaw}")
+                return if_error, self.bro_data_recv.find_enemy_yaw, self.bro_data_recv.cur_big_gimbal_yaw
         else:
-            return True, -1, 0.0, 0.0
+            return True, 0.0, 0.0
         
         

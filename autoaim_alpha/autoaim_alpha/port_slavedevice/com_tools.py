@@ -447,30 +447,24 @@ class pos_data(data_list):
 
 class bro_data(data_list):
     def __init__(self,
-                 SOF:str = 'C',
-                 find_enemy_name:int = 3,
                  find_enemy_yaw:float = 0.0, # radian
                  cur_big_gimbal_yaw:float = 0.0 # radian
                 )->None:
         super().__init__()
-        self.label_list = ['SOF','find_enemy_name','find_enemy_yaw', 'cur_big_gimbal_yaw']
-        self.SOF = SOF
-        self.find_enemy_name = find_enemy_name
+        self.label_list = ['find_enemy_yaw', 'cur_big_gimbal_yaw']
         self.find_enemy_yaw = find_enemy_yaw
         self.cur_big_gimbal_yaw = cur_big_gimbal_yaw
-        self.list = [self.SOF,self.find_enemy_name,self.find_enemy_yaw,self.cur_big_gimbal_yaw]
+        self.list = [self.find_enemy_yaw,self.cur_big_gimbal_yaw]
         self.len = len(self.list)
         
     def convert_bro_data_to_bytes(self)->bytes:
         """Calculate crc here if needed
-        NO.0 (SOF:char , '<c')                             |     ('C')                      |byte0      bytes 1     total 1
-        NO.1 (find_enemy_name:int , '<b')                  |     (0<=x<10)                  |byte1      bytes 1     total 2
-        NO.2 (find_enemy_yaw:float , '<f')                 |                                |byte2-5    bytes 4     total 6
-        NO.3 (cur_big_gimbal_yaw:float , '<f')             |                                |byte6-9    bytes 4     total 10
-        ALL: 3 elements
+        NO.1 (find_enemy_yaw:float , '<f')                 |                                |byte2-5    bytes 4     total 6
+        NO.2 (cur_big_gimbal_yaw:float , '<f')             |                                |byte6-9    bytes 4     total 10
+        ALL: 2 elements
         """
-        self.list = [self.SOF,self.find_enemy_name,self.find_enemy_yaw, self.cur_big_gimbal_yaw]
-        fmt_list = ['<c','<b','<f','<f']
+        self.list = [self.find_enemy_yaw, self.cur_big_gimbal_yaw]
+        fmt_list = ['<f','<f']
         out = b''
         for index,each in enumerate(self.list):
             out += convert_to_bytes((each,fmt_list[index]))
@@ -478,43 +472,28 @@ class bro_data(data_list):
       
     def convert_bro_bytes_to_data(self,ser_read:bytes)->bool:
         """
-        NO.0 (SOF:char , '<c')                             |     ('C')                      |byte0      bytes 1     total 1
-        NO.1 (find_enemy_name:int , '<b')                  |     (0<=x<10)                  |byte1      bytes 1     total 2
-        NO.2 (find_enemy_yaw:float , '<f')                 |                                |byte2-5    bytes 4     total 6 
-        NO.3 (cur_big_gimbal_yaw:float , '<f')             |                                |byte6-9    bytes 4     total 10
-        ALL: 3 elements
+        NO.1 (find_enemy_yaw:float , '<f')                 |                                |byte2-5    bytes 4     total 6 
+        NO.2 (cur_big_gimbal_yaw:float , '<f')             |                                |byte6-9    bytes 4     total 10
+        ALL: 2 elements
         """
-        self.fmt_list = ['<c','<b','<f','<f']
-        self.range_list = [(0,1),(1,2),(2,6),(6,10)]
+        self.fmt_list = ['<f','<f']
+        self.range_list = [(0,4),(4,8)]
         self.frame_type_nums = 4
         out = []
         if ser_read == b'' or ser_read is None:
             self.error = True
             print(f"can error: recv is nullbyte")
             return self.error
-        
-        for i in range(self.frame_type_nums):
-            out.append(struct.unpack(self.fmt_list[i],
-                                    ser_read[self.range_list[i][0]:self.range_list[i][1]])[0])
-            
-        try:
-            out[0] = out[0].decode('utf-8')
-        except Exception as e:
-            print(f'can decode first byte failed: e:{e}, out[0]:{out[0]}')
-            self.error = True
-            return self.error
-       
-        if out[0] == self.SOF:
-            self.SOF = out[0]
-            self.find_enemy_name = out[1]
-            self.find_enemy_yaw = out[2]
-            self.cur_big_gimbal_yaw = out[3]
-            self.list = [self.SOF,self.find_enemy_name,self.find_enemy_yaw,self.cur_big_gimbal_yaw]
-            self.error = False
         else:
-            self.error = True
-
-        return self.error
+            for i in range(self.frame_type_nums):
+                out.append(struct.unpack(self.fmt_list[i],
+                                        ser_read[self.range_list[i][0]:self.range_list[i][1]])[0])
+                
+            self.find_enemy_yaw = out[0]
+            self.cur_big_gimbal_yaw = out[1]
+            self.list = [self.find_enemy_yaw,self.cur_big_gimbal_yaw]
+            self.error = False
+            return self.error
         
 
 
