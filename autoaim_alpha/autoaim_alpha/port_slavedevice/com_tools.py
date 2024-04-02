@@ -478,7 +478,7 @@ class bro_data(data_list):
         """
         self.fmt_list = ['<f','<f']
         self.range_list = [(0,4),(4,8)]
-        self.frame_type_nums = 4
+        self.frame_type_nums = 2
         out = []
         if ser_read == b'' or ser_read is None:
             self.error = True
