@@ -327,29 +327,13 @@ class Decision_Maker:
             return True
         
     def doing_nothing(self,arg):
-        if self.action_count == -1:
-            self.action_count = arg 
-            if self.mode == 'Dbg':
-                lr1.debug("Start Doing Nothing")
-            return False
-        elif self.action_count > 0:
-            if self.action_count == 999:
-                pass
-            else:
-                self.action_count -= 1
-            self.next_pitch = self.cur_pitch
-            self.next_yaw = self.cur_yaw
-            self.fire_times = 0
-            self.reserved_slot = 10
-            self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
-            if self.mode == 'Dbg':
-                lr1.debug("Doing Doing Nothing")
-            return False
-        elif self.action_count == 0:
-            self.action_count = -1
-            if self.mode == 'Dbg':
-                lr1.debug("Doing Nothing Finished")
-            return True
+
+        self.next_pitch = self.cur_pitch
+        self.next_yaw = self.cur_yaw
+        self.fire_times = 0
+        self.reserved_slot = 10
+        self.next_big_gimbal_yaw = self.cur_big_gimbal_yaw
+
     
     
     def go_right(self,arg):

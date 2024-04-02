@@ -196,11 +196,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
     def make_decision_callback(self):
         if self.if_connetect_to_ele_sys == False:
             self.get_logger().warn(f"Not connect to small gimbal, cannot make decision")
-            self.decision_maker.doing_nothing()
+            self.decision_maker.doing_nothing(999)
             return
         if self.if_connect_to_brother == False:
             self.get_logger().warn(f"Not connect to brother, cannot make decision")
-            self.decision_maker.doing_nothing()
+            self.decision_maker.doing_nothing(999)
             return
         
         t1 = time.time()
