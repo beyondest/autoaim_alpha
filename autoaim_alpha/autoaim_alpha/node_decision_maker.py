@@ -80,7 +80,16 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             self.if_connetect_to_ele_sys = True
         else:
             self.if_connetect_to_ele_sys = False
-        
+        if if_ignore_brother:
+            self.if_connect_to_brother = True
+            self.get_logger().warn(f"Ignore brother ")
+        else:
+            self.if_connect_to_brother = False
+        if if_main_head:
+            self.get_logger().warn(f"Main head, use big gimbal")
+        else:
+            self.get_logger().warn(f"Not main head, use small gimbal only")
+            
         if node_decision_maker_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
             
@@ -186,9 +195,14 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
     def make_decision_callback(self):
         if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to small gimbal, cannot search and fire")
+            self.get_logger().warn(f"Not connect to small gimbal, cannot make decision")
             self.decision_maker.doing_nothing()
             return
+        if self.if_connect_to_brother == False:
+            self.get_logger().warn(f"Not connect to brother, cannot make decision")
+            self.decision_maker.doing_nothing()
+            return
+        
         t1 = time.time()
         if_action_finished = self.event_flat_to_callback[self.cur_event](self.cur_event_arg)
         if if_action_finished:
