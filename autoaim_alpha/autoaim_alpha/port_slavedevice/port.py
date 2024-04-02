@@ -1,8 +1,9 @@
+from typing import Any
 from .com_tools import *
 from ..os_op.basic import *
 from ..os_op.global_logger import *
 
-
+import can
 
 
 
@@ -105,4 +106,52 @@ class Port:
     def save_params_to_yaml(self,yaml_path:str)->None:
         self.params.save_params_to_yaml(yaml_path)
         
+class Can_Port:
+    def __init__(self,
+                 mode:str = 'Dbg',
+                 port_config_yaml_path:Union[str,None]=None) -> None:
+        CHECK_INPUT_VALID(mode,'Dbg','Rel')
+        self.params = Port_Params()
+        if port_config_yaml_path is not None:
+            self.params.load_params_from_yaml(port_config_yaml_path)
+        
+        self.mode = mode
+        self.bro_data_send = bro_data()
+        self.bro_data_recv = bro_data()
+        try:
+            self.can = can.interface.Bus(bustype='socketcan',channel=self.params.port_abs_path,bitrate=self.params.baudrate)
+        except Exception as e:
+            self.can = None
+            lr1.critical(f"Failed to open can port {self.params.port_abs_path}")
+            lr1.critical(f"Error message: {e}")
     
+    def send_msg(self):
+        if self.can is not None:
+            msg = self.bro_data_send.convert_bro_data_to_bytes()
+            can_msg = can.Message(arbitration_id=0x123, data=msg, extended_id=False)
+            self.can.send(can_msg)
+            if self.mode == 'Dbg':
+                lr1.debug(f"Send  {msg} find_enemy_yaw: {self.bro_data_send.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_send.cur_big_gimbal_yaw}, find_enemy_name: {self.bro_data_send.find_enemy_name}")
+    
+    
+    def recv_feedback(self)->tuple:
+        """
+
+        Returns:
+            find_enemy_name: int, if -1, error msg or brother find nothing
+            find_enemy_yaw: float
+            cur_big_gimbal_yaw: float
+        """
+        if self.can is not None:
+            can_msg = self.can.recv(timeout=0.1)
+            if can_msg is not None:
+                msg = can_msg.data
+                if_error = self.bro_data_recv.convert_bro_bytes_to_data(msg)
+                if self.mode == 'Dbg':
+                    lr1.debug(f"Recv {msg} ,if_error: {if_error} find_enemy_name: {self.bro_data_recv.find_enemy_name} find_enemy_yaw: {self.bro_data_recv.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_recv.cur_big_gimbal_yaw}")
+                    
+                return if_error,self.bro_data_recv.find_enemy_name,self.bro_data_recv.find_enemy_yaw,self.bro_data_recv.cur_big_gimbal_yaw
+        else:
+            return True, -1, 0.0, 0.0
+        
+        

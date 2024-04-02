@@ -72,6 +72,8 @@ class Decision_Maker_Params(Params):
         self.strategy_1_event_flag_to_arg_list = []
         self.strategy_2_event_flag_to_arg_list = []
         
+        
+        self.primary_target = "0"
 
 class Decision_Maker:
     def __init__(self,
@@ -460,10 +462,9 @@ class Decision_Maker:
             return False
         elif self.action_count > 0:
             if self.bro_target:
-                if self.bro_target.if_update:
-                    if self.bro_target.confidence == 0.1234:
-                        self.bro_found = True
-                        lr1.warn(f"Bro Found Friend {self.bro_target.name}")
+                if self.bro_target.name.split('_')[0] == 'friend':
+                    self.bro_found = True
+                    lr1.warn(f"Bro Found Friend {self.bro_target.name}")
             if self.i_found and self.bro_found:
                 self.action_count = -1
                 if self.mode == 'Dbg':
@@ -473,7 +474,7 @@ class Decision_Maker:
                 last_update_target_list = self._find_last_update_target()
                 if len(last_update_target_list) != 0:
                     for target in last_update_target_list:
-                        if target.confidence == 0.1234:
+                        if target.name.split('_')[0] == 'friend':
                             self.i_found = True
                             self.next_yaw = self.params.search_friend_yaw
                             self.next_pitch = np.pi/2
@@ -547,6 +548,10 @@ class Decision_Maker:
         if len(last_update_target_list) == 0:
             self.target.if_update = False
         else:
+            for target in last_update_target_list:
+                if target.name[1] == self.params.primary_target:
+                    self.target = target
+                    return
             if self.params.choose_mode == 0:
                 self.target = max(last_update_target_list,key=lambda x:x.continuous_detected_num)
             elif self.params.choose_mode == 1:

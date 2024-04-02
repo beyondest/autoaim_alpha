@@ -122,6 +122,9 @@ strategy_2_event_flag_to_arg_list:
 - - 1
   - 999                             # Search and fire until race end, may pre end by sentry health
 
+# "0" for sentry, "1" for hero, "3","4" for infantory, "-1" for nobody
+primary_target: "0"
+
 
 
 

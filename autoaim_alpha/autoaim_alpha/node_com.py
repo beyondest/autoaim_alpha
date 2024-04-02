@@ -17,7 +17,10 @@ class Node_Com(Node,Custom_Context_Obj):
 
         self.port = Port(node_com_mode,
                          port_config_yaml_path)
-        
+        if if_main_head:
+            self.port2 = Port(node_com_mode,
+                            port2_config_yaml_path)
+        self.bro_port = Port()
         if node_com_mode == 'Dbg':
             self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
 
