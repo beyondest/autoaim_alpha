@@ -271,7 +271,6 @@ class Decision_Maker:
         if_locked = self._if_target_locked()
         if if_locked:
             self.fire_times = 1
-            lr1.warn("Target Locked, FIRE")
             if self.mode == 'Dbg':
                 lr1.debug(f"Target Locked, FIRE, img_x: {self.target.tvec[0]:.2f}, img_y: {self.target.tvec[2]}")
                 
@@ -568,14 +567,16 @@ class Decision_Maker:
         if self.target.continuous_lost_num < self.params.continuous_lost_num_max_threshold:
             self.next_yaw =  self.cur_yaw
             self.next_pitch =  self.cur_pitch
-            lr1.warn(f"Stay cause blink {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
+            if self.mode == 'Dbg':
+                lr1.warn(f"Stay cause blink {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
         
         else: 
             self.next_yaw,self.next_pitch = self._search_target()
             if self.params.if_use_pid_control:
                 self.yaw_pid_controller.reset()
                 self.pitch_pid_controller.reset()
-            lr1.warn(f'Search {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}')
+            if self.mode == 'Dbg':
+                lr1.warn(f'Search {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}')
     
     def _get_next_yaw_pitch_by_ballistic(self):
         
@@ -585,14 +586,15 @@ class Decision_Maker:
         if if_success:
             self.next_yaw = fire_yaw
             self.next_pitch = fire_pitch
-            lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
             if self.mode == 'Dbg':
+                lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
                 lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, fy = {fire_yaw:.3f}, fp = {fire_pitch:.3f}, ny = {self.next_yaw:.3f}, np = {self.next_pitch:.3f}, x = {self.target.tvec[0]:.3f}, y = {self.target.tvec[1]:.3f}, z = {self.target.tvec[2]:.3f}")
             
         else:
             self.next_yaw = self.cur_yaw
             self.next_pitch =  self.cur_pitch
-            lr1.warn(f"Stay cause fail to solve , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
+            if self.mode == 'Dbg':
+                lr1.warn(f"Stay cause fail to solve , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
     
     def _get_next_yaw_pitch_by_pid(self,yaw_pid_target:float = 0.0,pitch_pid_target:float = 0.0):
         
@@ -604,9 +606,8 @@ class Decision_Maker:
         pid_rel_pit = self.pitch_pid_controller.get_output(pitch_pid_target,relative_pitch) 
         self.next_yaw = self.cur_yaw + pid_rel_yaw
         self.next_pitch = self.cur_pitch + pid_rel_pit
-            
-        lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
-        if self.mode == 'Dbg':  
+        if self.mode == 'Dbg':
+            lr1.warn(f"Track {self.target.name} {self.target.id} , d,l = {self.target.continuous_detected_num}, {self.target.continuous_lost_num}")
             lr1.debug(f"cy = {self.cur_yaw:.3f}, cp = {self.cur_pitch:.3f}, ry = {relative_yaw:.3f}, rp = {relative_pitch:.3f}, ny = {self.next_yaw:.3f}, np = {self.next_pitch:.3f}, x = {self.target.tvec[0]:.3f}, y = {self.target.tvec[1]:.3f}, z = {self.target.tvec[2]:.3f}")
     
     

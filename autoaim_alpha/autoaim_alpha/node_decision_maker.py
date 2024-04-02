@@ -195,11 +195,13 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
     def make_decision_callback(self):
         if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to small gimbal, cannot make decision")
+            if mode == 'Dbg':
+                self.get_logger().warn(f"Not connect to small gimbal, cannot make decision")
             self.decision_maker.doing_nothing(999)
             return
         if self.if_connect_to_brother == False:
-            self.get_logger().warn(f"Not connect to brother, cannot make decision")
+            if mode == 'Dbg':
+                self.get_logger().warn(f"Not connect to brother, cannot make decision")
             self.decision_maker.doing_nothing(999)
             return
         
@@ -227,7 +229,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
        
     def auto_bounce_callback(self):
         if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot auto bounce back")
+            if mode == 'Dbg':
+                self.get_logger().warn(f"Not connect to electric system, cannot auto bounce back")
         else:
             if self.cur_event == SEARCH_AND_FIRE or self.cur_event == DOING_NOTHING:
                 self.pre_event = self.cur_event
@@ -251,7 +254,8 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         
     def test_fire_callback(self):
         if self.if_connetect_to_ele_sys == False:
-            self.get_logger().warn(f"Not connect to electric system, cannot make decision")
+            if mode == 'Dbg':
+                self.get_logger().warn(f"Not connect to electric system, cannot make decision")
             return
         if self.fire_times == -1:
             self.decision_maker.params.manual_pitch_compensation = self.rel_pitch

@@ -132,14 +132,15 @@ class Node_Detector(Node,Custom_Context_Obj):
                 msg.detect_result.append(ed)
                 
                 log_info += f"\narmor_name:{ed.armor_name},conf:{ed.confidence:.2f}, x:{each_result['pos'][0]:.2f},y:{each_result['pos'][1]:.2f},z:{each_result['pos'][2]:.2f}"
-                
-            self.get_logger().warn(f"Find target : {log_info} spend time:{find_time}s")
+            if mode == 'Dbg':
+                self.get_logger().warn(f"Find target : {log_info} spend time:{find_time}s")
             
             self.pub_detect_result.publish(msg)
             
         else:
             self.pub_detect_result.publish(DetectResult())
-            self.get_logger().warn(f"No target found")
+            if mode == 'Dbg':
+                self.get_logger().warn(f"No target found")
     
     def sub_ele_sys_com_callback(self,msg:ElectricsysCom):
         
