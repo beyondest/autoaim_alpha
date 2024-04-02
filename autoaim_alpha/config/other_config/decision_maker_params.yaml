@@ -65,12 +65,12 @@ search_friend_pitch: -0.1745 # rad
 # event_flag:
 # DOING_NOTHING = 0
 # SEARCH_AND_FIRE = 1
-# AUTO_BOUNCE_BACK = 2, do not use this flag, enable auto_bounce_back instead
+# AUTO_BOUNCE_BACK = 2, do not use this flag, enable auto_bounce_back by set auto_bounce_back_period > 0 instead
 # GO_RIGHT = 3
 # GO_LEFT = 4
 # GO_FORWARD = 5
 # GO_BACKWARD = 6
-# SEARCH_FRIEND = 7
+# SEARCH_FRIEND = 7 # Do not use this flag , enable if_auto_recognize_friend instead
 
 # strategy 1, go left to protect 
 strategy_0_event_flag_to_arg_list:

@@ -1,0 +1,16 @@
+[Unit]
+Description=Test_Sudo Service
+After=network.target 
+
+[Service]
+ExecStart=/bin/bash -c 'chmod o+rw /dev/tty8 '
+User=rcclub
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
