@@ -32,7 +32,8 @@ setup(
             'node_com = autoaim_alpha.node_com:main',
             'node_marker = autoaim_alpha.node_marker:main',
             'node_visualizer = autoaim_alpha.node_visualizer:main',
-            'node_parameter = autoaim_alpha.node_parameter:main'
+            'node_parameter = autoaim_alpha.node_parameter:main',
+            'node_monitor = autoaim_alpha.node_monitor:main'
         ],
     },
 )

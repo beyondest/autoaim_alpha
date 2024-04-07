@@ -40,7 +40,7 @@ if __name__ == '__main__':
                         enemy_car_list=enemy_car_list
                         )
     
-    #ca.enable_trackbar_config(press_key_to_save='a')
+    ca.enable_trackbar_config(press_key_to_save='a')
     #de.tradition_detector.enable_preprocess_config(press_key_to_save='s')
     #de.tradition_detector.filter1.enable_trackbar_config(press_key_to_save='d')
     #de.tradition_detector.filter2.enable_trackbar_config(press_key_to_save='f')

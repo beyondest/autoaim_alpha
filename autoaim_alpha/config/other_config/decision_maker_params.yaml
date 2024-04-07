@@ -5,7 +5,7 @@ pitch_max: 5.0  # deg
 yaw_search_step: 0.2 # rad
 pitch_search_step: 0.2 # rad
 
-# In the frame of zero yaw big gimbal 
+# In the frame of zero yaw big gimbal , determine yaw search data = np.arange(negtive_limit_switch, positive_limit_switch)
 
 # 45.0 for Sentry Small Gimbal Right
 # 180.0 for Sentry Small Gimbal Left

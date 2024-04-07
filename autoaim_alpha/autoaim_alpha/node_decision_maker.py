@@ -21,10 +21,12 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
                  name):
         super().__init__(name)
         self.action_mode_to_callback = {0:self.make_decision_callback,
-                                       1:self.test_fire_callback}
+                                       1:self.test_fire_callback,
+                                       2:self.test_big_gimbal_callback}
         
         self.action_mode_to_note = {0:"Make decision mode",
-                                    1:"Test fire , auto track"}
+                                    1:"Test fire , auto track",
+                                    2:"Test Big Gimbal"}
 
         
         self.pub_ele_sys_com = self.create_publisher(topic_electric_sys_com['type'],
@@ -86,8 +88,10 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         else:
             self.if_connect_to_brother = False
         if if_main_head:
+            self.if_connect_to_big_gimbal = False
             self.get_logger().warn(f"Main head, use big gimbal")
         else:
+            self.if_connect_to_big_gimbal = True
             self.get_logger().warn(f"Not main head, use small gimbal only")
             
         if node_decision_maker_mode == 'Dbg':
@@ -186,15 +190,21 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
             
     
     def sub_bro_info_callback(self, msg:BroInfo):
+        if not self.if_connect_to_brother:
+            self.if_connect_to_brother = True 
+            self.get_logger().warn(f"Connect To Bro ")
         self.decision_maker.update_brother_info(msg.find_enemy_yaw,
                                                 msg.cur_big_gimbal_yaw)
                 
     def sub_big_gimbal_state_callback(self, msg:EleBigGimbalState):
+        if not self.if_connect_to_big_gimbal:
+            self.if_connect_to_big_gimbal = True
+            self.get_logger().warn(f"Connect To Big Gimbal")
         self.decision_maker.update_big_gimbal_info(msg.cur_big_gimbal_yaw,
                                                    msg.sentry_health)
         
     def make_decision_callback(self):
-        if self.if_connetect_to_ele_sys == False:
+        if self.if_connetect_to_ele_sys == False :
             if mode == 'Dbg':
                 self.get_logger().warn(f"Not connect to small gimbal, cannot make decision")
             self.decision_maker.doing_nothing(999)
@@ -202,6 +212,11 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         if self.if_connect_to_brother == False:
             if mode == 'Dbg':
                 self.get_logger().warn(f"Not connect to brother, cannot make decision")
+            self.decision_maker.doing_nothing(999)
+            return
+        if self.if_connect_to_big_gimbal == False:
+            if mode == 'Dbg':
+                self.get_logger().warn(f"Not connect to big_gimbal, cannot make decision")
             self.decision_maker.doing_nothing(999)
             return
         
@@ -289,6 +304,25 @@ class Node_Decision_Maker(Node,Custom_Context_Obj):
         self.fire_times = msg.fire_times
         self.rel_pitch = msg.rel_pitch
         self.rel_yaw = msg.rel_yaw
+
+
+    def test_big_gimbal_callback(self):
+        
+        if not self.if_connect_to_big_gimbal:
+            self.get_logger().warn('Not connect to big gimbal')
+        else:
+            self.decision_maker.search_and_fire(999)
+            self.decision_maker.next_big_gimbal_yaw = self.decision_maker.cur_big_gimbal_yaw + 0.07
+            self.decision_maker.reserved_slot = 10
+            
+        com_msg = ElectricsysCom()
+        com_msg.sof = 'A'
+        com_msg.target_abs_pitch = self.decision_maker.next_pitch
+        com_msg.target_abs_yaw = self.decision_maker.next_yaw
+        com_msg.fire_times = self.decision_maker.fire_times
+        com_msg.big_gimbal_yaw = self.decision_maker.next_big_gimbal_yaw
+        com_msg.reserved_slot = self.decision_maker.reserved_slot
+        self.pub_ele_sys_com.publish(com_msg)
         
     def _start(self):
         

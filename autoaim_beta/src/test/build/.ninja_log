@@ -27,3 +27,7 @@
 585	822	1711859483	exe/astra_test	4a1d7227934c31a1
 1	594	1711859866	CMakeFiles/astra_test.dir/astra_test.cpp.o	b188617634fa94c1
 595	826	1711859866	exe/astra_test	4a1d7227934c31a1
+1	6301	1712294319	CMakeFiles/mv_test.dir/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/basic.cpp.o	5056359b2ae63b3a
+1	6527	1712294319	CMakeFiles/mv_test.dir/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src/autoaim_beta/src/mv_class.cpp.o	abeedfe38778b7fc
+1	7393	1712294320	CMakeFiles/mv_test.dir/webcam_test.cpp.o	e2a9e1cf7ff05b2e
+7393	7804	1712294320	exe/mv_test	bdbadf81e2719de

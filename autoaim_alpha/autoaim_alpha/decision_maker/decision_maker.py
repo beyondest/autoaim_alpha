@@ -153,8 +153,12 @@ class Decision_Maker:
             self.mouse_control = KeyboardAndMouseControl('Rel',if_enable_key_board=False,if_enable_mouse_control=True)
             self.mouse_pos_prior = (0,0)
         
+        
         self.yaw_search_add = True
         self.pitch_search_add = True
+        self.yaw_search_offset_list = list(np.arange(self.params.yaw_mechanical_negative_limit_switch,self.params.yaw_mechanical_positive_limit_switch,self.params.yaw_search_step))
+        self.yaw_search_id = 0
+        
         
     def _trans_params_degree_to_radian(self):
         self.params.yaw_mechanical_negative_limit_switch = self.params.yaw_mechanical_negative_limit_switch/180*np.pi
@@ -489,18 +493,16 @@ class Decision_Maker:
         Returns:
             yaw, pitch
         """
+        next_yaw = self.yaw_search_offset_list[self.yaw_search_id] + self.cur_big_gimbal_yaw
         if self.yaw_search_add:
-            next_yaw = self.cur_yaw + self.params.yaw_search_step
-            if self.params.yaw_mechanical_positive_limit_switch != 0:
-                if next_yaw > self.cur_big_gimbal_yaw + self.params.yaw_mechanical_positive_limit_switch:
-                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_positive_limit_switch - self.params.yaw_search_step
-                    self.yaw_search_add = False
+            self.yaw_search_id+=1
+            if self.yaw_search_id == len(self.yaw_search_offset_list) - 1:
+                self.yaw_search_add = False
         else:
-            next_yaw = self.cur_yaw - self.params.yaw_search_step
-            if self.params.yaw_mechanical_negative_limit_switch != 0:
-                if next_yaw < self.cur_big_gimbal_yaw + self.params.yaw_mechanical_negative_limit_switch:
-                    next_yaw = self.cur_big_gimbal_yaw + self.params.yaw_mechanical_negative_limit_switch + self.params.yaw_search_step
-                    self.yaw_search_add = True
+            self.yaw_search_id-=1
+            if self.yaw_search_id == 0:
+                self.yaw_search_add = True
+                
         if self.pitch_search_add:
             next_pitch = self.cur_pitch + self.params.pitch_search_step
             if next_pitch > self.params.pitch_max:

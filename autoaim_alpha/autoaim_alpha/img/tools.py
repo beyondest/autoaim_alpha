@@ -199,7 +199,7 @@ def add_text(img_bgr:np.ndarray,
              name:str,
              value,
              pos=None,
-             font:int=cv2.FONT_HERSHEY_SIMPLEX,
+             font:int=0,
              color:tuple=(0,0,0),
              scale_size: float= 0.5
              )->np.ndarray:

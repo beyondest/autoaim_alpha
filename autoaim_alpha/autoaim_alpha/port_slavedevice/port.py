@@ -130,7 +130,10 @@ class Can_Port:
         if self.can is not None:
             msg = self.bro_data_send.convert_bro_data_to_bytes()
             can_msg = can.Message(arbitration_id=0x123, data=msg, extended_id=False)
-            self.can.send(can_msg)
+            try:
+                self.can.send(can_msg)
+            except Exception as e:
+                lr1.error(f'Can send error: {e}')
             if self.mode == 'Dbg':
                 lr1.debug(f"Send  {msg} find_enemy_yaw: {self.bro_data_send.find_enemy_yaw} cur_big_gimbal_yaw: {self.bro_data_send.cur_big_gimbal_yaw}")
     

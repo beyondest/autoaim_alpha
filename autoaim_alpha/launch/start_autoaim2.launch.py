@@ -6,7 +6,19 @@ package_name = 'autoaim_alpha'
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package="autoaim_beta",
+            package=package_name,
+            node_executable='node_observer',
+            node_name='node_observer',
+            output='log'
+        ),
+        Node(
+            package=package_name,
+            node_executable='node_decision_maker',
+            node_name='node_decision_maker',
+            output='log'
+        ),
+        Node(
+            package='autoaim_beta',
             node_executable='node_webcam',
             node_name='node_webcam',
             output='log'
@@ -19,14 +31,8 @@ def generate_launch_description():
         ),
         Node(
             package=package_name,
-            node_executable='node_observer',
-            node_name='node_observer',
-            output='log'
-        ),
-        Node(
-            package=package_name,
-            node_executable='node_decision_maker',
-            node_name='node_decision_maker',
+            node_executable='node_monitor',
+            node_name='node_monitor',
             output='log'
         )
     ])

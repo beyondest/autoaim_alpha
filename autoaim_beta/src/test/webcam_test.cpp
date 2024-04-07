@@ -26,10 +26,45 @@ std::string log_save_folder = "/home/liyuxuan/vscode/pywork_linux/autoaim_ws/src
 std::chrono::high_resolution_clock::time_point t1, t2;
 int fps = 0;
 
+
+std::string window_name = "config";
+void visualize_isp_config_by_isp_params()
+{
+    
+    cv::namedWindow(window_name);
+    cv::createTrackbar("exp",window_name,0,10000,NULL);
+    cv::createTrackbar("r_gain",window_name,0,300,NULL);
+    cv::createTrackbar("g_gain",window_name,0,300,NULL);
+    cv::createTrackbar("b_gain",window_name,0,300,NULL);
+    cv::createTrackbar("gain",window_name,0,192,NULL);
+
+}
+qq
+Mindvision_Camera_Params update_camera_isp_params()
+{
+    Mindvision_Camera_Params prs;
+    prs.exposure_time_us = cv::getTrackbarPos("exp",window_name);
+    prs.r_gain = cv::getTrackbarPos("r_gain",window_name);
+    prs.g_gain = cv::getTrackbarPos("g_gain",window_name);
+    prs.b_gain = cv::getTrackbarPos("b_gain",window_name);
+    prs.analog_gain = cv::getTrackbarPos("gain",window_name);
+    return prs;
+}
+
+
+void set_isp_params(Mindvision_Camera_Params prs, CameraHandle hcamera)
+{
+    CameraSetExposureTime(hcamera, (double)prs.exposure_time_us);
+    CameraSetGain(hcamera,(int)prs.r_gain,(int)prs.g_gain,(int)prs.b_gain);
+    CameraSetAnalogGain(hcamera, (int)prs.analog_gain);
+
+}
+
+
 int main()
 {
     signal(SIGINT, signal_handler);
-
+    visualize_isp_config_by_isp_params();
     try
     {
 
@@ -38,11 +73,8 @@ int main()
                             spdlog::level::debug,
                             true);
                             
-        Mindvision_Camera mv(mode,
+        Mindvision_Camera mv(Mode::Dbg,
                             camera_config_folder,
-                            camera_output_format,
-                            trigger_mode,
-                            wTimes_ms,
                             false,
                             armor_color,
                             if_yolov5
@@ -56,6 +88,8 @@ int main()
             {
                 cv::resize(img, img_show, cv::Size(640, 640));
                 cv::flip(img_show,img_show, -1);
+                auto prs = update_camera_isp_params();
+                set_isp_params(prs,mv.hcamera);
                 cv::imshow("camera", img_show);
                 cv::waitKey(1);
             }

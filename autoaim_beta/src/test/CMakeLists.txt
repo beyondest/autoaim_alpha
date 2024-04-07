@@ -68,17 +68,16 @@ endif()
 
 
 
-add_executable(gg_test        ${ROOT_DIR}/src/test/gg_test.cpp
-                              ${ROOT_DIR}/src/basic.cpp
-                              ${ROOT_DIR}/src/gg_class.cpp)
 
-target_link_libraries(gg_test ${OpenCV_LIBS} 
+
+add_executable(mv_test        ${ROOT_DIR}/src/test/webcam_test.cpp
+                              ${ROOT_DIR}/src/basic.cpp
+                              ${ROOT_DIR}/src/mv_class.cpp)
+
+target_link_libraries(mv_test ${OpenCV_LIBS} 
                                      ${lib_list} 
                                      ${spdlog_LIBRARIES})
 
-
-add_executable(astra_test        ${ROOT_DIR}/src/test/astra_test.cpp)
-target_link_libraries(astra_test ${OpenCV_LIBS})
 
 
 

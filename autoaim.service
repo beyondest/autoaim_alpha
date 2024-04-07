@@ -1,10 +1,12 @@
 [Unit]
 Description=Autoaim Service
-After=network.target prepare_autoaim.service
+After=network.target
 
 [Service]
-ExecStart=/bin/bash -c 'source /opt/ros/dashing/setup.bash \
+ExecStart=/bin/bash -c 'source /home/rcclub/.bashrc \
+                        &&source /opt/ros/dashing/setup.bash \
                         && source /home/rcclub/ggbond/autoaim_ws/install/setup.bash\
+                        && . /home/rcclub/ggbond/autoaim_ws/src/prepare_autoaim.sh\
                         && ros2 launch autoaim_alpha start_autoaim2.launch.py '
 User=rcclub
 Restart=always

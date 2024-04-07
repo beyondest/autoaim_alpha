@@ -22,22 +22,28 @@ ser = serial.Serial(
                     ) 
 
 p = pos_data()
+a = action_data()
 try:
     while True:
         # WARNING: CANNOT USE read(16) when you use time.sleep, exactly when sleep time is too long
         # WARNING: BETTER USE read_all() instead of read(16)
         #time.sleep(0.1)
         #b = ser.read(16)
-        b = ser.read_all()
-        if_error = p.convert_pos_bytes_to_data(b,if_part_crc=False)
-        if if_error:
-            print(f'Error in data conversion,ori_bytes:{b}')
-            p.show()
-            print(f"crc_get: {p.crc_get},crc_calc: {p.crc_v}")
-        else:
-            print(f'ori_bytes:{b}')
-            p.show()
-        
+        if 0:
+            b = ser.read_all()
+            if_error = p.convert_pos_bytes_to_data(b)
+            if if_error:
+                print(f'Error in data conversion,ori_bytes:{b}')
+                p.show()
+                print(f"crc_get: {p.crc_get},crc_calc: {p.crc_v}")
+            else:
+                print(f'ori_bytes:{b}')
+                p.show()
+        if 1:
+            a.abs_yaw+=2
+            bts = a.convert_action_data_to_bytes()
+            ser.write(bts)
+
 except Exception as e:
     print(f'Error:{e}')
     ser.close()

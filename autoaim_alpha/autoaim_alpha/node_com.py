@@ -62,7 +62,7 @@ class Node_Com(Node,Custom_Context_Obj):
             self.last_sub_topic_time = time.time()
             self.port.action_data.fire_times = msg.fire_times
             # Call Brother I Found Friend
-            if not if_ignore_brother and not self.if_first_recv_from_bro:
+            if not if_ignore_brother:
                 if msg.target_abs_yaw > 2000:
                     self.bro_port.bro_data_send.find_enemy_yaw = msg.target_abs_yaw
                     self.bro_port.bro_data_send.cur_big_gimbal_yaw = 1000.0
@@ -72,25 +72,31 @@ class Node_Com(Node,Custom_Context_Obj):
             self.port.action_data.abs_yaw = msg.target_abs_yaw / np.pi * 180
             self.port.action_data.abs_pitch = msg.target_abs_pitch / np.pi * 180
             
+            
+            self.port.send_msg()
             if node_com_mode == 'Dbg':
                 self.get_logger().debug(f"SOF A from Decision maker : abs_pitch {msg.target_abs_pitch:.3f}, abs_yaw {msg.target_abs_yaw:.3f}")
             
-            self.port.send_msg()
-            
             # Call Brother Where Enemy is
-            if not if_ignore_brother and not self.if_first_recv_from_bro:
+            if not if_ignore_brother:
                 if msg.fire_times != 0:
                     self.bro_port.bro_data_send.find_enemy_yaw = msg.target_abs_yaw
                 else:
                     self.bro_port.bro_data_send.find_enemy_yaw = 1000.0
                 self.bro_port.bro_data_send.cur_big_gimbal_yaw = 1000.0
                 self.bro_port.send_msg()
+                if node_com_mode == 'Dbg':
+                    self.get_logger().debug(f"Send to bro: enemy_yaw {self.bro_port.bro_data_send.find_enemy_yaw:.3f}")
+                    
             
             # Big Gimbal Action
             if if_main_head:
                 self.big_gimbal_port.action_data.abs_yaw = msg.big_gimbal_yaw / np.pi * 180
                 self.big_gimbal_port.action_data.reserved_slot = msg.reserved_slot
                 self.big_gimbal_port.send_msg()
+                if node_com_mode == 'Dbg':
+                    if node_com_mode == 'Dbg':
+                        self.get_logger().debug(f"Send To Big Gimbal : yaw: {self.big_gimbal_port.action_data.abs_yaw:.3f}, reserved_slog: {self.big_gimbal_port.action_data.reserved_slot}")
                 
         else:
             self.get_logger().error(f"Unknown sof {msg.sof}")
@@ -164,11 +170,11 @@ class Node_Com(Node,Custom_Context_Obj):
                 big_gimbal_msg.cur_big_gimbal_yaw = cur_yaw_ / 180 * np.pi
                 big_gimbal_msg.sentry_health = reserved_slot_
                 self.elebig_gimbal_pub.publish(big_gimbal_msg)
-                
-                # Call Brother Where Big Gimbal is         
-                self.bro_port.bro_data_send.find_enemy_yaw = 1000.0
-                self.bro_port.bro_data_send.cur_big_gimbal_yaw = cur_yaw_ / 180 * np.pi
-                self.bro_port.send_msg()
+                # Call Brother Where Big Gimbal is
+                if not if_ignore_brother:         
+                    self.bro_port.bro_data_send.find_enemy_yaw = 1000.0
+                    self.bro_port.bro_data_send.cur_big_gimbal_yaw = cur_yaw_ / 180 * np.pi
+                    self.bro_port.send_msg()
                 
                     
     def _start(self):

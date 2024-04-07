@@ -425,7 +425,7 @@ def add_text(img_bgr:np.ndarray,
              name:str,
              value,
              pos:tuple=(-1,-1),
-             font:int=cv2.FONT_HERSHEY_SIMPLEX,
+             font:int=0,
              color:tuple=(0,0,0),
              scale_size: float= 0.5
              )->np.ndarray:
