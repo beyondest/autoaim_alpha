@@ -565,7 +565,7 @@ def resize_image(frame, target_size=(480, 640), stride=0):
     :param frame: input image
     :param target_size: target size (height, width)
     :param stride: stride of the resized image, 0 means no constraint
-    :return: resized image
+    :return: CHW format image
     '''
     image = frame.copy()
     target_height, target_width = target_size
