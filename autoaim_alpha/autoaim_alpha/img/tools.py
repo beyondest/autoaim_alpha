@@ -558,4 +558,40 @@ class Plt_Dynamic_Window:
         plt.pause(0.001)
         plt.ioff()
         
-        
+
+def resize_image(frame, target_size=(480, 640), stride=0):
+    '''
+    Resize the image to fit the target size while maintaining the original proportions
+    :param frame: input image
+    :param target_size: target size (height, width)
+    :param stride: stride of the resized image, 0 means no constraint
+    :return: resized image
+    '''
+    image = frame.copy()
+    target_height, target_width = target_size
+    original_shape = image.shape[:2]  # original shape (height, width)
+
+    r = min(target_width / original_shape[1], target_height / original_shape[0])
+    new_size = (int(original_shape[1] * r), int(original_shape[0] * r))  
+
+    image = cv2.resize(image, new_size, interpolation=cv2.INTER_LINEAR)
+
+    delta_w = target_width - new_size[0]
+    delta_h = target_height - new_size[1]
+
+    if stride != 0:
+        if target_width % stride != 0:
+            delta_w += stride - (target_width % stride)
+        if target_height % stride != 0:
+            delta_h += stride - (target_height % stride)
+
+    top, bottom = delta_h // 2, delta_h - delta_h // 2
+    left, right = delta_w // 2, delta_w - delta_w // 2
+
+    image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+
+    # HWC -> CHW
+    image = image.transpose((2, 0, 1))[::-1]
+    image = np.ascontiguousarray(image)
+
+    return image
